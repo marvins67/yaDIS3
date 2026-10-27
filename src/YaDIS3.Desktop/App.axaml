@@ -1,0 +1,8 @@
+<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="YaDIS3.Desktop.App" RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="#A8B3C3" /></Style>
+    <Style Selector="TextBlock.section"><Setter Property="FontSize" Value="20" /><Setter Property="FontWeight" Value="SemiBold" /></Style>
+    <Style Selector="Button"><Setter Property="Padding" Value="12,8" /></Style>
+  </Application.Styles>
+</Application>

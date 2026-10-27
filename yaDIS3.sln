@@ -1,0 +1,28 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YaDIS3.Core", "src\YaDIS3.Core\YaDIS3.Core.csproj", "{C06814AF-F6FA-5386-8EC2-19548840D715}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YaDIS3.Desktop", "src\YaDIS3.Desktop\YaDIS3.Desktop.csproj", "{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YaDIS3.Rendering", "src\YaDIS3.Rendering\YaDIS3.Rendering.csproj", "{30EC86B3-D5A7-42EF-8676-629AC037FDCA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{30EC86B3-D5A7-42EF-8676-629AC037FDCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30EC86B3-D5A7-42EF-8676-629AC037FDCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30EC86B3-D5A7-42EF-8676-629AC037FDCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30EC86B3-D5A7-42EF-8676-629AC037FDCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C06814AF-F6FA-5386-8EC2-19548840D715}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C06814AF-F6FA-5386-8EC2-19548840D715}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C06814AF-F6FA-5386-8EC2-19548840D715}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C06814AF-F6FA-5386-8EC2-19548840D715}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

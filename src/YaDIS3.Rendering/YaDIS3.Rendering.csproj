@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Original graphics, templates and fonts: Frédéric L'hote / Fred-L.
+       Origins 1.2, GLASS Revisited 1.0 and GLASS Revisited (TV Posters) 1.0.
+       Original embedded authorship and font metadata preserved.
+       Portable C# renderer: MarvinS 2026, with assistance from ChatGPT. -->
+  <ItemGroup>
+    <ProjectReference Include="../YaDIS3.Core/YaDIS3.Core.csproj" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

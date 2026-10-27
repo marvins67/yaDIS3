@@ -1,0 +1,106 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:YaDIS3.Desktop.ViewModels" xmlns:core="using:YaDIS3.Core" xmlns:render="using:YaDIS3.Rendering"
+        x:Class="YaDIS3.Desktop.Views.MainWindow" x:DataType="vm:MainWindowViewModel"
+        Title="yaDIS3 — Bibliothèque" Width="1220" Height="820" MinWidth="960" MinHeight="650">
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="20" RowSpacing="14">
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+      <StackPanel Spacing="4"><TextBlock Text="yaDIS3" FontSize="28" FontWeight="Bold" /><TextBlock Text="{Binding WorkspacePath}" Classes="muted" TextTrimming="CharacterEllipsis" /></StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsEnabled="{Binding !IsBusy}">
+        <Button Content="Ouvrir une bibliothèque" Click="OpenWorkspace" /><Button Content="Créer" Click="CreateWorkspace" /><Button Content="Enregistrer" Command="{Binding SaveCommand}" />
+      </StackPanel>
+    </Grid>
+    <Border Grid.Row="1" Background="#22354A" CornerRadius="8" Padding="12"><TextBlock Text="{Binding MigrationNote}" TextWrapping="Wrap" /></Border>
+    <Grid Grid.Row="2" ColumnDefinitions="260,16,*" IsEnabled="{Binding !IsBusy}">
+      <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+        <TextBox PlaceholderText="Filtrer les fiches…" Text="{Binding Filter, Mode=TwoWay}" />
+        <TextBlock Grid.Row="1" Text="{Binding CountLabel}" Classes="muted" />
+        <ListBox x:Name="LibraryList" Grid.Row="2" ItemsSource="{Binding VisibleCards}" SelectedItem="{Binding SelectedCard, Mode=TwoWay}">
+          <ListBox.ItemTemplate><DataTemplate x:DataType="core:MediaCard"><StackPanel Margin="4,6" Spacing="4">
+            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="8"><TextBlock Text="{Binding KindLabel}" Classes="muted" /><TextBlock Text="{Binding Year}" Classes="muted" /><TextBlock Text="Modifié" IsVisible="{Binding IsDirty}" Foreground="#EBCB8B" /></StackPanel>
+          </StackPanel></DataTemplate></ListBox.ItemTemplate>
+        </ListBox>
+        <Button Grid.Row="3" Content="Ajouter une série manuelle" Click="AddManualSeries" HorizontalAlignment="Stretch" />
+      </Grid>
+      <Grid Grid.Column="2">
+        <TextBlock Text="Ouvrez une bibliothèque puis sélectionnez une fiche." IsVisible="{Binding !HasCard}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" />
+        <TabControl x:Name="EditorTabs" IsVisible="{Binding HasCard}">
+          <TabItem Header="Informations"><ScrollViewer><Grid Margin="10,16" ColumnDefinitions="*,180" ColumnSpacing="20">
+            <StackPanel Spacing="10">
+              <TextBlock Text="{Binding SelectedCard.DisplayName}" Classes="section" TextWrapping="Wrap" />
+              <TextBlock Text="Titre" /><TextBox x:Name="TitleEditor" Text="{Binding SelectedCard.Title, Mode=TwoWay}" />
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <StackPanel Spacing="6"><TextBlock Text="Année" /><TextBox Text="{Binding SelectedCard.Year, Mode=TwoWay}" /></StackPanel>
+                <StackPanel Grid.Column="1" Spacing="6"><TextBlock Text="Note" /><TextBox Text="{Binding SelectedCard.Rating, Mode=TwoWay}" /></StackPanel>
+              </Grid>
+              <StackPanel Spacing="6" IsVisible="{Binding IsSeries}"><TextBlock Text="Chaîne / réseau" /><TextBox Text="{Binding SelectedCard.Network, Mode=TwoWay}" /></StackPanel>
+              <TextBlock Text="Résumé" /><TextBox Text="{Binding SelectedCard.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" VerticalContentAlignment="Top" />
+              <TextBlock Text="Les autres champs XML et les informations techniques restent conservés dans la fiche." Classes="muted" TextWrapping="Wrap" />
+            </StackPanel>
+            <Image Grid.Column="1" Source="{Binding Poster}" Stretch="Uniform" MaxHeight="360" VerticalAlignment="Top" />
+          </Grid></ScrollViewer></TabItem>
+          <TabItem Header="Épisodes" IsVisible="{Binding IsSeries}">
+            <Grid Margin="10,16" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+              <StackPanel Orientation="Horizontal" Spacing="8"><Button Content="Analyser un dossier de vidéos" Click="ScanEpisodes" /><Button Content="◀" Command="{Binding PreviousEpisodeCommand}" IsEnabled="{Binding HasEpisode}" /><Button Content="▶" Command="{Binding NextEpisodeCommand}" IsEnabled="{Binding HasEpisode}" /><TextBlock Text="{Binding EpisodePosition}" VerticalAlignment="Center" /></StackPanel>
+              <ComboBox x:Name="EpisodeChoice" Grid.Row="1" ItemsSource="{Binding SelectedCard.Episodes}" SelectedItem="{Binding SelectedEpisode, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate><DataTemplate x:DataType="core:Episode"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
+              <ScrollViewer Grid.Row="2" IsVisible="{Binding HasEpisode}"><Grid ColumnDefinitions="*,220" ColumnSpacing="16">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="Titre de l’épisode" /><TextBox x:Name="EpisodeTitleEditor" Text="{Binding SelectedEpisode.Title, Mode=TwoWay}" />
+                  <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <StackPanel Spacing="6"><TextBlock Text="Diffusion (AAAA-MM-JJ)" /><TextBox Text="{Binding SelectedEpisode.Aired, Mode=TwoWay}" /></StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="6"><TextBlock Text="Note" /><TextBox Text="{Binding SelectedEpisode.Rating, Mode=TwoWay}" /></StackPanel>
+                  </Grid>
+                  <TextBlock Text="Réalisation" /><TextBox Text="{Binding SelectedEpisode.Director, Mode=TwoWay}" />
+                  <TextBlock Text="Résumé" /><TextBox Text="{Binding SelectedEpisode.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="180" />
+                  <TextBlock Text="{Binding SelectedEpisode.VideoPath}" Classes="muted" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="12"><Image Source="{Binding EpisodeImage}" Stretch="Uniform" MaxHeight="220" /><Button Content="Choisir l’image de l’épisode" Click="ImportEpisodeImage" /><TextBlock Text="Les flèches enregistrent la fiche avant de changer d’épisode." Classes="muted" TextWrapping="Wrap" /></StackPanel>
+              </Grid></ScrollViewer>
+            </Grid>
+          </TabItem>
+          <TabItem Header="Images"><ScrollViewer><StackPanel Margin="10,16" Spacing="18">
+            <TextBlock Text="Images source de la fiche" Classes="section" />
+            <StackPanel Spacing="8"><Button Content="Importer un fanart" Click="ImportFanart" /><Image Source="{Binding Fanart}" Stretch="Uniform" MaxHeight="240" HorizontalAlignment="Left" /></StackPanel>
+            <StackPanel Spacing="8"><Button Content="Importer une bannière" Click="ImportBanner" /><Image Source="{Binding Banner}" Stretch="Uniform" MaxHeight="110" HorizontalAlignment="Left" /></StackPanel>
+            <StackPanel Spacing="8"><Button Content="Importer une affiche" Click="ImportPoster" /><Image Source="{Binding Poster}" Stretch="Uniform" MaxHeight="240" HorizontalAlignment="Left" /></StackPanel>
+          </StackPanel></ScrollViewer></TabItem>
+          <TabItem Header="Recherche TVDB" IsVisible="{Binding IsSeries}">
+            <Grid Margin="10,16" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="12">
+              <StackPanel Orientation="Horizontal" Spacing="12"><Button Content="Configuration TVDB" Click="ConfigureTvdb" /><TextBlock Text="{Binding CredentialsLabel}" Classes="muted" VerticalAlignment="Center" /></StackPanel>
+              <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8"><TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="Titre à rechercher…" /><Button Grid.Column="1" Content="Rechercher" Command="{Binding SearchCommand}" /></Grid>
+              <ListBox x:Name="TvdbResults" Grid.Row="2" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedMatch, Mode=TwoWay}" SelectionChanged="SearchSelectionChanged">
+                <ListBox.ItemTemplate><DataTemplate x:DataType="core:SeriesMatch"><StackPanel Margin="4,8" Spacing="6"><TextBlock Text="{Binding Label}" FontWeight="SemiBold" /><TextBlock Text="{Binding Overview}" TextWrapping="Wrap" MaxHeight="72" /></StackPanel></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+              <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12"><TextBlock Text="Ordre des épisodes" VerticalAlignment="Center" /><ComboBox Grid.Column="1" ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}" HorizontalAlignment="Stretch"><ComboBox.ItemTemplate><DataTemplate x:DataType="core:EpisodeOrder"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate></ComboBox></Grid>
+              <Button Grid.Row="4" Content="Appliquer les informations à la série" Command="{Binding ApplySeriesCommand}" HorizontalAlignment="Left" />
+            </Grid>
+          </TabItem>
+          <TabItem Header="Export Dune">
+            <ScrollViewer><StackPanel Margin="10,16" Spacing="12">
+              <TextBlock Text="Template et rendu" Classes="section" />
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                  <ComboBox.ItemTemplate><DataTemplate x:DataType="render:DuneTemplate"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Column="1" Content="Charger un template…" Click="ChooseTemplate" />
+                <ComboBox Grid.Column="2" ItemsSource="{Binding TemplateLanguages}" SelectedItem="{Binding TemplateLanguage, Mode=TwoWay}" />
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="16"><CheckBox Content="Fonds AAI (sinon JPEG)" IsChecked="{Binding AaiBackgrounds, Mode=TwoWay}" /><CheckBox Content="Boîtiers des films" IsChecked="{Binding UseCases, Mode=TwoWay}" /></StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="12"><Button Content="Traiter la fiche sélectionnée" Command="{Binding ProcessCommand}" /><CheckBox Content="Aperçu de l’épisode sélectionné" IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}" IsEnabled="{Binding HasEpisode}" /></StackPanel>
+              <Image x:Name="DunePreview" Source="{Binding RenderedPreview}" Stretch="Uniform" MaxHeight="360" />
+              <TextBlock Text="Chemins de lecture du Dune" Classes="section" />
+              <TextBlock Text="Une correspondance par ligne : racine locale =&gt; adresse Dune. Si aucune ne correspond, le chemin Dune enregistré dans la fiche est utilisé." TextWrapping="Wrap" Classes="muted" />
+              <TextBox Text="{Binding PathMappings, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="84" PlaceholderText="Z:\Séries =&gt; smb://nas/Series&#10;/Volumes/Films =&gt; storage_label://MEDIAS/Films" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><TextBox Text="{Binding ExportParentPath, Mode=TwoWay}" PlaceholderText="Dossier de destination" /><Button Grid.Column="1" Content="Parcourir…" Click="ChooseExportDestination" /></Grid>
+              <Button Content="Exporter toute la bibliothèque vers Dune" Command="{Binding ExportCommand}" HorizontalAlignment="Left" />
+              <TextBlock Text="L’export crée le sous-dossier yaDIS3-modern. Lors d’un nouvel export, sa version précédente est conservée dans yaDIS3-modern.previous. Les vidéos restent à leur emplacement d’origine." TextWrapping="Wrap" Classes="muted" />
+            </StackPanel></ScrollViewer>
+          </TabItem>
+        </TabControl>
+      </Grid>
+    </Grid>
+    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12"><ProgressBar IsVisible="{Binding IsBusy}" IsIndeterminate="True" Width="80" Height="5" VerticalAlignment="Center" /><TextBlock Grid.Column="1" Text="{Binding Status}" TextWrapping="Wrap" /><Button Grid.Column="2" Content="Annuler" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" /></Grid>
+  </Grid>
+</Window>
