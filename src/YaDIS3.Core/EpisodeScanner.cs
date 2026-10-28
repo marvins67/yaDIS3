@@ -1,56 +1,262 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+
 namespace YaDIS3.Core;
 
-public sealed record VideoEpisode(int Season, int Number, string File);
+/// <summary>
+/// Identifies an episode detected in a local video
+/// filename.
+/// </summary>
+public sealed record VideoEpisode(
+    int Season,
+    int Number,
+    string File
+);
+
+/// <summary>
+/// Detects local episodes and merges them into a series
+/// card.
+/// </summary>
 public static class EpisodeScanner
 {
-    private static readonly HashSet<string> Extensions = new(StringComparer.OrdinalIgnoreCase) { ".mkv", ".mp4", ".avi", ".m2ts", ".mov", ".wmv", ".ts", ".iso", ".mpg", ".mpeg", ".vob" };
-    public static IReadOnlyList<VideoEpisode> Detect(string directory) => Directory.EnumerateFiles(directory, "*", new EnumerationOptions
-        { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint }).Order(StringComparer.Ordinal)
-        .Where(p => Extensions.Contains(Path.GetExtension(p))).SelectMany(Parse).DistinctBy(e => (e.Season, e.Number)).OrderBy(e => e.Season).ThenBy(e => e.Number).ToArray();
+    private static readonly HashSet<string> s_extensions = new(
+        StringComparer.OrdinalIgnoreCase
+    )
+    {
+        ".mkv",
+        ".mp4",
+        ".avi",
+        ".m2ts",
+        ".mov",
+        ".wmv",
+        ".ts",
+        ".iso",
+        ".mpg",
+        ".mpeg",
+        ".vob",
+    };
+
+    /// <summary>
+    /// Finds supported video files and extracts their episode
+    /// numbers.
+    /// </summary>
+    public static IReadOnlyList<VideoEpisode> Detect(
+        string directory
+    )
+    {
+        return Directory
+            .EnumerateFiles(
+                directory,
+                "*",
+                new EnumerationOptions
+                {
+                    RecurseSubdirectories = true,
+                    IgnoreInaccessible = true,
+                    AttributesToSkip =
+                        FileAttributes.ReparsePoint,
+                }
+            )
+            .Order(StringComparer.Ordinal)
+            .Where(path =>
+                s_extensions.Contains(Path.GetExtension(path))
+            )
+            .SelectMany(Parse)
+            .DistinctBy(element =>
+                (element.Season, element.Number)
+            )
+            .OrderBy(element => element.Season)
+            .ThenBy(element => element.Number)
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Extracts season and episode numbers from a video
+    /// filename.
+    /// </summary>
     public static IReadOnlyList<VideoEpisode> Parse(string file)
     {
-        var normalized = file.Replace('\\', '/'); var name = normalized[(normalized.LastIndexOf('/') + 1)..];
-        var stem = Path.GetFileNameWithoutExtension(name);
-        var pair = Regex.Match(stem, @"(?i)(?:\bS(?<s>\d{1,2})[ ._-]*E(?<e>\d{1,3})|(?<!\d)(?<s>\d{1,2})[xXeE](?<e>\d{1,3}))(?!\d)");
+        string normalized = file.Replace('\\', '/');
+        string name = normalized[
+            (normalized.LastIndexOf('/') + 1)..
+        ];
+        string stem = Path.GetFileNameWithoutExtension(name);
+        Match pair = Regex.Match(
+            stem,
+            """(?i)(?:\bS(?<s>\d{1,2})[ ._-]*E(?<e>\d{1,3})|(?<!\d)(?<s>\d{1,2})[xXeE](?<e>\d{1,3}))(?!\d)"""
+        );
         if (pair.Success)
         {
-            var season = int.Parse(pair.Groups["s"].Value, CultureInfo.InvariantCulture); var number = int.Parse(pair.Groups["e"].Value, CultureInfo.InvariantCulture);
-            var range = Regex.Match(stem[(pair.Index + pair.Length)..], @"^(?:[ ._]*E|\s*-\s*)(?<last>\d{1,3})(?!\d)", RegexOptions.IgnoreCase);
-            var end = range.Success ? int.Parse(range.Groups["last"].Value, CultureInfo.InvariantCulture) : number;
-            if (end < number || end - number > 100) end = number;
-            return Enumerable.Range(number, end - number + 1).Select(n => new VideoEpisode(season, n, file)).ToArray();
+            int season = int.Parse(
+                pair.Groups["s"].Value,
+                CultureInfo.InvariantCulture
+            );
+            int number = int.Parse(
+                pair.Groups["e"].Value,
+                CultureInfo.InvariantCulture
+            );
+            Match range = Regex.Match(
+                stem[(pair.Index + pair.Length)..],
+                """^(?:[ ._]*E|\s*-\s*)(?<last>\d{1,3})(?!\d)""",
+                RegexOptions.IgnoreCase
+            );
+            int end = range.Success
+                ? int.Parse(
+                    range.Groups["last"].Value,
+                    CultureInfo.InvariantCulture
+                )
+                : number;
+            if (end < number || end - number > 100)
+            {
+                end = number;
+            }
+
+            return Enumerable
+                .Range(number, end - number + 1)
+                .Select(numberValue => new VideoEpisode(
+                    season,
+                    numberValue,
+                    file
+                ))
+                .ToArray();
         }
-        var single = Regex.Match(stem, @"(?i)(?:\b(?:E|EP|Episode|Épisode)[ ._-]*|^\s*|\s+-\s+)(?<e>\d{1,3})(?=$|\s+-\s+|[ ._-]+[A-Za-zÀ-ÿ])");
-        if (!single.Success) single = Regex.Match(stem, @"(?:^|[ ._])(?<e>\d{1,3})$|^\[(?<e>\d{1,3})\](?:\s|$)");
-        if (!single.Success) return [];
-        var directory = normalized[..Math.Max(0, normalized.LastIndexOf('/'))];
-        var parent = Regex.Match(directory, @"(?i)(?:^|/)(?:Season|Saison|S)[ ._-]*(?<s>\d{1,2})(?:/|$)");
-        return [new VideoEpisode(parent.Success ? int.Parse(parent.Groups["s"].Value, CultureInfo.InvariantCulture) : 1, int.Parse(single.Groups["e"].Value, CultureInfo.InvariantCulture), file)];
+
+        Match single = Regex.Match(
+            stem,
+            """(?i)(?:\b(?:E|EP|Episode|Épisode)[ ._-]*|^\s*|\s+-\s+)(?<e>\d{1,3})(?=$|\s+-\s+|[ ._-]+[A-Za-zÀ-ÿ])"""
+        );
+        if (!single.Success)
+        {
+            single = Regex.Match(
+                stem,
+                """(?:^|[ ._])(?<e>\d{1,3})$|^\[(?<e>\d{1,3})\](?:\s|$)"""
+            );
+        }
+
+        if (!single.Success)
+        {
+            return [];
+        }
+
+        string directory = normalized[
+            ..Math.Max(0, normalized.LastIndexOf('/'))
+        ];
+        Match parent = Regex.Match(
+            directory,
+            """(?i)(?:^|/)(?:Season|Saison|S)[ ._-]*(?<s>\d{1,2})(?:/|$)"""
+        );
+        return
+        [
+            new VideoEpisode(
+                parent.Success
+                    ? int.Parse(
+                        parent.Groups["s"].Value,
+                        CultureInfo.InvariantCulture
+                    )
+                    : 1,
+                int.Parse(
+                    single.Groups["e"].Value,
+                    CultureInfo.InvariantCulture
+                ),
+                file
+            ),
+        ];
     }
-    public static void Synchronize(MediaCard card, IReadOnlyList<VideoEpisode> detected)
+
+    /// <summary>
+    /// Merges detected video paths without deleting existing
+    /// episodes.
+    /// </summary>
+    public static void Synchronize(
+        MediaCard card,
+        IReadOnlyList<VideoEpisode> detected
+    )
     {
-        if (!card.IsSeries) throw new InvalidOperationException("Sélectionnez une série.");
+        if (!card.IsSeries)
+        {
+            throw new InvalidOperationException(
+                "Sélectionnez une série."
+            );
+        }
+
         card.Update(() =>
         {
-            var info = card.EnsureInfo();
-            foreach (var found in detected.DistinctBy(e => (e.Season, e.Number)))
+            XElement info = card.EnsureInfo();
+            foreach (
+                VideoEpisode found in detected.DistinctBy(
+                    element => (element.Season, element.Number)
+                )
+            )
             {
-                var existing = info.Elements("episode").FirstOrDefault(e => (string?)e.Attribute("season") == found.Season.ToString(CultureInfo.InvariantCulture) && (string?)e.Attribute("episode") == found.Number.ToString(CultureInfo.InvariantCulture));
+                XElement? existing = info.Elements("episode")
+                    .FirstOrDefault(element =>
+                        (string?)element.Attribute("season")
+                            == found.Season.ToString(
+                                CultureInfo.InvariantCulture
+                            )
+                        && (string?)element.Attribute("episode")
+                            == found.Number.ToString(
+                                CultureInfo.InvariantCulture
+                            )
+                    );
                 if (existing is not null)
                 {
-                    if (existing.Element("file")?.Value != found.File) { MediaCard.Put(existing, "file", found.File); existing.Element("mediainfo")?.Remove(); }
+                    if (
+                        existing.Element("file")?.Value
+                        != found.File
+                    )
+                    {
+                        MediaCard.Put(
+                            existing,
+                            "file",
+                            found.File
+                        );
+                        existing.Element("mediainfo")?.Remove();
+                    }
+
                     continue;
                 }
-                var ep = new XElement("episode", new XAttribute("season", found.Season), new XAttribute("episode", found.Number), new XAttribute("key", $"{found.Season:00}_{found.Number:000}_000"));
-                foreach (var field in new[] { "title", "plot", "aired", "rating", "director", "image", "file" })
-                    ep.Add(new XElement(field, field == "file" ? found.File : field == "title" ? Path.GetFileNameWithoutExtension(found.File) : ""));
-                info.Add(ep);
+
+                var episode = new XElement(
+                    "episode",
+                    new XAttribute("season", found.Season),
+                    new XAttribute("episode", found.Number),
+                    new XAttribute(
+                        "key",
+                        $"{found.Season:00}_{found.Number:000}_000"
+                    )
+                );
+                foreach (
+                    string field in new[]
+                    {
+                        "title",
+                        "plot",
+                        "aired",
+                        "rating",
+                        "director",
+                        "image",
+                        "file",
+                    }
+                )
+                {
+                    episode.Add(
+                        new XElement(
+                            field,
+                            field == "file" ? found.File
+                                : field == "title"
+                                    ? Path.GetFileNameWithoutExtension(
+                                        found.File
+                                    )
+                                : ""
+                        )
+                    );
+                }
+
+                info.Add(episode);
             }
         });
-        // Offline volumes must never cause automatic deletion of existing metadata.
+        // Offline volumes must never cause automatic deletion of
+        // existing metadata.
         card.RefreshEpisodes();
     }
 }
