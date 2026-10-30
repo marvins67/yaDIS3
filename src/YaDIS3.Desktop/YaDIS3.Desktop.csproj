@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>WinExe</OutputType><AssemblyName>yaDIS3.Desktop</AssemblyName><Version>2.5.0-alpha.4</Version><AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault></PropertyGroup>
   <ItemGroup>
+    <AvaloniaResource Include="Assets/Icons/*.png" />
     <ProjectReference Include="../YaDIS3.Core/YaDIS3.Core.csproj" />
     <ProjectReference Include="../YaDIS3.Rendering/YaDIS3.Rendering.csproj" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />

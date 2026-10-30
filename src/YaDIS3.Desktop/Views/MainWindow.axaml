@@ -6,7 +6,7 @@
       <WrapPanel Orientation="Horizontal" ItemSpacing="5" LineSpacing="4" IsEnabled="{Binding !IsBusy}">
         <Button Classes="toolbar">
           <StackPanel Orientation="Horizontal" Spacing="7">
-            <Path Data="M2,0 L7,5 L5,8 L10,13 L14,11 L20,16 L16,20 L11,15 L8,16 L3,11 L4,7 L0,3 Z" Fill="#7D8790" Width="21" Height="21" Stretch="Uniform" VerticalAlignment="Center" />
+            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/tools.png" Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center" />
             <TextBlock Text="Configurer" VerticalAlignment="Center" />
           </StackPanel>
           <Button.Flyout>
@@ -25,25 +25,25 @@
         </Button>
         <Button Classes="toolbar" Command="{Binding ProcessCommand}" IsEnabled="{Binding HasCard}">
           <StackPanel Orientation="Horizontal" Spacing="7">
-            <Path Data="M9,0 L13,0 L14,4 L17,5 L20,3 L23,6 L21,9 L22,12 L26,13 L26,17 L22,18 L21,21 L23,24 L20,27 L17,25 L14,26 L13,30 L9,30 L8,26 L5,25 L2,27 L0,24 L2,21 L1,18 L0,17 L0,13 L3,12 L4,9 L2,6 L5,3 L8,5 Z M11,9 A6,6 0 1 0 11,21 A6,6 0 1 0 11,9 Z" Fill="#90999F" Width="21" Height="21" Stretch="Uniform" VerticalAlignment="Center" />
+            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/process.png" Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center" />
             <TextBlock Text="Traiter" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
         <Button Classes="toolbar" Command="{Binding ExportCommand}">
           <StackPanel Orientation="Horizontal" Spacing="7">
-            <Path Data="M1,1 L19,1 L19,14 L12,14 L12,18 L16,18 L16,20 L4,20 L4,18 L8,18 L8,14 L1,14 Z M3,3 L3,12 L17,12 L17,3 Z M19,10 L23,10 L23,15 L26,15 L21,21 L16,15 L19,15 Z" Fill="#4386B0" Width="21" Height="21" Stretch="Uniform" VerticalAlignment="Center" />
+            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/download_to_computer.png" Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center" />
             <TextBlock Text="Exporter" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
         <Button Classes="toolbar" Click="RefreshWorkspace" IsEnabled="{Binding HasWorkspace}">
           <StackPanel Orientation="Horizontal" Spacing="7">
-            <Path Data="M18,5 A9,9 0 0 0 3,8 L0,6 L0,15 L9,13 L6,11 A5,5 0 0 1 16,8 Z M4,17 A9,9 0 0 0 19,14 L22,16 L22,7 L13,9 L16,11 A5,5 0 0 1 6,14 Z" Fill="#529967" Width="21" Height="21" Stretch="Uniform" VerticalAlignment="Center" />
+            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/refresh.png" Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center" />
             <TextBlock Text="Rafraîchir" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
         <Button Classes="toolbar" Command="{Binding SaveCommand}" IsEnabled="{Binding HasChanges}" ToolTip.Tip="Enregistrer les modifications">
           <StackPanel Orientation="Horizontal" Spacing="7">
-            <Path Data="M1,1 L17,1 L21,5 L21,21 L1,21 Z M5,2 L5,9 L16,9 L16,2 Z M5,13 L5,20 L17,20 L17,13 Z" Fill="#597C9D" Width="21" Height="21" Stretch="Uniform" VerticalAlignment="Center" />
+            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/accept.png" Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
         <ComboBox ItemsSource="{Binding MediaFilters}" SelectedIndex="{Binding MediaFilterIndex, Mode=TwoWay}" Width="125" ToolTip.Tip="Films et séries" />
@@ -51,7 +51,7 @@
         <CheckBox Content="Inverser le filtre" IsChecked="{Binding InvertStateFilter, Mode=TwoWay}" Margin="3,0" VerticalAlignment="Center" />
       </WrapPanel>
       <Button Grid.Column="1" Click="ShowAbout" Classes="toolbar" Margin="6,0,0,0" ToolTip.Tip="À propos de yaDIS3">
-        <Path Data="M11,0 A11,11 0 1 0 11,22 A11,11 0 1 0 11,0 Z M10,4 L13,4 L13,7 L10,7 Z M9,9 L13,9 L13,17 L15,17 L15,19 L8,19 L8,17 L10,17 L10,11 L9,11 Z" Fill="#45A3B8" Width="21" Height="21" Stretch="Uniform" VerticalAlignment="Center" />
+        <Image Source="avares://yaDIS3.Desktop/Assets/Icons/info_big.png" Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center" />
       </Button>
     </Grid>
     <Grid Grid.Row="1" ColumnDefinitions="250,6,*">
