@@ -1,16 +1,67 @@
 <Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="YaDIS3.Desktop.App" RequestedThemeVariant="Dark">
+             xmlns:ui="using:YaDIS3.Desktop"
+             x:Class="YaDIS3.Desktop.App" RequestedThemeVariant="Light">
+  <Application.Resources>
+    <ui:LibraryStateConverter x:Key="LibraryStateConverter" />
+  </Application.Resources>
   <Application.Styles>
-    <FluentTheme />
+    <FluentTheme DensityStyle="Compact" />
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F0F0F0" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
     <Style Selector="TextBlock.muted">
-      <Setter Property="Foreground" Value="#A8B3C3" />
+      <Setter Property="Foreground" Value="#666666" />
+    </Style>
+    <Style Selector="TextBlock.fieldLabel">
+      <Setter Property="Foreground" Value="#6A6A6A" />
+      <Setter Property="FontSize" Value="11" />
     </Style>
     <Style Selector="TextBlock.section">
-      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontSize" Value="14" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="Button">
-      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="CornerRadius" Value="2" />
+    </Style>
+    <Style Selector="Button.toolbar">
+      <Setter Property="Height" Value="36" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="BorderBrush" Value="#C6C6C6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Background">
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#FFFFFF" Offset="0" />
+          <GradientStop Color="#F4F4F4" Offset="1" />
+        </LinearGradientBrush>
+      </Setter>
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Padding" Value="5,2" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#CCCCCC" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="6,3" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="MinHeight" Value="24" />
+    </Style>
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="3,0" />
+      <Setter Property="MinHeight" Value="20" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="FontSize" Value="12" />
     </Style>
   </Application.Styles>
 </Application>

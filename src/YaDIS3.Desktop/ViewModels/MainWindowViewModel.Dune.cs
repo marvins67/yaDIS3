@@ -160,7 +160,11 @@ public sealed partial class MainWindowViewModel
     public Bitmap? RenderedPreview
     {
         get => _renderedPreview;
-        private set => Replace(ref _renderedPreview, value);
+        private set
+        {
+            Replace(ref _renderedPreview, value);
+            Notify(nameof(HasRenderedPreview));
+        }
     }
 
     private CancellationToken OperationToken =>

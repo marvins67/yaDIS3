@@ -388,6 +388,7 @@ public sealed partial class MainWindowViewModel
             _activeOperation.Dispose();
             _activeOperation = null;
             IsBusy = false;
+            RefreshFilter();
             NotifyAll();
         }
     }
@@ -438,6 +439,12 @@ public sealed partial class MainWindowViewModel
     {
         Notify(nameof(CountLabel));
         Notify(nameof(HasChanges));
+        Notify(nameof(ActorsText));
+        Notify(nameof(GenresText));
+        if (StateFilterIndex == 3 && !IsBusy)
+        {
+            RefreshFilter();
+        }
     }
 
     private void RefreshFilter()
@@ -445,12 +452,7 @@ public sealed partial class MainWindowViewModel
         MediaCard? previous = _selectedCard;
         VisibleCards.Clear();
         foreach (
-            MediaCard card in Cards.Where(cardValue =>
-                cardValue.DisplayName.Contains(
-                    Filter,
-                    StringComparison.CurrentCultureIgnoreCase
-                )
-            )
+            MediaCard card in Cards.Where(MatchesLibraryFilters)
         )
         {
             VisibleCards.Add(card);
@@ -461,6 +463,7 @@ public sealed partial class MainWindowViewModel
             && VisibleCards.Contains(previous)
                 ? previous
                 : VisibleCards.FirstOrDefault();
+        Notify(nameof(VisibleCountLabel));
     }
 
     /// <summary>
@@ -506,6 +509,9 @@ public sealed partial class MainWindowViewModel
         await _repository.SaveAsync(card, OperationToken);
         Cards.Add(card);
         card.PropertyChanged += CardChanged;
+        MediaFilterIndex = 2;
+        StateFilterIndex = 0;
+        InvertStateFilter = false;
         Filter = "";
         SelectedCard = card;
         Status =
