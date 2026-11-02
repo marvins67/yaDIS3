@@ -1,0 +1,86 @@
+using System.Xml.Linq;
+using Xunit;
+
+namespace YaDIS3.Tests;
+
+public sealed class LegacyIndexErrorTests
+{
+    [Fact]
+    public void Export_InvalidIndexName_IdentifiesCardAndMetadataFile()
+    {
+        using ExportFixture fixture = new();
+        string path = Path.Combine(
+            fixture.Root,
+            "data",
+            ExportFixture.MovieName,
+            "data.xml"
+        );
+        XDocument data = XDocument.Load(path);
+        data.Root!.Element("info")!.Element("genre")!.Value =
+            "Science/Fiction";
+        data.Save(path);
+        InvalidDataException exception =
+            Assert.Throws<InvalidDataException>(() =>
+                ExportFixture
+                    .Exporter()
+                    .Export(fixture.Cards(), fixture.Destination)
+            );
+        Assert.Contains(
+            "L’été d’Adèle",
+            exception.Message,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            path,
+            exception.Message,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "Science/Fiction",
+            exception.Message,
+            StringComparison.Ordinal
+        );
+        Assert.False(Directory.Exists(fixture.Destination));
+    }
+
+    [Fact]
+    public void Export_PersonWithTrailingSpace_CompletesLikeYadis2()
+    {
+        using ExportFixture fixture = new();
+        string path = Path.Combine(
+            fixture.Root,
+            "data",
+            ExportFixture.MovieName,
+            "data.xml"
+        );
+        XDocument data = XDocument.Load(path);
+        data.Root!.Element("info")!.Element("actor")!.Value =
+            "Burt Lancaster ";
+        data.Root.Element("info")!.Element("director")!.Value =
+            "Stanley Kubrick ";
+        data.Save(path);
+        var result = ExportFixture
+            .Exporter()
+            .Export(fixture.Cards(), fixture.Destination);
+        Assert.Equal(2, result.MediaCount);
+        Assert.False(
+            Directory.Exists(
+                Path.Combine(
+                    result.Directory,
+                    "00",
+                    "05",
+                    "L",
+                    "Burt Lancaster "
+                )
+            )
+        );
+        Assert.Equal(
+            "Burt Lancaster ",
+            XDocument
+                .Load(path)
+                .Root!.Element("info")!
+                .Element("actor")!
+                .Value
+        );
+    }
+}

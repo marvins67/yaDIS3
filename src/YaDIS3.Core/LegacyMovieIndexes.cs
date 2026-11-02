@@ -65,13 +65,13 @@ public static class LegacyMovieIndexes
         foreach (XElement person in people)
         {
             string name = person.Value;
-            if (name.Length > 0)
+            int initialIndex = name.LastIndexOf(' ') + 1;
+            // yaDIS2 ignore cette entrée si aucun caractère ne suit le dernier espace.
+            if (initialIndex < name.Length)
             {
                 Add(
                     entries,
-                    directory
-                        + "/"
-                        + name[(name.LastIndexOf(' ') + 1)],
+                    directory + "/" + name[initialIndex],
                     name
                 );
             }

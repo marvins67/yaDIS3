@@ -531,11 +531,7 @@ internal sealed class LegacyDuneCatalogWriter(
                 (LegacyIndexEntry Entry, MediaContext Movie)
             > group in movies
                 .SelectMany(movie =>
-                    LegacyMovieIndexes
-                        .Create(
-                            movie.Info,
-                            movie.Root.Element("mediainfo")
-                        )
+                    MovieIndexes(movie)
                         .Select(entry =>
                             (Entry: entry, Movie: movie)
                         )
@@ -577,6 +573,36 @@ internal sealed class LegacyDuneCatalogWriter(
             WriteAlphabet(renderer, movies, groups, root);
         }
         WriteIndexMenus(renderer, root);
+    }
+
+    private static IReadOnlyList<LegacyIndexEntry> MovieIndexes(
+        MediaContext movie
+    )
+    {
+        try
+        {
+            return LegacyMovieIndexes.Create(
+                movie.Info,
+                movie.Root.Element("mediainfo")
+            );
+        }
+        catch (Exception exception)
+            when (exception
+                    is InvalidDataException
+                        or ArgumentException
+                        or IndexOutOfRangeException
+                        or OverflowException
+            )
+        {
+            string path = Path.Combine(
+                movie.DataDirectory,
+                "data.xml"
+            );
+            throw new InvalidDataException(
+                $"Création des index de la fiche « {movie.Title} » ({path}) : {exception.Message}",
+                exception
+            );
+        }
     }
 
     private void WriteIndexListing(
