@@ -1,6 +1,8 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
 namespace YaDIS3.Desktop;
 
@@ -9,6 +11,10 @@ namespace YaDIS3.Desktop;
 /// </summary>
 public sealed class LibraryStateConverter : IMultiValueConverter
 {
+    private readonly Dictionary<string, Bitmap> _images = new(
+        StringComparer.Ordinal
+    );
+
     /// <summary>
     /// Returns the state glyph or its matching indicator brush.
     /// </summary>
@@ -29,6 +35,15 @@ public sealed class LibraryStateConverter : IMultiValueConverter
                     "preview.jpg"
                 )
             );
+        if (parameter is "image")
+        {
+            string name =
+                edited ? "edit"
+                : hasPreview ? "accept_green"
+                : "question_orange";
+            return StateImage(name);
+        }
+
         if (parameter is "color")
         {
             return edited ? Brushes.DarkGoldenrod
@@ -39,5 +54,20 @@ public sealed class LibraryStateConverter : IMultiValueConverter
         return edited ? "*"
             : hasPreview ? "✓"
             : "?";
+    }
+
+    private Bitmap StateImage(string name)
+    {
+        if (!_images.TryGetValue(name, out Bitmap? image))
+        {
+            using Stream stream = AssetLoader.Open(
+                new Uri(
+                    $"avares://yaDIS3.Desktop/Assets/Icons/{name}.png"
+                )
+            );
+            image = new Bitmap(stream);
+            _images.Add(name, image);
+        }
+        return image;
     }
 }

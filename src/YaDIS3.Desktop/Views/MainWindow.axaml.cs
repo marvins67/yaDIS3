@@ -32,16 +32,60 @@ public sealed partial class MainWindow : Window
             (DataContext as IDisposable)?.Dispose();
     }
 
-    private void ShowDuneSettings(
+    private async void ShowDuneSettings(
         object? sender,
         RoutedEventArgs eventArgs
     )
     {
-        this.FindControl<TabControl>(
-            "EditorTabs"
-        )!.SelectedItem = this.FindControl<TabItem>(
-            "DuneSettingsTab"
+        await ShowUtilityDialog(
+            "DuneSettingsTab",
+            "Configuration de l’export Dune"
         );
+    }
+
+    private async void ShowTvdbSearch(
+        object? sender,
+        RoutedEventArgs eventArgs
+    )
+    {
+        if (Model.IsSeries)
+        {
+            await ShowUtilityDialog(
+                "TvdbSearchTab",
+                "Changer de titre"
+            );
+        }
+    }
+
+    private async Task ShowUtilityDialog(
+        string tabName,
+        string title
+    )
+    {
+        TabItem tab = this.FindControl<TabItem>(tabName)!;
+        object? content = tab.Content;
+        tab.Content = null;
+        Window dialog = new()
+        {
+            Title = title,
+            Width = 850,
+            Height = 650,
+            MinWidth = 650,
+            MinHeight = 500,
+            WindowStartupLocation =
+                WindowStartupLocation.CenterOwner,
+            DataContext = Model,
+            Content = content,
+        };
+        try
+        {
+            await dialog.ShowDialog(this);
+        }
+        finally
+        {
+            dialog.Content = null;
+            tab.Content = content;
+        }
     }
 
     private async void RefreshWorkspace(

@@ -37,8 +37,12 @@ public sealed partial class MainWindowViewModel
             _mediaFilterIndex = value;
             RefreshFilter();
             Notify();
+            Notify(nameof(IsSeriesFilter));
         }
     }
+
+    /// <summary>Choisit l'icône télévision lorsque le filtre porte sur les séries.</summary>
+    public bool IsSeriesFilter => MediaFilterIndex == 2;
 
     /// <summary>
     /// Gets or sets the selected preview or edit state.

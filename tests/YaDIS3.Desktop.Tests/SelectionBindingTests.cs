@@ -2,6 +2,7 @@ using System.Xml.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.Logging;
 using Avalonia.Threading;
 using Xunit;
@@ -13,6 +14,14 @@ namespace YaDIS3.Desktop.Tests;
 
 public sealed class SelectionBindingTests
 {
+    private static readonly string[] s_seriesTabs =
+    [
+        "Série TV",
+        "Bannière",
+        "Fanart",
+        "Épisodes",
+    ];
+
     [Fact]
     public void MainWindow_SelectionChanges_ClearsEditorsWithoutBindingErrors()
     {
@@ -53,6 +62,8 @@ public sealed class SelectionBindingTests
         try
         {
             Dispatcher.UIThread.RunJobs();
+            VerifyMainLayout(window);
+            VerifySettingsDialog(window, model);
             TextBox title = window.FindControl<TextBox>(
                 "TitleEditor"
             )!;
@@ -61,6 +72,16 @@ public sealed class SelectionBindingTests
                 card.IsSeries
             );
             model.SelectedCard = series;
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(
+                s_seriesTabs,
+                window
+                    .FindControl<TabControl>("EditorTabs")!
+                    .Items.OfType<TabItem>()
+                    .Where(tab => tab.IsVisible)
+                    .Select(tab => tab.Header?.ToString())
+                    .ToArray()
+            );
             VisitTabs(window);
             Assert.Equal("Série", title.Text);
             VerifyEpisodeEditors(window, model);
@@ -76,12 +97,91 @@ public sealed class SelectionBindingTests
             model.SelectedCard = series;
             Dispatcher.UIThread.RunJobs();
             Assert.Equal("Série modifiée", title.Text);
-            Assert.Empty(log.Errors);
+            Assert.True(
+                log.Errors.Count == 0,
+                string.Join(Environment.NewLine, log.Errors)
+            );
         }
         finally
         {
             window.Close();
         }
+    }
+
+    private static void VerifyMainLayout(MainWindow window)
+    {
+        ListBox library = window.FindControl<ListBox>(
+            "LibraryList"
+        )!;
+        Border preview = window.FindControl<Border>(
+            "PreviewPanel"
+        )!;
+        Assert.Equal(254, library.Bounds.Width);
+        Assert.Equal(
+            51,
+            library.TranslatePoint(default, window)!.Value.Y
+        );
+        Assert.Equal(
+            270,
+            preview.TranslatePoint(default, window)!.Value.X
+        );
+        Assert.Equal(
+            library.Bounds.Height,
+            preview.Bounds.Height
+        );
+        Assert.Equal(
+            242,
+            window
+                .FindControl<TabControl>("EditorTabs")!
+                .Bounds.Height
+        );
+        Grid information = window.FindControl<Grid>(
+            "InformationPanel"
+        )!;
+        Assert.Equal(
+            406,
+            information.ColumnDefinitions[0].ActualWidth
+        );
+        window.Width = 943;
+        window.Height = 693;
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(preview.Bounds.Width > 600);
+        Assert.True(library.Bounds.Height > 300);
+        window.Width = 1075;
+        window.Height = 797;
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void VerifySettingsDialog(
+        MainWindow window,
+        MainWindowViewModel model
+    )
+    {
+        Button configure = window.FindControl<Button>(
+            "ConfigureButton"
+        )!;
+        Flyout flyout = (Flyout)configure.Flyout!;
+        Button settings = ((StackPanel)flyout.Content!)
+            .Children.OfType<Button>()
+            .Single(button =>
+                button.Content?.ToString()
+                == "Templates et export Dune…"
+            );
+        TabItem tab = window.FindControl<TabItem>(
+            "DuneSettingsTab"
+        )!;
+        object? original = tab.Content;
+        settings.RaiseEvent(
+            new RoutedEventArgs(Button.ClickEvent)
+        );
+        Dispatcher.UIThread.RunJobs();
+        Window dialog = Assert.Single(window.OwnedWindows);
+        Assert.Same(model, dialog.DataContext);
+        Assert.Same(original, dialog.Content);
+        Assert.False(tab.IsVisible);
+        dialog.Close();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Same(original, tab.Content);
     }
 
     private static void VerifyEpisodeEditors(

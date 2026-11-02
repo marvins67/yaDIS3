@@ -33,6 +33,18 @@ internal sealed class BindingLog : ILogSink
         params object?[] propertyValues
     )
     {
-        Log(level, area, source, messageTemplate);
+        Log(
+            level,
+            area,
+            source,
+            messageTemplate
+                + " | "
+                + string.Join(
+                    " | ",
+                    propertyValues.Select(value =>
+                        value?.ToString()
+                    )
+                )
+        );
     }
 }
