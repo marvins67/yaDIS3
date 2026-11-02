@@ -384,13 +384,7 @@ public sealed partial class MainWindowViewModel
             ?? throw new InvalidOperationException(
                 "Ouvrez une bibliothèque."
             );
-        if (card.IsDirty)
-        {
-            await _repository.SaveAsync(card, OperationToken);
-        }
-
         SaveDunePreferences();
-        var media = new MediaContext(card);
         var options = new RenderOptions(
             TemplateLanguage,
             AaiBackgrounds,
@@ -399,16 +393,16 @@ public sealed partial class MainWindowViewModel
         var progress = new Progress<string>(message =>
             Status = message
         );
-        await Task.Run(
-            () =>
-                DuneExporter.Process(
-                    media,
-                    template,
-                    options,
-                    current.Directory,
-                    cancellationToken: OperationToken,
-                    progress: progress
-                ),
+        MediaProcessingService processor = new(
+            _repository,
+            TimeProvider.System
+        );
+        await processor.ProcessAsync(
+            card,
+            template,
+            options,
+            current.Directory,
+            progress,
             OperationToken
         );
         RefreshImages();

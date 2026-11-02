@@ -315,6 +315,45 @@ public sealed class MediaCard
         return (new XDocument(Document), _revision);
     }
 
+    /// <summary>Reprend le statut et la date appliqués après un traitement réussi par yaDIS2.</summary>
+    public void MarkProcessed(DateOnly processingDate)
+    {
+        string? previousStatus = Header.Element("status")?.Value;
+        string? previousDate = Header.Element("date")?.Value;
+        // ProcessMovie et ProcessTVShow conservent le statut zéro.
+        if (
+            int.TryParse(
+                previousStatus,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out int status
+            )
+            && status > 0
+        )
+        {
+            Put(Header, "status", "1");
+        }
+        if (string.IsNullOrEmpty(previousDate))
+        {
+            Put(
+                Header,
+                "date",
+                processingDate.ToString(
+                    "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture
+                )
+            );
+        }
+        if (
+            previousStatus != Header.Element("status")?.Value
+            || previousDate != Header.Element("date")?.Value
+        )
+        {
+            _revision++;
+            Notify();
+        }
+    }
+
     internal void MarkSaved(long atRevision, string hash)
     {
         SourceHash = hash;

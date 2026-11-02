@@ -9,6 +9,12 @@ public interface IWorkspaceRepository
         CancellationToken cancellationToken = default
     );
 
+    /// <summary>Enregistre une fiche avec les contrôles de conflit du workspace.</summary>
+    Task SaveAsync(
+        MediaCard card,
+        CancellationToken cancellationToken = default
+    );
+
     /// <summary>Crée un workspace vide.</summary>
     void Create(string path);
 
