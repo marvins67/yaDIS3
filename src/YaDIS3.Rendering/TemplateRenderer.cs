@@ -95,7 +95,11 @@ public sealed class TemplateRenderer : IDisposable
         return image;
     }
 
-    private SKBitmap? ReadImage(string? path, bool commonAsset)
+    private SKBitmap? ReadImage(
+        string? path,
+        bool commonAsset,
+        bool allowEmpty = false
+    )
     {
         if (path is null || !File.Exists(path))
         {
@@ -113,6 +117,12 @@ public sealed class TemplateRenderer : IDisposable
         try
         {
             using FileStream input = File.OpenRead(path);
+            // Legacy workspaces use an empty fanart as an absent image.
+            if (allowEmpty && input.Length == 0)
+            {
+                return null;
+            }
+
             using SKCodec codec = SKCodec.Create(input);
             if (codec is null)
             {
@@ -806,7 +816,11 @@ public sealed class TemplateRenderer : IDisposable
             };
             Image(
                 canvas,
-                ReadImage(path, type != "fanart"),
+                ReadImage(
+                    path,
+                    type != "fanart",
+                    allowEmpty: type == "fanart"
+                ),
                 rectangleValue
             );
         }
