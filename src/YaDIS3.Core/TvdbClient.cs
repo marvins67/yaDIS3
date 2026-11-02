@@ -101,7 +101,7 @@ public sealed record SeriesDetails(
 public sealed class TvdbClient(
     HttpClient http,
     TvdbSettings settings
-)
+) : IDisposable
 {
     private static readonly Uri s_api = new(
         "https://api4.thetvdb.com/v4/"
@@ -138,13 +138,13 @@ public sealed class TvdbClient(
             : value.ToString();
     }
 
-    private static IEnumerable<JsonElement> Items(
+    private static JsonElement.ArrayEnumerator Items(
         JsonElement node
     )
     {
         return node.ValueKind == JsonValueKind.Array
             ? node.EnumerateArray()
-            : [];
+            : default;
     }
 
     private static int Number(JsonElement node, string key)
@@ -538,10 +538,7 @@ public sealed class TvdbClient(
         CancellationToken cancellationToken = default
     )
     {
-        if (id <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(id));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
 
         IReadOnlyList<EpisodeOrder> all = await TypesAsync(
             cancellationToken
@@ -585,10 +582,7 @@ public sealed class TvdbClient(
         CancellationToken cancellationToken = default
     )
     {
-        if (id <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(id));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
 
         ValidateOrder(order);
         Language(language);
@@ -697,5 +691,11 @@ public sealed class TvdbClient(
         throw new InvalidDataException(
             "Pagination TVDB excessive."
         );
+    }
+
+    /// <summary>Libère le verrou de connexion sans fermer le client HTTP injecté.</summary>
+    public void Dispose()
+    {
+        _login.Dispose();
     }
 }

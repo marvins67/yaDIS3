@@ -1,0 +1,4 @@
+﻿*** NE PAS SUPPRIMER OU MODIFIER CETTE LIGNE - DO NOT DELETE OR MODIFY THIS LINE ***
+icon_path=icon.aai
+icon_valign=center
+media_url=smb://nas/Films/L’été d’Adèle [1080p].mkv

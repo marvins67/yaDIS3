@@ -20,6 +20,17 @@ public sealed record VideoEpisode(
 /// </summary>
 public static class EpisodeScanner
 {
+    private static readonly string[] s_episodeFields =
+    [
+        "title",
+        "plot",
+        "aired",
+        "rating",
+        "director",
+        "image",
+        "file",
+    ];
+
     private static readonly HashSet<string> s_extensions = new(
         StringComparer.OrdinalIgnoreCase
     )
@@ -226,18 +237,7 @@ public static class EpisodeScanner
                         $"{found.Season:00}_{found.Number:000}_000"
                     )
                 );
-                foreach (
-                    string field in new[]
-                    {
-                        "title",
-                        "plot",
-                        "aired",
-                        "rating",
-                        "director",
-                        "image",
-                        "file",
-                    }
-                )
+                foreach (string field in s_episodeFields)
                 {
                     episode.Add(
                         new XElement(

@@ -14,6 +14,9 @@ namespace YaDIS3.Desktop.ViewModels;
 /// </summary>
 public sealed partial class MainWindowViewModel
 {
+    private static readonly JsonSerializerOptions s_preferencesOptions =
+        new() { WriteIndented = true };
+
     private DuneTemplate? _selectedTemplate;
 
     private string _templateLanguage = "fr";
@@ -346,10 +349,7 @@ public sealed partial class MainWindowViewModel
                 temporary,
                 JsonSerializer.Serialize(
                     config,
-                    new JsonSerializerOptions
-                    {
-                        WriteIndented = true,
-                    }
+                    s_preferencesOptions
                 )
             );
             File.Move(temporary, file, true);
@@ -459,8 +459,8 @@ public sealed partial class MainWindowViewModel
                 ).Export(
                     media,
                     destination,
-                    OperationToken,
-                    progress
+                    progress,
+                    OperationToken
                 ),
             OperationToken
         );

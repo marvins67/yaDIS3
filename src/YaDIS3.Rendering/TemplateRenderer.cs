@@ -28,7 +28,7 @@ public sealed record RenderedCard(
 /// Renders Dune template layers, fonts, masks, and
 /// metadata.
 /// </summary>
-public sealed class TemplateRenderer : IDisposable
+public sealed partial class TemplateRenderer : IDisposable
 {
     private readonly DuneTemplate _template;
 
@@ -392,8 +392,8 @@ public sealed class TemplateRenderer : IDisposable
     public RenderedCard Render(
         MediaContext media,
         string directory,
-        CancellationToken cancellationToken = default,
-        IProgress<string>? progress = null
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default
     )
     {
         _cancellation = cancellationToken;
@@ -1600,6 +1600,16 @@ public sealed class TemplateRenderer : IDisposable
             image,
             Path.Combine(directory, "background")
         );
+    }
+
+    /// <summary>Conserve l'icône d'application utilisée à la racine de yaDIS2.</summary>
+    public void SaveApplicationIcon(string path)
+    {
+        using SKBitmap icon =
+            ReadImage(_template.Asset("icon.png", true), true)
+                ?.Copy()
+            ?? New(32, 32);
+        AaiCodec.Save(icon, path);
     }
 
     /// <summary>

@@ -1,0 +1,19 @@
+﻿*** NE PAS SUPPRIMER OU MODIFIER CETTE LIGNE - DO NOT DELETE OR MODIFY THIS LINE ***
+background_order=before_all
+background_path=background.jpg
+use_icon_view=yes
+icon_path=icon.aai
+icon_sel_path=icon.aai
+icon_scale_factor=0.85
+icon_sel_scale_factor=1
+icon_valign=center
+paint_captions=no
+paint_help_line=no
+paint_path_box=no
+paint_content_box_background=no
+paint_scrollbar=no
+paint_icon_selection_box=no
+paint_icons=no
+system_files=*.aai,*.jpg
+item.0.caption=Play
+item.0.media_url=smb://nas/Films/L’été d’Adèle [1080p].mkv

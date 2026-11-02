@@ -18,6 +18,8 @@ public sealed record Workspace(
 /// Loads cards and saves metadata and artwork with backups.
 /// </summary>
 public sealed class WorkspaceRepository
+    : IWorkspaceRepository,
+        IDisposable
 {
     private readonly SemaphoreSlim _writer = new(1, 1);
 
@@ -392,5 +394,11 @@ public sealed class WorkspaceRepository
             detected ?? EpisodeScanner.Detect(videoPath)
         );
         return card;
+    }
+
+    /// <summary>Libère le verrou d'écriture lorsque le workspace est fermé.</summary>
+    public void Dispose()
+    {
+        _writer.Dispose();
     }
 }

@@ -1,2 +1,6 @@
 
 src/YaDIS.Rendering/Assets/** -text
+
+# Les fixtures caractérisent les octets Windows de yaDIS2 (BOM et CRLF).
+tests/YaDIS3.Tests/Fixtures/** -text
+src/YaDIS3.Rendering/Assets/** -text

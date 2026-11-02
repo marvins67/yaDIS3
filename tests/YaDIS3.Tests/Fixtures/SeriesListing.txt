@@ -1,0 +1,23 @@
+﻿*** NE PAS SUPPRIMER OU MODIFIER CETTE LIGNE - DO NOT DELETE OR MODIFY THIS LINE ***
+background_order=before_all
+background_path=background.jpg
+use_icon_view=yes
+icon_path=icon.aai
+icon_valign=center
+num_cols=3
+num_rows=6
+content_box_x=50
+content_box_y=50
+content_box_width=1820
+content_box_height=980
+content_box_padding_left=0
+content_box_padding_right=0
+content_box_padding_top=0
+content_box_padding_bottom=0
+icon_selection_box_width=600
+icon_selection_box_height=135
+paint_captions=no
+paint_help_line=no
+paint_path_box=no
+paint_content_box_background=no
+system_files=*.aai,*.jpg

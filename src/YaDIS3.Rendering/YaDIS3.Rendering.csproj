@@ -4,8 +4,12 @@
        Original embedded authorship and font metadata preserved.
        Portable C# renderer: MarvinS 2026, with assistance from ChatGPT. -->
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>YaDIS3.Tests</_Parameter1>
+    </AssemblyAttribute>
     <ProjectReference Include="../YaDIS3.Core/YaDIS3.Core.csproj" />
-    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="SkiaSharp" />
     <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

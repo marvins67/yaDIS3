@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YaDIS3.Desktop", "src\YaDIS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YaDIS3.Rendering", "src\YaDIS3.Rendering\YaDIS3.Rendering.csproj", "{30EC86B3-D5A7-42EF-8676-629AC037FDCA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YaDIS3.Tests", "tests\YaDIS3.Tests\YaDIS3.Tests.csproj", "{6C3803D6-8AED-47AC-8C5F-F53844B4B891}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BC38D6A-DE4C-51A9-A1A8-5A0FFEC88C78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C3803D6-8AED-47AC-8C5F-F53844B4B891}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C3803D6-8AED-47AC-8C5F-F53844B4B891}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C3803D6-8AED-47AC-8C5F-F53844B4B891}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C3803D6-8AED-47AC-8C5F-F53844B4B891}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

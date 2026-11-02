@@ -109,3 +109,9 @@ dotnet_diagnostic.IDE1006.severity = warning
 
 # Factory method names do not make their return types obvious to a reader.
 dotnet_diagnostic.IDE0007.severity = suggestion
+
+# Les noms de tests suivent explicitement AGENTS.md, contrairement aux API publiques.
+[tests/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+# Les méthodes publiques xUnit sont des cas de test, pas une API livrée.
+dotnet_diagnostic.CS1591.severity = none

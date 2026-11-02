@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
@@ -126,23 +125,7 @@ public sealed class MediaContext
     /// </summary>
     public static string ViewingSeason(XElement episode)
     {
-        string key = episode.Attr("key");
-        string first = key.Split('_')[0];
-        if (
-            first.Length is >= 2 and <= 3
-            && int.TryParse(
-                first,
-                NumberStyles.None,
-                CultureInfo.InvariantCulture,
-                out _
-            )
-        )
-        {
-            return first;
-        }
-
-        return Season(episode)
-            .ToString("00", CultureInfo.InvariantCulture);
+        return LegacyExportPaths.Season(EpisodeFolder(episode));
     }
 
     /// <summary>

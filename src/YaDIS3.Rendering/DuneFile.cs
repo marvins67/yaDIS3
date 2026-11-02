@@ -1,11 +1,16 @@
 using System.Globalization;
-using System.Text;
 using System.Xml.Linq;
+using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
-internal sealed class DuneFile
+internal sealed class DuneFile(
+    IExportFileSystem? fileSystem = null
+)
 {
+    private readonly IExportFileSystem _fileSystem =
+        fileSystem ?? new ExportFileSystem();
+
     private readonly Dictionary<string, string> _values = new(
         StringComparer.Ordinal
     );
@@ -101,11 +106,8 @@ internal sealed class DuneFile
             prefix + "caption",
             caption.Replace('\r', ' ').Replace('\n', ' ')
         );
-        Set(prefix + "media_url", url)
-            .Set(
-                prefix + "media_action",
-                play ? "play" : "browse"
-            );
+        Set(prefix + "media_action", play ? "play" : "browse")
+            .Set(prefix + "media_url", url);
         if (icon is not null)
         {
             Set(prefix + "icon_path", icon)
@@ -118,24 +120,41 @@ internal sealed class DuneFile
         return this;
     }
 
-    /// <summary>
-    /// Writes the Dune folder configuration to the target
-    /// directory.
-    /// </summary>
+    /// <summary>Importe les propriétés dans l'ordre exact de yaDIS2.</summary>
+    public static DuneFile FromLegacy(
+        string content,
+        IExportFileSystem? fileSystem = null
+    )
+    {
+        DuneFile file = new(fileSystem);
+        foreach (string line in content.Split('|'))
+        {
+            int separator = line.IndexOf('=');
+            if (separator >= 0)
+            {
+                file.Set(
+                    line[..separator],
+                    line[(separator + 1)..]
+                );
+            }
+        }
+
+        return file;
+    }
+
+    /// <summary>Écrit le format historique, BOM et CRLF inclus.</summary>
     public void Save(string directory)
     {
-        Directory.CreateDirectory(directory);
-        File.WriteAllText(
+        _fileSystem.CreateDirectory(directory);
+        string content = string.Join(
+            '|',
+            _values.Select(entry =>
+                entry.Key + "=" + entry.Value
+            )
+        );
+        _fileSystem.WriteBytes(
             Path.Combine(directory, "dune_folder.txt"),
-            "*** NE PAS SUPPRIMER OU MODIFIER CETTE LIGNE - DO NOT DELETE OR MODIFY THIS LINE ***\r\n"
-                + string.Join(
-                    "\r\n",
-                    _values.Select(entry =>
-                        entry.Key + "=" + entry.Value
-                    )
-                )
-                + "\r\n",
-            new UTF8Encoding(true)
+            LegacyDuneEncoding.Encode(content, true)
         );
     }
 }

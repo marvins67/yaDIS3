@@ -4,8 +4,8 @@
     <AvaloniaResource Include="Assets/Icons/*.png" />
     <ProjectReference Include="../YaDIS3.Core/YaDIS3.Core.csproj" />
     <ProjectReference Include="../YaDIS3.Rendering/YaDIS3.Rendering.csproj" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
-    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="SkiaSharp" />
   </ItemGroup>
 </Project>

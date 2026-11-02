@@ -122,7 +122,9 @@ public sealed partial class MainWindow : Window
                     AllowMultiple = false,
                 }
             );
-        return selected.FirstOrDefault()?.TryGetLocalPath();
+        return selected.Count == 0
+            ? null
+            : selected[0].TryGetLocalPath();
     }
 
     private async Task<bool> ConfirmSwitch()
@@ -241,7 +243,7 @@ public sealed partial class MainWindow : Window
     )
     {
         string? directory = await Folder(
-            "Dossier où créer l'export yaDIS3-modern"
+            "Dossier de l'export Dune"
         );
         if (directory is not null)
         {
@@ -272,7 +274,8 @@ public sealed partial class MainWindow : Window
                 }
             );
         if (
-            files.FirstOrDefault()?.TryGetLocalPath() is { } path
+            files.Count > 0
+            && files[0].TryGetLocalPath() is { } path
         )
         {
             await Model.RunAsync(() =>
@@ -330,7 +333,8 @@ public sealed partial class MainWindow : Window
                 }
             );
         if (
-            files.FirstOrDefault()?.TryGetLocalPath() is { } path
+            files.Count > 0
+            && files[0].TryGetLocalPath() is { } path
         )
         {
             await Model.RunAsync(() =>

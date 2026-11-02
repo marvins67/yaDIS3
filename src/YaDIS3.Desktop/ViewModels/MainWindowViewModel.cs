@@ -151,7 +151,7 @@ public sealed partial class MainWindowViewModel
     /// Gets the description of the migrated features available
     /// in this build.
     /// </summary>
-    public string MigrationNote =>
+    public string MigrationNote { get; } =
         "Édition, rendu des templates et export Dune disponibles. Choisissez un template puis Traiter, ou exportez la bibliothèque depuis l’onglet Export Dune.";
 
     /// <summary>
@@ -284,7 +284,10 @@ public sealed partial class MainWindowViewModel
             Orders.Clear();
             SelectedMatch = null;
             SelectedOrder = null;
-            SelectedEpisode = value?.Episodes.FirstOrDefault();
+            SelectedEpisode = value?.Episodes
+                is { Count: > 0 } episodes
+                ? episodes[0]
+                : null;
             RefreshImages();
             NotifyAll();
         }
@@ -533,7 +536,8 @@ public sealed partial class MainWindowViewModel
             EpisodeScanner.Detect(directory)
         );
         EpisodeScanner.Synchronize(card, found);
-        SelectedEpisode = card.Episodes.FirstOrDefault();
+        SelectedEpisode =
+            card.Episodes.Count > 0 ? card.Episodes[0] : null;
         Notify(nameof(SelectedCard));
         Status =
             $"{card.Episodes.Count} épisode(s). Les informations existantes sont conservées ; enregistrez les changements.";
@@ -545,6 +549,7 @@ public sealed partial class MainWindowViewModel
     /// </summary>
     public void ConfigureTvdb(string file)
     {
+        _tvdb?.Dispose();
         _tvdb = new TvdbClient(_http, TvdbSettings.Load(file));
         CredentialsLabel = "TVDB v4 configuré";
         Status = "Configuration TVDB chargée.";
@@ -612,7 +617,7 @@ public sealed partial class MainWindowViewModel
         SelectedOrder =
             available.FirstOrDefault(o =>
                 o.Code == SelectedCard?.Order
-            ) ?? available.FirstOrDefault();
+            ) ?? (available.Count > 0 ? available[0] : null);
     }
 
     /// <summary>
@@ -781,6 +786,8 @@ public sealed partial class MainWindowViewModel
         _episodeImage?.Dispose();
         _renderedPreview?.Dispose();
         _activeOperation?.Cancel();
+        _tvdb?.Dispose();
+        _repository.Dispose();
         _http.Dispose();
     }
 }
