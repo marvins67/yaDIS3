@@ -110,23 +110,45 @@ public sealed class TemplateRenderer : IDisposable
             return found;
         }
 
-        using FileStream input = File.OpenRead(path);
-        using SKCodec codec = SKCodec.Create(input);
-        if (codec is null)
+        try
+        {
+            using FileStream input = File.OpenRead(path);
+            using SKCodec codec = SKCodec.Create(input);
+            if (codec is null)
+            {
+                throw new InvalidDataException(
+                    "Format d'image illisible."
+                );
+            }
+
+            AaiCodec.CheckSize(
+                codec.Info.Width,
+                codec.Info.Height
+            );
+            SKBitmap bitmap =
+                SKBitmap.Decode(codec)
+                ?? throw new InvalidDataException(
+                    "Décodage d'image impossible."
+                );
+            cache[path] = bitmap;
+            return bitmap;
+        }
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or InvalidDataException
+                        or UnauthorizedAccessException
+                        or ArgumentException
+                        or InvalidOperationException
+                        or NotSupportedException
+            )
         {
             throw new InvalidDataException(
-                $"Image illisible : {Path.GetFileName(path)}."
+                $"Image illisible : {Path.GetFullPath(path)}. "
+                    + exception.Message,
+                exception
             );
         }
-
-        AaiCodec.CheckSize(codec.Info.Width, codec.Info.Height);
-        SKBitmap bitmap =
-            SKBitmap.Decode(codec)
-            ?? throw new InvalidDataException(
-                "Décodage d'image impossible."
-            );
-        cache[path] = bitmap;
-        return bitmap;
     }
 
     private void Image(
@@ -618,6 +640,23 @@ public sealed class TemplateRenderer : IDisposable
             }
 
             return new(directory, preview, episodePreviews);
+        }
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or InvalidDataException
+                        or UnauthorizedAccessException
+                        or ArgumentException
+                        or InvalidOperationException
+                        or NotSupportedException
+            )
+        {
+            throw new InvalidDataException(
+                $"Échec du rendu de la fiche « {media.Title} » "
+                    + $"({Path.GetFullPath(media.DataDirectory)}). "
+                    + exception.Message,
+                exception
+            );
         }
         finally
         {
