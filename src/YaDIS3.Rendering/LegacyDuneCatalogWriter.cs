@@ -583,7 +583,10 @@ internal sealed class LegacyDuneCatalogWriter(
         {
             return LegacyMovieIndexes.Create(
                 movie.Info,
-                movie.Root.Element("mediainfo")
+                // AddToIndex utilise //mediainfo, imbriqué dans info dans yaDIS2.
+                movie
+                    .Root.Descendants("mediainfo")
+                    .FirstOrDefault()
             );
         }
         catch (Exception exception)

@@ -160,11 +160,14 @@ public static class LegacyMovieIndexes
         }
 
         LegacyExportPaths.ValidateName(caption);
+        // CreateIndexItem passe par les chemins Win32, qui retirent les points finaux.
+        string name = caption.TrimEnd(' ', '.');
+        if (name.Length == 0)
+        {
+            return;
+        }
         entries.Add(
-            new LegacyIndexEntry(
-                directory + "/" + caption,
-                caption
-            )
+            new LegacyIndexEntry(directory + "/" + name, caption)
         );
     }
 }
