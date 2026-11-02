@@ -32,6 +32,14 @@ public sealed class ExportFileSystem : IExportFileSystem
     ) => File.Copy(source, destination, overwrite);
 
     /// <inheritdoc />
+    public void DeleteDirectory(string path) =>
+        Directory.Delete(path, true);
+
+    /// <inheritdoc />
+    public IEnumerable<string> EnumerateFiles(string path) =>
+        Directory.EnumerateFiles(path);
+
+    /// <inheritdoc />
     public IEnumerable<string> EnumerateDirectories(
         string path,
         string pattern = "*"

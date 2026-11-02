@@ -651,6 +651,12 @@ public sealed partial class DuneExporter(
                 }
             }
 
+            new LegacyMovieIndexStore(template, options).Update(
+                media,
+                workspace,
+                cancellationToken
+            );
+
             string? selected =
                 episodeKey is not null
                 && rendered.EpisodePreviews.TryGetValue(

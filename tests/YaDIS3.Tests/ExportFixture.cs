@@ -100,6 +100,21 @@ internal sealed class ExportFixture : IDisposable
             .ToArray();
     }
 
+    public void ProcessIndexes(string template = "Origins")
+    {
+        LegacyMovieIndexStore store = new(
+            Template(template),
+            new RenderOptions()
+        );
+        foreach (
+            MediaContext movie in Cards()
+                .Where(card => !card.IsSeries)
+        )
+        {
+            store.Update(movie, Root);
+        }
+    }
+
     public static DuneTemplate Template(string name = "Origins")
     {
         string assets = Path.Combine(

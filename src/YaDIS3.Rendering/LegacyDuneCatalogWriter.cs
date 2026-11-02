@@ -48,6 +48,7 @@ internal sealed class LegacyDuneCatalogWriter(
             movies,
             groups,
             root,
+            workspace,
             cancellationToken
         );
         WriteSeries(renderer, cards, root);
@@ -142,6 +143,7 @@ internal sealed class LegacyDuneCatalogWriter(
         MediaContext[] movies,
         XElement groups,
         string root,
+        string workspace,
         CancellationToken cancellationToken
     )
     {
@@ -165,6 +167,7 @@ internal sealed class LegacyDuneCatalogWriter(
             movies,
             groups,
             root,
+            workspace,
             cancellationToken
         );
         WriteMovieMenu(renderer, root);
@@ -527,53 +530,26 @@ internal sealed class LegacyDuneCatalogWriter(
         MediaContext[] movies,
         XElement groups,
         string root,
+        string workspace,
         CancellationToken cancellationToken
     )
     {
-        foreach (
-            IGrouping<
-                string,
-                (LegacyIndexEntry Entry, MediaContext Movie)
-            > group in movies
-                .SelectMany(movie =>
-                    MovieIndexes(movie)
-                        .Select(entry =>
-                            (Entry: entry, Movie: movie)
-                        )
-                )
-                .GroupBy(
-                    item => IndexDirectory(item.Entry),
-                    StringComparer.OrdinalIgnoreCase
-                )
-        )
+        LegacyMovieIndexStore store = new(
+            template,
+            options,
+            fileSystem
+        );
+        for (int index = 4; index <= 11; index++)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (
-                !Enabled(
-                    int.Parse(
-                        group.Key.Split('/')[1],
-                        CultureInfo.InvariantCulture
-                    )
-                )
-            )
+            if (Enabled(index))
             {
-                continue;
+                store.CopyCategory(
+                    workspace,
+                    root,
+                    index,
+                    cancellationToken
+                );
             }
-
-            string directory = Output(root, group.Key);
-            WriteIndexListing(
-                group.Select(item => item.Movie),
-                root,
-                group.Key
-            );
-            string[] components = group.Key.Split('/');
-            string kind = IndexKind(components[1]);
-            Label(
-                renderer,
-                directory,
-                group.First().Entry.Caption,
-                template.Node("menu/index/" + kind + "/area")
-            );
         }
 
         if (Enabled(3))
@@ -581,54 +557,6 @@ internal sealed class LegacyDuneCatalogWriter(
             WriteAlphabet(renderer, movies, groups, root);
         }
         WriteIndexMenus(renderer, root);
-    }
-
-    private static string IndexDirectory(LegacyIndexEntry entry)
-    {
-        string[] components = entry.Directory.Split('/');
-        // Les initiales des personnes réutilisent les dossiers A à Z créés par yaDIS2.
-        if (
-            components.Length == 4
-            && components[1] is "05" or "06"
-            && components[2][0] is >= 'a' and <= 'z'
-        )
-        {
-            components[2] = components[2].ToUpperInvariant();
-        }
-        return string.Join('/', components);
-    }
-
-    private static IReadOnlyList<LegacyIndexEntry> MovieIndexes(
-        MediaContext movie
-    )
-    {
-        try
-        {
-            return LegacyMovieIndexes.Create(
-                movie.Info,
-                // AddToIndex utilise //mediainfo, imbriqué dans info dans yaDIS2.
-                movie
-                    .Root.Descendants("mediainfo")
-                    .FirstOrDefault()
-            );
-        }
-        catch (Exception exception)
-            when (exception
-                    is InvalidDataException
-                        or ArgumentException
-                        or IndexOutOfRangeException
-                        or OverflowException
-            )
-        {
-            string path = Path.Combine(
-                movie.DataDirectory,
-                "data.xml"
-            );
-            throw new InvalidDataException(
-                $"Création des index de la fiche « {movie.Title} » ({path}) : {exception.Message}",
-                exception
-            );
-        }
     }
 
     private void WriteIndexListing(

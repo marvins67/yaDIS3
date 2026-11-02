@@ -136,6 +136,89 @@ internal sealed class DuneFile(
         );
     }
 
+    /// <summary>Conserve les entrées existantes avec leur numérotation historique.</summary>
+    public DuneFile ImportIndexItems(string content)
+    {
+        foreach (string line in content.Split('\n'))
+        {
+            int separator = line.IndexOf('=');
+            if (
+                separator > 0
+                && line.StartsWith(
+                    "item.",
+                    StringComparison.Ordinal
+                )
+            )
+            {
+                Set(
+                    line[..separator],
+                    line[(separator + 1)..].TrimEnd('\r')
+                );
+            }
+        }
+        return this;
+    }
+
+    /// <summary>Ajoute une version seulement si son libellé n'existe pas déjà.</summary>
+    public void AddIndexMovie(
+        string caption,
+        string url,
+        string scale
+    )
+    {
+        if (ContainsIndexCaption(caption))
+        {
+            RefreshIndexScale(caption, scale);
+            return;
+        }
+        Item(
+            NextIndex(),
+            caption,
+            url,
+            url + "/icon.aai",
+            scale: scale
+        );
+    }
+
+    private int NextIndex()
+    {
+        return _values
+                .Keys.Where(key =>
+                    key.StartsWith(
+                        "item.",
+                        StringComparison.Ordinal
+                    )
+                )
+                .Select(key =>
+                    int.Parse(
+                        key.Split('.')[1],
+                        CultureInfo.InvariantCulture
+                    )
+                )
+                .DefaultIfEmpty(-1)
+                .Last() + 1;
+    }
+
+    private void RefreshIndexScale(string caption, string scale)
+    {
+        foreach (string key in _values.Keys.ToArray())
+        {
+            if (
+                key.EndsWith(
+                    ".caption",
+                    StringComparison.Ordinal
+                )
+                && _values[key] == caption
+            )
+            {
+                string prefix = key[..^"caption".Length];
+                Set(prefix + "icon_scale_factor", scale);
+                Set(prefix + "icon_sel_scale_factor", "1");
+                break;
+            }
+        }
+    }
+
     /// <summary>Importe les propriétés dans l'ordre exact de yaDIS2.</summary>
     public static DuneFile FromLegacy(
         string content,

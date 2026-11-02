@@ -130,6 +130,18 @@ public sealed class LegacyProcessingStateTests
                 .Value
         );
         Assert.False(card.IsDirty);
+        Assert.True(
+            File.Exists(
+                Path.Combine(
+                    fixture.Root,
+                    "interface",
+                    "00",
+                    "11",
+                    "DVD",
+                    "dune_folder.txt"
+                )
+            )
+        );
         ExportResult result = ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);

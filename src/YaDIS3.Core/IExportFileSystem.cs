@@ -25,6 +25,12 @@ public interface IExportFileSystem
         bool overwrite
     );
 
+    /// <summary>Supprime une catégorie devenue vide et ses illustrations.</summary>
+    void DeleteDirectory(string path);
+
+    /// <summary>Énumère les fichiers directs d'un dossier.</summary>
+    IEnumerable<string> EnumerateFiles(string path);
+
     /// <summary>Énumère les dossiers directs correspondant au motif.</summary>
     IEnumerable<string> EnumerateDirectories(
         string path,

@@ -40,6 +40,7 @@ public sealed class LegacyCatalogParityTests
             }
             SaveMovie(fixture, data, format + ".mkv");
         }
+        fixture.ProcessIndexes();
         ExportResult result = ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);

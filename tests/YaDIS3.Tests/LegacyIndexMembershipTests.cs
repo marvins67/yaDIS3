@@ -20,6 +20,7 @@ public sealed class LegacyIndexMembershipTests
     {
         using ExportFixture fixture = new();
         AddVersion(fixture, first, second);
+        fixture.ProcessIndexes();
         ExportResult result = ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);
@@ -82,6 +83,7 @@ public sealed class LegacyIndexMembershipTests
             "fr",
             "matroska"
         );
+        fixture.ProcessIndexes();
         ExportResult result = ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);

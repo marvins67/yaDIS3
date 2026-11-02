@@ -16,6 +16,7 @@ public sealed class LegacyExportIntegrationTests
     )
     {
         using ExportFixture fixture = new();
+        fixture.ProcessIndexes(template);
         ExportResult result = ExportFixture
             .Exporter(template)
             .Export(fixture.Cards(), fixture.Destination);

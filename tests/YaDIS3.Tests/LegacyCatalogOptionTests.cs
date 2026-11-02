@@ -11,6 +11,7 @@ public sealed class LegacyCatalogOptionTests
     public void Export_DisabledCategories_OmitsTheirFolders()
     {
         using ExportFixture fixture = new();
+        fixture.ProcessIndexes();
         DuneExporter exporter = new(
             ExportFixture.Template(),
             new RenderOptions(),

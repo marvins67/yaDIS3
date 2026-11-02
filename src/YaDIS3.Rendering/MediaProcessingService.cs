@@ -36,7 +36,9 @@ public sealed class MediaProcessingService
         ArgumentException.ThrowIfNullOrWhiteSpace(workspace);
         if (card.IsDirty)
         {
-            await _repository.SaveAsync(card, cancellationToken);
+            await new LegacyIndexedCardSaver(
+                _repository
+            ).SaveAsync(card, cancellationToken);
         }
         MediaContext media = new(card);
         ProcessingResult result = await Task.Run(

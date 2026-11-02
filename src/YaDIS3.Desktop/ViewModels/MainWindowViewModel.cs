@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Avalonia.Media.Imaging;
 using YaDIS3.Core;
+using YaDIS3.Rendering;
 
 namespace YaDIS3.Desktop.ViewModels;
 
@@ -480,7 +481,9 @@ public sealed partial class MainWindowViewModel
             )
         )
         {
-            await _repository.SaveAsync(card, OperationToken);
+            await new LegacyIndexedCardSaver(
+                _repository
+            ).SaveAsync(card, OperationToken);
         }
 
         Status =
@@ -509,7 +512,10 @@ public sealed partial class MainWindowViewModel
             directory,
             detected
         );
-        await _repository.SaveAsync(card, OperationToken);
+        await new LegacyIndexedCardSaver(_repository).SaveAsync(
+            card,
+            OperationToken
+        );
         Cards.Add(card);
         card.PropertyChanged += CardChanged;
         MediaFilterIndex = 2;
@@ -694,7 +700,9 @@ public sealed partial class MainWindowViewModel
 
         if (SelectedCard.IsDirty)
         {
-            await _repository.SaveAsync(SelectedCard);
+            await new LegacyIndexedCardSaver(
+                _repository
+            ).SaveAsync(SelectedCard);
         }
 
         SelectedEpisode = SelectedCard.Episodes[index];

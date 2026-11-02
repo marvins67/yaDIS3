@@ -6,7 +6,7 @@ namespace YaDIS3.Tests;
 public sealed class LegacyIndexErrorTests
 {
     [Fact]
-    public void Export_InvalidIndexName_IdentifiesCardAndMetadataFile()
+    public void Update_InvalidIndexName_IdentifiesCardAndMetadataFile()
     {
         using ExportFixture fixture = new();
         string path = Path.Combine(
@@ -21,9 +21,7 @@ public sealed class LegacyIndexErrorTests
         data.Save(path);
         InvalidDataException exception =
             Assert.Throws<InvalidDataException>(() =>
-                ExportFixture
-                    .Exporter()
-                    .Export(fixture.Cards(), fixture.Destination)
+                fixture.ProcessIndexes()
             );
         Assert.Contains(
             "L’été d’Adèle",
@@ -59,6 +57,7 @@ public sealed class LegacyIndexErrorTests
         data.Root.Element("info")!.Element("director")!.Value =
             "Stanley Kubrick ";
         data.Save(path);
+        fixture.ProcessIndexes();
         var result = ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);
@@ -107,6 +106,7 @@ public sealed class LegacyIndexErrorTests
             .Value = " ";
         data.Save(path);
         byte[] original = File.ReadAllBytes(path);
+        fixture.ProcessIndexes();
         var result = ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);
