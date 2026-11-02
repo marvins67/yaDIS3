@@ -475,8 +475,12 @@ internal sealed class LegacyDuneCatalogWriter(
         {
             AddMovie(
                 file,
-                index++,
-                member.Info.ValueAt("sort_title"),
+                index,
+                // ProcessForm numérote les films dans l’ordre XML de la saga.
+                index.ToString(
+                    "00",
+                    CultureInfo.InvariantCulture
+                ),
                 directory,
                 Output(
                     root,
@@ -486,6 +490,7 @@ internal sealed class LegacyDuneCatalogWriter(
                     )
                 )
             );
+            index++;
         }
 
         file.Save(directory);
@@ -688,19 +693,26 @@ internal sealed class LegacyDuneCatalogWriter(
                 .Where(movie =>
                     movie.Info.ValueAt("sort_title").Length > 0
                 )
-                .GroupBy(movie =>
-                    LegacyExportPaths.Alphabet(
-                        AlphabetCaption(movie, groups)
-                    )
+                // Sous Windows, yaDIS2 ajoute L et l au même dossier.
+                .GroupBy(
+                    movie =>
+                        LegacyExportPaths.Alphabet(
+                            AlphabetCaption(movie, groups)
+                        ),
+                    StringComparer.OrdinalIgnoreCase
                 )
         )
         {
-            LegacyExportPaths.ValidateName(group.Key);
+            // CreateAlphabet crée d’abord les dossiers A à Z en majuscules.
+            string letter = group.Key[0] is >= 'a' and <= 'z'
+                ? group.Key.ToUpperInvariant()
+                : group.Key;
+            LegacyExportPaths.ValidateName(letter);
             WriteMovieListing(
                 group,
                 groups,
                 root,
-                "00/03/" + group.Key,
+                "00/03/" + letter,
                 "../../00/" + Background,
                 true
             );
