@@ -94,7 +94,7 @@
             </StackPanel>
           </Grid>
           <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,4,0,0">
-            <TextBlock Text="{Binding SelectedCard.DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <TextBlock Text="{Binding SelectedCard?.DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             <CheckBox Grid.Column="1" Content="Aperçu de l’épisode" IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}" IsEnabled="{Binding HasEpisode}" IsVisible="{Binding IsSeries}" />
           </Grid>
         </Grid>
@@ -108,15 +108,15 @@
             <Grid ColumnDefinitions="*,60,55" ColumnSpacing="6">
               <StackPanel Spacing="2">
                 <TextBlock Text="Titre :" Classes="fieldLabel" />
-                <TextBox x:Name="TitleEditor" Text="{Binding SelectedCard.Title, Mode=TwoWay}" />
+                <TextBox x:Name="TitleEditor" Text="{Binding SelectedCard?.Title, Mode=TwoWay}" />
               </StackPanel>
               <StackPanel Grid.Column="1" Spacing="2">
                 <TextBlock Text="Année :" Classes="fieldLabel" />
-                <TextBox Text="{Binding SelectedCard.Year, Mode=TwoWay}" />
+                <TextBox Text="{Binding SelectedCard?.Year, Mode=TwoWay}" />
               </StackPanel>
               <StackPanel Grid.Column="2" Spacing="2">
                 <TextBlock Text="Note :" Classes="fieldLabel" />
-                <TextBox Text="{Binding SelectedCard.Rating, Mode=TwoWay}" />
+                <TextBox Text="{Binding SelectedCard?.Rating, Mode=TwoWay}" />
               </StackPanel>
             </Grid>
             <TextBlock Text="Acteurs :" Classes="fieldLabel" />
@@ -124,11 +124,11 @@
             <TextBlock Text="Genres :" Classes="fieldLabel" />
             <TextBox Text="{Binding GenresText}" IsReadOnly="True" />
             <TextBlock Text="Diffuseur :" Classes="fieldLabel" />
-            <TextBox Text="{Binding SelectedCard.Network, Mode=TwoWay}" IsReadOnly="False" />
+            <TextBox Text="{Binding SelectedCard?.Network, Mode=TwoWay}" IsReadOnly="False" />
           </StackPanel>
           <Grid Grid.Column="2" RowDefinitions="Auto,*" RowSpacing="3">
             <TextBlock Text="Synopsis :" Classes="fieldLabel" />
-            <TextBox Grid.Row="1" Text="{Binding SelectedCard.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            <TextBox Grid.Row="1" Text="{Binding SelectedCard?.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto" />
           </Grid>
         </Grid>
       </TabItem>
@@ -166,7 +166,7 @@
               <Button Content="◀" Command="{Binding PreviousEpisodeCommand}" IsEnabled="{Binding HasEpisode}" />
               <Button Content="▶" Command="{Binding NextEpisodeCommand}" IsEnabled="{Binding HasEpisode}" />
             </StackPanel>
-            <ComboBox x:Name="EpisodeChoice" Grid.Column="1" ItemsSource="{Binding SelectedCard.Episodes}" SelectedItem="{Binding SelectedEpisode, Mode=TwoWay}" HorizontalAlignment="Stretch">
+            <ComboBox x:Name="EpisodeChoice" Grid.Column="1" ItemsSource="{Binding SelectedCard?.Episodes}" SelectedItem="{Binding SelectedEpisode, Mode=TwoWay}" HorizontalAlignment="Stretch">
               <ComboBox.ItemTemplate>
                 <DataTemplate x:DataType="core:Episode">
                   <TextBlock Text="{Binding Label}" />
@@ -178,19 +178,19 @@
           <Grid Grid.Row="1" ColumnDefinitions="2*,12,3*,12,210" IsEnabled="{Binding HasEpisode}">
             <StackPanel Spacing="3">
               <TextBlock Text="Titre de l’épisode :" Classes="fieldLabel" />
-              <TextBox x:Name="EpisodeTitleEditor" Text="{Binding SelectedEpisode.Title, Mode=TwoWay}" />
+              <TextBox x:Name="EpisodeTitleEditor" Text="{Binding SelectedEpisode?.Title, Mode=TwoWay}" />
               <TextBlock Text="Diffusion (AAAA-MM-JJ) :" Classes="fieldLabel" />
               <Grid ColumnDefinitions="*,65" ColumnSpacing="6">
-                <TextBox Text="{Binding SelectedEpisode.Aired, Mode=TwoWay}" />
-                <TextBox Grid.Column="1" Text="{Binding SelectedEpisode.Rating, Mode=TwoWay}" PlaceholderText="Note" />
+                <TextBox Text="{Binding SelectedEpisode?.Aired, Mode=TwoWay}" />
+                <TextBox Grid.Column="1" Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}" PlaceholderText="Note" />
               </Grid>
               <TextBlock Text="Réalisation :" Classes="fieldLabel" />
-              <TextBox Text="{Binding SelectedEpisode.Director, Mode=TwoWay}" />
+              <TextBox Text="{Binding SelectedEpisode?.Director, Mode=TwoWay}" />
               <TextBlock Text="{Binding EpisodePosition}" Classes="muted" />
             </StackPanel>
             <Grid Grid.Column="2" RowDefinitions="Auto,*" RowSpacing="3">
               <TextBlock Text="Synopsis :" Classes="fieldLabel" />
-              <TextBox Grid.Row="1" Text="{Binding SelectedEpisode.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+              <TextBox Grid.Row="1" Text="{Binding SelectedEpisode?.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto" />
             </Grid>
             <Grid Grid.Column="4" RowDefinitions="*,Auto">
               <Image Source="{Binding EpisodeImage}" Stretch="Uniform" />
