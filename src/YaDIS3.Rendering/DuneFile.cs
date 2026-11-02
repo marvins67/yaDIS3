@@ -120,6 +120,22 @@ internal sealed class DuneFile(
         return this;
     }
 
+    /// <summary>Reprend la recherche littérale de CreateIndexItem, limitée aux entrées.</summary>
+    public bool ContainsIndexCaption(string caption)
+    {
+        string marker = caption + "|";
+        return _values.Any(entry =>
+            entry.Key.StartsWith(
+                "item.",
+                StringComparison.Ordinal
+            )
+            && (entry.Key + "=" + entry.Value + "|").Contains(
+                marker,
+                StringComparison.Ordinal
+            )
+        );
+    }
+
     /// <summary>Importe les propriétés dans l'ordre exact de yaDIS2.</summary>
     public static DuneFile FromLegacy(
         string content,

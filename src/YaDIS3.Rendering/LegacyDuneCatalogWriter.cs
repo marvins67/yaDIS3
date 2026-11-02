@@ -541,7 +541,10 @@ internal sealed class LegacyDuneCatalogWriter(
                             (Entry: entry, Movie: movie)
                         )
                 )
-                .GroupBy(item => item.Entry.Directory)
+                .GroupBy(
+                    item => IndexDirectory(item.Entry),
+                    StringComparer.OrdinalIgnoreCase
+                )
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -578,6 +581,21 @@ internal sealed class LegacyDuneCatalogWriter(
             WriteAlphabet(renderer, movies, groups, root);
         }
         WriteIndexMenus(renderer, root);
+    }
+
+    private static string IndexDirectory(LegacyIndexEntry entry)
+    {
+        string[] components = entry.Directory.Split('/');
+        // Les initiales des personnes réutilisent les dossiers A à Z créés par yaDIS2.
+        if (
+            components.Length == 4
+            && components[1] is "05" or "06"
+            && components[2][0] is >= 'a' and <= 'z'
+        )
+        {
+            components[2] = components[2].ToUpperInvariant();
+        }
+        return string.Join('/', components);
     }
 
     private static IReadOnlyList<LegacyIndexEntry> MovieIndexes(
@@ -641,10 +659,16 @@ internal sealed class LegacyDuneCatalogWriter(
             )
         )
         {
+            string caption = movie.Info.ValueAt("sort_title");
+            // yaDIS2 conserve la première version correspondant au libellé, pas au fichier.
+            if (file.ContainsIndexCaption(caption))
+            {
+                continue;
+            }
             AddMovie(
                 file,
                 index++,
-                movie.Info.ValueAt("sort_title"),
+                caption,
                 directory,
                 Output(
                     root,
