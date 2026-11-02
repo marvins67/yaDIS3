@@ -12,6 +12,8 @@ public sealed class LegacyPersonIndexTests
     [InlineData("actor", "   ", "00/05")]
     [InlineData("director", "Stanley Kubrick ", "00/06")]
     [InlineData("director", " ", "00/06")]
+    [InlineData("actor", "\t", "00/05")]
+    [InlineData("director", "\u00a0", "00/06")]
     public void Create_PersonWithTrailingSpace_SkipsOnlyInvalidLegacyIndex(
         string field,
         string name,

@@ -70,4 +70,43 @@ public sealed class LegacyMovieIndexTests
             )
         );
     }
+
+    [Theory]
+    [InlineData("genre", " ")]
+    [InlineData("genre", "\t")]
+    [InlineData("country", "   ")]
+    [InlineData("country", "\u00a0")]
+    [InlineData("rating", " ")]
+    [InlineData("rating", " 8.7")]
+    [InlineData("format", " ")]
+    [InlineData("format", "\t")]
+    public void Create_BlankIndexCaption_SkipsOnlyBlankEntry(
+        string field,
+        string value
+    )
+    {
+        XElement info = new(
+            "info",
+            new XElement("genre", "Documentaire")
+        );
+        XElement technical = new("mediainfo");
+        (field == "format" ? technical : info).Add(
+            new XElement(field, value)
+        );
+        XElement originalInfo = new(info);
+        XElement originalTechnical = new(technical);
+        Assert.Equal(
+            new LegacyIndexEntry(
+                "00/04/Documentaire",
+                "Documentaire"
+            ),
+            Assert.Single(
+                LegacyMovieIndexes.Create(info, technical)
+            )
+        );
+        Assert.True(XNode.DeepEquals(originalInfo, info));
+        Assert.True(
+            XNode.DeepEquals(originalTechnical, technical)
+        );
+    }
 }

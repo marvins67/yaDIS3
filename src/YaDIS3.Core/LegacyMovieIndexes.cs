@@ -153,7 +153,8 @@ public static class LegacyMovieIndexes
         string caption
     )
     {
-        if (caption.Length == 0)
+        // Une métadonnée blanche ne constitue pas une catégorie exportable.
+        if (string.IsNullOrWhiteSpace(caption))
         {
             return;
         }

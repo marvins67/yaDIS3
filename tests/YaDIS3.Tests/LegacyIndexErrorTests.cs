@@ -83,4 +83,56 @@ public sealed class LegacyIndexErrorTests
                 .Value
         );
     }
+
+    [Fact]
+    public void Export_BlankIndexMetadata_ExportsCardWithoutBlankIndexes()
+    {
+        using ExportFixture fixture = new();
+        string path = Path.Combine(
+            fixture.Root,
+            "data",
+            ExportFixture.MovieName,
+            "data.xml"
+        );
+        XDocument data = XDocument.Load(path);
+        XElement info = data.Root!.Element("info")!;
+        info.Element("title")!.Value =
+            "Les Raisins du Désespoir";
+        info.Element("genre")!.Value = " ";
+        info.Element("country")!.Value = " ";
+        info.Element("rating")!.Value = " ";
+        data
+            .Root.Element("mediainfo")!
+            .Element("format")!
+            .Value = " ";
+        data.Save(path);
+        byte[] original = File.ReadAllBytes(path);
+        var result = ExportFixture
+            .Exporter()
+            .Export(fixture.Cards(), fixture.Destination);
+        Assert.Equal(2, result.MediaCount);
+        Assert.True(
+            File.Exists(
+                Path.Combine(
+                    result.Directory,
+                    "00",
+                    "99",
+                    ExportFixture.MovieName,
+                    "dune_folder.txt"
+                )
+            )
+        );
+        Assert.Equal(original, File.ReadAllBytes(path));
+        Assert.DoesNotContain(
+            Directory.EnumerateDirectories(
+                result.Directory,
+                "*",
+                SearchOption.AllDirectories
+            ),
+            directory =>
+                string.IsNullOrWhiteSpace(
+                    Path.GetFileName(directory)
+                )
+        );
+    }
 }
