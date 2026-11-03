@@ -145,12 +145,26 @@
               />
             </StackPanel>
             <SplitButton.Flyout>
-              <Flyout>
-                <Button
-                  Content="Traiter la fiche sélectionnée"
-                  Command="{Binding ProcessCommand}"
+              <MenuFlyout>
+                <MenuItem
+                  Header="Changer de titre…"
+                  Click="ShowTvdbSearch"
+                  IsEnabled="{Binding IsSeries}"
                 />
-              </Flyout>
+                <MenuItem
+                  Header="Recharger les informations"
+                  Command="{Binding ReloadInformationCommand}"
+                />
+                <MenuItem
+                  Header="Recharger les informations techniques"
+                  Command="{Binding ReloadTechnicalCommand}"
+                />
+                <MenuItem
+                  Header="Traiter tous les épisodes"
+                  Command="{Binding ProcessAllEpisodesCommand}"
+                  IsVisible="{Binding IsSeries}"
+                />
+              </MenuFlyout>
             </SplitButton.Flyout>
           </SplitButton>
           <Button
@@ -367,6 +381,8 @@
     <Grid Grid.Row="1" ColumnDefinitions="254,8,*">
       <ListBox
         x:Name="LibraryList"
+        SelectionMode="Multiple"
+        SelectedItems="{Binding TreatmentSelection}"
         ItemsSource="{Binding VisibleCards}"
         SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
         IsEnabled="{Binding !IsBusy}"

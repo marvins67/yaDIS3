@@ -10,4 +10,12 @@ public sealed record SeriesDetails(
     string FirstAired,
     string Network,
     IReadOnlyList<TvdbEpisode> Episodes
-);
+)
+{
+    /// <summary>Illustrations préférées pour la langue demandée.</summary>
+    public IReadOnlyDictionary<string, string> Artwork
+    {
+        get;
+        init;
+    } = new Dictionary<string, string>(StringComparer.Ordinal);
+}

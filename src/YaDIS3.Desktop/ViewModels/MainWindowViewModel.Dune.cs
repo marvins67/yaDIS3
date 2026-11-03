@@ -169,11 +169,15 @@ public sealed partial class MainWindowViewModel
 
     private void InitializeDune()
     {
-        ProcessCommand = new UiCommand(() =>
-            RunAsync(ProcessSelectedAsync)
+        ProcessCommand = TreatmentCommand(TreatmentMode.Normal);
+        ReloadInformationCommand = TreatmentCommand(
+            TreatmentMode.ReloadInformation
         );
-        ExportCommand = new UiCommand(() =>
-            RunAsync(ExportDuneAsync)
+        ReloadTechnicalCommand = TreatmentCommand(
+            TreatmentMode.ReloadTechnicalInformation
+        );
+        ProcessAllEpisodesCommand = TreatmentCommand(
+            TreatmentMode.AllEpisodes
         );
         CancelCommand = new UiCommand(() =>
         {
@@ -276,50 +280,6 @@ public sealed partial class MainWindowViewModel
                 _configuration
             );
         }
-    }
-
-    /// <summary>
-    /// Enregistre et traite la fiche sélectionnée avec les
-    /// options courantes.
-    /// </summary>
-    public async Task ProcessSelectedAsync()
-    {
-        MediaCard card =
-            SelectedCard
-            ?? throw new InvalidOperationException(
-                "Sélectionnez une fiche."
-            );
-        DuneTemplate template =
-            SelectedTemplate
-            ?? throw new InvalidOperationException(
-                "Chargez un template yaDIS3."
-            );
-        Workspace current =
-            _workspace
-            ?? throw new InvalidOperationException(
-                "Ouvrez une bibliothèque."
-            );
-        SaveDunePreferences();
-        RenderOptions options = ConfiguredRenderOptions();
-        var progress = new Progress<string>(message =>
-            Status = message
-        );
-        MediaProcessingService processor = new(
-            _repository,
-            TimeProvider.System
-        );
-        await processor.ProcessAsync(
-            card,
-            template,
-            options,
-            current.Directory,
-            progress,
-            _configuration,
-            OperationToken
-        );
-        RefreshImages();
-        Status =
-            "Rendu terminé : aperçu, icônes et saisons actualisés. Les données vidéo et métadonnées existantes sont conservées.";
     }
 
     /// <summary>

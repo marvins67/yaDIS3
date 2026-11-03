@@ -9,7 +9,7 @@ namespace YaDIS3.Core;
 /// Édite une fiche en préservant le XML inconnu et les
 /// informations techniques.
 /// </summary>
-public sealed class MediaCard
+public sealed partial class MediaCard
     : INotifyPropertyChanged,
         IDisposable
 {

@@ -15,6 +15,21 @@ public sealed class ImageImporter(IJpegEncoder encoder)
         ArtworkKind kind,
         string source,
         Episode? episode = null
+    ) => ImportCore(card, kind, source, episode, true);
+
+    internal void ImportAutomatic(
+        MediaCard card,
+        ArtworkKind kind,
+        string source,
+        Episode? episode
+    ) => ImportCore(card, kind, source, episode, false);
+
+    private void ImportCore(
+        MediaCard card,
+        ArtworkKind kind,
+        string source,
+        Episode? episode,
+        bool manual
     )
     {
         if (
@@ -51,6 +66,11 @@ public sealed class ImageImporter(IJpegEncoder encoder)
         {
             encoder.Encode(source, temporary);
             card.StageImage(name, temporary);
+            if (!manual)
+            {
+                card.UpdateForTreatment(() => { });
+                return;
+            }
             card.Update(() =>
             {
                 if (kind == ArtworkKind.Episode)

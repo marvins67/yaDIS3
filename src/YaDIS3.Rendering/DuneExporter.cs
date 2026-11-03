@@ -409,6 +409,8 @@ public sealed partial class DuneExporter(
         string workspace,
         string? episodeKey = null,
         IProgress<string>? progress = null,
+        bool useFirstEpisodePreview = false,
+        IReadOnlySet<string>? reusableEpisodes = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -444,12 +446,31 @@ public sealed partial class DuneExporter(
                 template,
                 options
             );
+            ReuseEpisodes(
+                target,
+                stage,
+                template,
+                options,
+                reusableEpisodes
+            );
             RenderedCard rendered = renderer.Render(
                 media,
                 stage,
                 progress,
                 cancellationToken
             );
+            if (
+                useFirstEpisodePreview
+                && rendered.EpisodePreviews.Values.FirstOrDefault()
+                    is { } first
+            )
+            {
+                File.Copy(
+                    first,
+                    Path.Combine(stage, "preview.jpg"),
+                    true
+                );
+            }
             File.WriteAllText(
                 Path.Combine(stage, "render.json"),
                 JsonSerializer.Serialize(
@@ -459,6 +480,8 @@ public sealed partial class DuneExporter(
                         Version = 1,
                         MediaId = media.Id,
                         Template = template.Name,
+                        TemplateDirectory = template.Directory,
+                        Options = options,
                     }
                 )
             );
@@ -496,6 +519,59 @@ public sealed partial class DuneExporter(
             if (Directory.Exists(stage))
             {
                 Directory.Delete(stage, true);
+            }
+        }
+    }
+
+    private static void ReuseEpisodes(
+        string target,
+        string stage,
+        DuneTemplate template,
+        RenderOptions options,
+        IReadOnlySet<string>? keys
+    )
+    {
+        if (
+            keys is null
+            || keys.Count == 0
+            || !Directory.Exists(target)
+        )
+        {
+            return;
+        }
+        using JsonDocument manifest = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(target, "render.json"))
+        );
+        JsonElement root = manifest.RootElement;
+        if (
+            !root.TryGetProperty(
+                "TemplateDirectory",
+                out JsonElement folder
+            )
+            || folder.GetString() != template.Directory
+            || !root.TryGetProperty(
+                "Options",
+                out JsonElement previous
+            )
+            || previous.Deserialize<RenderOptions>() != options
+        )
+        {
+            return;
+        }
+        foreach (string key in keys)
+        {
+            string old = Path.Combine(target, key);
+            string next = Path.Combine(stage, key);
+            string icon = Path.Combine(old, "icon.aai");
+            string preview = Path.Combine(old, "preview.jpg");
+            if (File.Exists(icon) && File.Exists(preview))
+            {
+                Directory.CreateDirectory(next);
+                File.Copy(icon, Path.Combine(next, "icon.aai"));
+                File.Copy(
+                    preview,
+                    Path.Combine(next, "preview.jpg")
+                );
             }
         }
     }

@@ -36,6 +36,8 @@ public sealed class MediaProcessingService
         string workspace,
         IProgress<string>? progress = null,
         DuneConfiguration? configuration = null,
+        bool useFirstEpisodePreview = false,
+        IReadOnlySet<string>? reusableEpisodes = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -62,7 +64,9 @@ public sealed class MediaProcessingService
                     options,
                     workspace,
                     progress: progress,
-                    cancellationToken: cancellationToken
+                    cancellationToken: cancellationToken,
+                    useFirstEpisodePreview: useFirstEpisodePreview,
+                    reusableEpisodes: reusableEpisodes
                 ),
             cancellationToken
         );
@@ -89,6 +93,10 @@ public sealed class MediaProcessingService
                 _timeProvider.GetLocalNow().DateTime
             )
         );
+        if (useFirstEpisodePreview)
+        {
+            card.CompleteTreatment();
+        }
         await _repository.SaveAsync(card, cancellationToken);
         return result;
     }

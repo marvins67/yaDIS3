@@ -164,6 +164,20 @@ public sealed partial class TemplateRenderer
                     seasonDirectory,
                     MediaContext.EpisodeFolder(episode)
                 );
+                string cachedPreview = Path.Combine(
+                    output,
+                    "preview.jpg"
+                );
+                if (
+                    File.Exists(cachedPreview)
+                    && File.Exists(
+                        Path.Combine(output, "icon.aai")
+                    )
+                )
+                {
+                    episodePreviews[key] = cachedPreview;
+                    continue;
+                }
                 Directory.CreateDirectory(output);
                 XElement episodeSpec = _template.Node(
                     "tv/synopsis/episode/episodeicon"

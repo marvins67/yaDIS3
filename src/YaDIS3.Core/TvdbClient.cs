@@ -432,7 +432,13 @@ public sealed partial class TvdbClient(
                             "name"
                         ),
                         episodes
-                    );
+                    )
+                    {
+                        Artwork = ReadSeriesArtwork(
+                            series,
+                            language
+                        ),
+                    };
                 }
 
                 if (payload.GetArrayLength() == 0)
@@ -447,6 +453,45 @@ public sealed partial class TvdbClient(
         throw new InvalidDataException(
             "Pagination TVDB excessive."
         );
+    }
+
+    private static Dictionary<string, string> ReadSeriesArtwork(
+        JsonElement series,
+        string language
+    )
+    {
+        Dictionary<string, string> artwork = new(
+            StringComparer.Ordinal
+        );
+        JsonElement images = ReadChild(series, "artworks");
+        if (images.ValueKind != JsonValueKind.Array)
+        {
+            return artwork;
+        }
+        foreach (
+            JsonElement image in images
+                .EnumerateArray()
+                .OrderBy(item =>
+                    ReadText(item, "language") == language
+                        ? 0
+                        : 1
+                )
+        )
+        {
+            string name = ReadNumber(image, "type") switch
+            {
+                1 => "banner",
+                2 => "poster",
+                3 => "fanart",
+                _ => "",
+            };
+            string url = ReadText(image, "image");
+            if (name.Length > 0 && url.Length > 0)
+            {
+                artwork.TryAdd(name, url);
+            }
+        }
+        return artwork;
     }
 
     /// <summary>

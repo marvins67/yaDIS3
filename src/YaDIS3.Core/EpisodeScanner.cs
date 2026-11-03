@@ -171,6 +171,12 @@ public static class EpisodeScanner
     public static void Synchronize(
         MediaCard card,
         IReadOnlyList<VideoEpisode> detected
+    ) => Synchronize(card, detected, manual: true);
+
+    internal static void Synchronize(
+        MediaCard card,
+        IReadOnlyList<VideoEpisode> detected,
+        bool manual
     )
     {
         if (!card.IsSeries)
@@ -180,7 +186,10 @@ public static class EpisodeScanner
             );
         }
 
-        card.Update(() =>
+        Action<Action> update = manual
+            ? card.Update
+            : card.UpdateForTreatment;
+        update(() =>
         {
             XElement info = card.EnsureInfo();
             foreach (
