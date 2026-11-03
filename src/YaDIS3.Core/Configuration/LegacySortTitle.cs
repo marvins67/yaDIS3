@@ -2,10 +2,16 @@ using System.Globalization;
 
 namespace YaDIS3.Core;
 
-/// <summary>Reprend RemoveArticle sans modifier les titres de tri existants.</summary>
+/// <summary>
+/// Reprend RemoveArticle sans modifier les titres de tri
+/// existants.
+/// </summary>
 public static class LegacySortTitle
 {
-    /// <summary>Retire le premier article correspondant, puis capitalise la première lettre.</summary>
+    /// <summary>
+    /// Retire le premier article correspondant, puis capitalise
+    /// la première lettre.
+    /// </summary>
     public static string Create(
         string title,
         DuneConfiguration configuration

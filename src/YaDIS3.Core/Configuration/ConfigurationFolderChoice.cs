@@ -1,9 +1,15 @@
 namespace YaDIS3.Core;
 
-/// <summary>Reprend les sous-dossiers proposés par les sélecteurs de SetupForm.</summary>
+/// <summary>
+/// Reprend les sous-dossiers proposés par les sélecteurs de
+/// SetupForm.
+/// </summary>
 public static class ConfigurationFolderChoice
 {
-    /// <summary>Propose workspace ou yaDIS lorsque le dossier choisi contient déjà des fichiers.</summary>
+    /// <summary>
+    /// Propose workspace ou yaDIS lorsque le dossier choisi
+    /// contient déjà des fichiers.
+    /// </summary>
     public static string Resolve(
         string path,
         string suffix,

@@ -1,6 +1,9 @@
 namespace YaDIS3.Core;
 
-/// <summary>Extensions de fichiers vidéo reconnues par la découverte des sources de yaDIS2.</summary>
+/// <summary>
+/// Extensions de fichiers vidéo reconnues par la découverte des
+/// sources de yaDIS2.
+/// </summary>
 public static class LegacyVideoFiles
 {
     private static readonly HashSet<string> s_extensions = new(
@@ -31,7 +34,9 @@ public static class LegacyVideoFiles
         StringComparer.OrdinalIgnoreCase
     );
 
-    /// <summary>Teste une extension sans tenir compte de sa casse.</summary>
+    /// <summary>
+    /// Teste une extension sans tenir compte de sa casse.
+    /// </summary>
     public static bool IsVideo(string path) =>
         s_extensions.Contains(Path.GetExtension(path));
 }

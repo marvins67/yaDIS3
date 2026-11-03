@@ -2,7 +2,10 @@ using System.Xml;
 
 namespace YaDIS3.Core;
 
-/// <summary>Applique les réglages et redécouvre les sources indépendamment de l'interface graphique.</summary>
+/// <summary>
+/// Applique les réglages et redécouvre les sources
+/// indépendamment de l'interface graphique.
+/// </summary>
 public sealed class DuneConfigurationService(
     IExportFileSystem? fileSystem = null
 )
@@ -10,7 +13,10 @@ public sealed class DuneConfigurationService(
     private readonly IExportFileSystem _files =
         fileSystem ?? new ExportFileSystem();
 
-    /// <summary>Change éventuellement de workspace puis enregistre les options validées.</summary>
+    /// <summary>
+    /// Change éventuellement de workspace puis enregistre les
+    /// options validées.
+    /// </summary>
     public void Apply(
         string? source,
         string destination,

@@ -4,13 +4,12 @@ using YaDIS3.Core;
 namespace YaDIS3.Desktop;
 
 /// <summary>
-/// Converts supported images to opaque JPEG artwork with
-/// Skia.
+/// Convertit les images reconnues en JPEG opaque avec Skia.
 /// </summary>
 public sealed class SkiaJpegEncoder : IJpegEncoder
 {
     /// <summary>
-    /// Converts the source image to a JPEG at the target path.
+    /// Convertit l'image source en JPEG au chemin demandé.
     /// </summary>
     public void Encode(string source, string target)
     {

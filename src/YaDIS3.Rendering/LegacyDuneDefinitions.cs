@@ -1,6 +1,8 @@
 namespace YaDIS3.Rendering;
 
-/// <summary>Conserve les définitions de navigation écrites par yaDIS2.</summary>
+/// <summary>
+/// Conserve les définitions de navigation écrites par yaDIS2.
+/// </summary>
 internal sealed class LegacyDuneDefinitions(
     DuneTemplate template
 )

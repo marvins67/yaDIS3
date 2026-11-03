@@ -1,19 +1,19 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
 using YaDIS3.Desktop.ViewModels;
 using YaDIS3.Desktop.Views;
 
 namespace YaDIS3.Desktop;
 
 /// <summary>
-/// Loads application resources and creates the desktop
-/// window.
+/// Charge les ressources et crée la fenêtre principale.
 /// </summary>
 public sealed partial class App : Application
 {
     /// <summary>
-    /// Loads the Avalonia application resources and theme.
+    /// Charge les ressources et le thème Avalonia.
     /// </summary>
     public override void Initialize()
     {
@@ -21,8 +21,8 @@ public sealed partial class App : Application
     }
 
     /// <summary>
-    /// Creates the main window when desktop initialization
-    /// completes.
+    /// Crée la fenêtre principale après l'initialisation de
+    /// l'application.
     /// </summary>
     public override void OnFrameworkInitializationCompleted()
     {
@@ -31,9 +31,13 @@ public sealed partial class App : Application
             is IClassicDesktopStyleApplicationLifetime desktop
         )
         {
+            ServiceProvider services =
+                DesktopServices.CreateProvider();
+            desktop.Exit += (_, _) => services.Dispose();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext =
+                    services.GetRequiredService<MainWindowViewModel>(),
             };
         }
 

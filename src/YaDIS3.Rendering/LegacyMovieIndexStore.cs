@@ -3,7 +3,10 @@ using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
-/// <summary>Conserve les index de films dans workspace/interface comme yaDIS2.</summary>
+/// <summary>
+/// Conserve les index de films dans workspace/interface comme
+/// yaDIS2.
+/// </summary>
 public sealed class LegacyMovieIndexStore(
     DuneTemplate template,
     RenderOptions options,
@@ -13,7 +16,10 @@ public sealed class LegacyMovieIndexStore(
     private readonly IExportFileSystem _fileSystem =
         fileSystem ?? new ExportFileSystem();
 
-    /// <summary>Reprend AddToIndex après le rendu d'un film, sans reconstruire les listes.</summary>
+    /// <summary>
+    /// Reprend AddToIndex après le rendu d'un film, sans
+    /// reconstruire les listes.
+    /// </summary>
     public void Update(
         MediaContext movie,
         string workspace,

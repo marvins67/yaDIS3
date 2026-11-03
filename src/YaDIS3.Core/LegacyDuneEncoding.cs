@@ -2,14 +2,22 @@ using System.Text;
 
 namespace YaDIS3.Core;
 
-/// <summary>Reproduit le contrat texte de MainModule.CreateDF dans yaDIS2.</summary>
+/// <summary>
+/// Reproduit le contrat texte de MainModule.CreateDF dans
+/// yaDIS2.
+/// </summary>
 public static class LegacyDuneEncoding
 {
-    /// <summary>Identifie les fichiers de navigation gérés par yaDIS.</summary>
+    /// <summary>
+    /// Identifie les fichiers de navigation gérés par yaDIS.
+    /// </summary>
     public const string Header =
         "*** NE PAS SUPPRIMER OU MODIFIER CETTE LIGNE - DO NOT DELETE OR MODIFY THIS LINE ***";
 
-    /// <summary>Produit le même UTF-8 avec BOM et les mêmes fins de ligne Windows.</summary>
+    /// <summary>
+    /// Produit le même UTF-8 avec BOM et les mêmes fins de ligne
+    /// Windows.
+    /// </summary>
     public static byte[] Encode(
         string content,
         bool aaiBackgrounds

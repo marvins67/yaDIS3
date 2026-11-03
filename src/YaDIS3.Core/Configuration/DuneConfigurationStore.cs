@@ -5,12 +5,18 @@ using System.Xml.Linq;
 
 namespace YaDIS3.Core;
 
-/// <summary>Relit les préférences du portage et les documents XML de yaDIS2.</summary>
+/// <summary>
+/// Relit les préférences du portage et les documents XML de
+/// yaDIS2.
+/// </summary>
 public sealed class DuneConfigurationStore(
     IExportFileSystem? fileSystem = null
 )
 {
-    /// <summary>Nom conservé pour les workspaces déjà utilisés dans yaDIS3.</summary>
+    /// <summary>
+    /// Nom conservé pour les workspaces déjà utilisés dans
+    /// yaDIS3.
+    /// </summary>
     public const string FileName = "yadis3-modern-export.json";
     private readonly IExportFileSystem _files =
         fileSystem ?? new ExportFileSystem();
@@ -19,7 +25,9 @@ public sealed class DuneConfigurationStore(
         WriteIndented = true,
     };
 
-    /// <summary>Charge une copie sans créer ni modifier de fichier.</summary>
+    /// <summary>
+    /// Charge une copie sans créer ni modifier de fichier.
+    /// </summary>
     public ConfigurationSnapshot Load(string workspace)
     {
         string path = Path.Combine(workspace, FileName);
@@ -91,7 +99,9 @@ public sealed class DuneConfigurationStore(
         );
     }
 
-    /// <summary>Refuse les valeurs invalides avant la première écriture.</summary>
+    /// <summary>
+    /// Refuse les valeurs invalides avant la première écriture.
+    /// </summary>
     public static void Validate(ConfigurationSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -131,7 +141,10 @@ public sealed class DuneConfigurationStore(
         }
     }
 
-    /// <summary>Enregistre ensemble réglages, dossiers, sélections et raccourcis.</summary>
+    /// <summary>
+    /// Enregistre ensemble réglages, dossiers, sélections et
+    /// raccourcis.
+    /// </summary>
     public void Save(
         string workspace,
         ConfigurationSnapshot snapshot
@@ -142,7 +155,10 @@ public sealed class DuneConfigurationStore(
         WriteDocuments(workspace, Documents(snapshot));
     }
 
-    /// <summary>Préserve les autres documents lors d'un traitement ou d'un export.</summary>
+    /// <summary>
+    /// Préserve les autres documents lors d'un traitement ou
+    /// d'un export.
+    /// </summary>
     public void SaveSettings(
         string workspace,
         DuneConfiguration settings

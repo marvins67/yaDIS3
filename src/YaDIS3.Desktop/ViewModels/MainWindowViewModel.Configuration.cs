@@ -8,10 +8,16 @@ public sealed partial class MainWindowViewModel
 {
     private DuneConfiguration _configuration = new();
 
-    /// <summary>En mode basique, Traiter écrit directement auprès des vidéos.</summary>
+    /// <summary>
+    /// En mode basique, Traiter écrit directement auprès des
+    /// vidéos.
+    /// </summary>
     public bool CanExport => !_configuration.BasicMode;
 
-    /// <summary>Prépare une copie indépendante pour la fenêtre de configuration.</summary>
+    /// <summary>
+    /// Prépare une copie indépendante pour la fenêtre de
+    /// configuration.
+    /// </summary>
     public ConfigurationViewModel CreateConfiguration()
     {
         ConfigurationSnapshot snapshot = _workspace is null
@@ -21,9 +27,7 @@ public sealed partial class MainWindowViewModel
                 new XDocument(new XElement("groups")),
                 []
             )
-            : new DuneConfigurationStore().Load(
-                _workspace.Directory
-            );
+            : _configurationStore.Load(_workspace.Directory);
         IEnumerable<string> genres = Cards
             .Where(card => !card.IsSeries)
             .SelectMany(card =>
@@ -39,7 +43,9 @@ public sealed partial class MainWindowViewModel
             WorkspacePath,
             Templates.ToArray(),
             genres,
-            ApplyConfigurationAsync
+            ApplyConfigurationAsync,
+            _configurationLogger,
+            _configurationStore
         );
     }
 
@@ -72,7 +78,7 @@ public sealed partial class MainWindowViewModel
         string? source = _workspace?.Directory;
         await Task.Run(
             () =>
-                new DuneConfigurationService().Apply(
+                _configurationService.Apply(
                     source,
                     destination,
                     snapshot,
@@ -88,17 +94,20 @@ public sealed partial class MainWindowViewModel
         NotifyAll();
     }
 
-    /// <summary>Redécouvre les dossiers configurés avant de recharger les fiches.</summary>
+    /// <summary>
+    /// Redécouvre les dossiers configurés avant de recharger les
+    /// fiches.
+    /// </summary>
     public async Task RefreshConfiguredWorkspaceAsync(
         CancellationToken cancellationToken = default
     )
     {
         string path = WorkspacePath;
         ConfigurationSnapshot snapshot =
-            new DuneConfigurationStore().Load(path);
+            _configurationStore.Load(path);
         await Task.Run(
             () =>
-                new SourceFolderScanner().Scan(
+                _sourceScanner.Scan(
                     path,
                     snapshot.Folders,
                     snapshot.Settings.BasicMode,

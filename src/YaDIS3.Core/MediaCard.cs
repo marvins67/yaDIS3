@@ -1,24 +1,13 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using System.Xml.Linq;
 
 namespace YaDIS3.Core;
 
 /// <summary>
-/// Tracks an artwork replacement and its original file
-/// hash.
-/// </summary>
-public sealed record StagedArtwork(
-    string Target,
-    string Temporary,
-    string OriginalHash
-);
-
-/// <summary>
-/// Edits a card while preserving unknown XML and technical
-/// metadata.
+/// Édite une fiche en préservant le XML inconnu et les
+/// informations techniques.
 /// </summary>
 public sealed class MediaCard
     : INotifyPropertyChanged,
@@ -38,13 +27,13 @@ public sealed class MediaCard
     internal string SourceHash { get; private set; }
 
     /// <summary>
-    /// Gets the path to the card's data.xml file.
+    /// Chemin du fichier data.xml de la fiche.
     /// </summary>
     public string FilePath { get; }
 
     /// <summary>
-    /// Gets the directory containing the card metadata and
-    /// artwork.
+    /// Dossier contenant les métadonnées et les illustrations de
+    /// la fiche.
     /// </summary>
     public string DataDirectory =>
         Path.GetDirectoryName(FilePath)!;
@@ -58,7 +47,8 @@ public sealed class MediaCard
         Root.Element("info") ?? Header.Element("info");
 
     /// <summary>
-    /// Notifies bindings when the displayed state changes.
+    /// Signale aux liaisons de données que l'état affiché a
+    /// changé.
     /// </summary>
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -92,40 +82,40 @@ public sealed class MediaCard
     }
 
     /// <summary>
-    /// Gets the original folder name stored in the card header.
+    /// Nom du dossier d'origine conservé dans l'en-tête.
     /// </summary>
     public string FolderName =>
         Header.Element("filename")!.Value;
 
     /// <summary>
-    /// Indicates whether the current card represents a series.
+    /// Indique si la fiche représente une série.
     /// </summary>
     public bool IsSeries => Header.Element("type")?.Value == "1";
 
     /// <summary>
-    /// Gets the localized film or series label.
+    /// Libellé localisé du type de média, film ou série.
     /// </summary>
     public string KindLabel => IsSeries ? "Série" : "Film";
 
     /// <summary>
-    /// Indicates whether the card has unsaved metadata edits.
+    /// Indique si la fiche contient des modifications non
+    /// enregistrées.
     /// </summary>
     public bool IsDirty => _revision != _savedRevision;
 
     /// <summary>
-    /// Gets the title, falling back to the original folder
-    /// name.
+    /// Titre de la fiche ou, à défaut, nom du dossier d'origine.
     /// </summary>
     public string DisplayName =>
         string.IsNullOrWhiteSpace(Title) ? FolderName : Title;
 
     /// <summary>
-    /// Gets the series identifier stored in the metadata.
+    /// Identifiant de série conservé dans les métadonnées.
     /// </summary>
     public string TvdbId => Read("id");
 
     /// <summary>
-    /// Gets or sets the displayed title.
+    /// Titre affiché.
     /// </summary>
     public string Title
     {
@@ -134,7 +124,7 @@ public sealed class MediaCard
     }
 
     /// <summary>
-    /// Gets or sets the synopsis.
+    /// Synopsis.
     /// </summary>
     public string Plot
     {
@@ -143,7 +133,7 @@ public sealed class MediaCard
     }
 
     /// <summary>
-    /// Gets or sets the release year.
+    /// Année de sortie.
     /// </summary>
     public string Year
     {
@@ -152,7 +142,7 @@ public sealed class MediaCard
     }
 
     /// <summary>
-    /// Gets or sets the stored rating text.
+    /// Note conservée sous sa forme textuelle.
     /// </summary>
     public string Rating
     {
@@ -161,7 +151,7 @@ public sealed class MediaCard
     }
 
     /// <summary>
-    /// Gets or sets the original broadcaster name.
+    /// Nom du diffuseur d'origine.
     /// </summary>
     public string Network
     {
@@ -170,29 +160,29 @@ public sealed class MediaCard
     }
 
     /// <summary>
-    /// Gets the TVDB episode order saved with the series.
+    /// Ordre des épisodes TVDB enregistré pour cette série.
     /// </summary>
     public string Order =>
         (string?)Root.Attribute("tvdb_order") ?? "official";
 
     /// <summary>
-    /// Gets the card's episodes in their stored navigation
-    /// order.
+    /// Épisodes classés dans leur ordre de navigation
+    /// enregistré.
     /// </summary>
     public IReadOnlyList<Episode> Episodes => _episodes;
 
     /// <summary>
-    /// Gets the staged or saved poster image path.
+    /// Chemin de l'affiche importée ou enregistrée.
     /// </summary>
     public string PosterPath => ArtworkPath("poster.jpg");
 
     /// <summary>
-    /// Gets the staged or saved banner image path.
+    /// Chemin de la bannière importée ou enregistrée.
     /// </summary>
     public string BannerPath => ArtworkPath("banner.jpg");
 
     /// <summary>
-    /// Gets the staged or saved fanart image path.
+    /// Chemin du fanart importé ou enregistré.
     /// </summary>
     public string FanartPath => ArtworkPath("fanart.jpg");
 
@@ -231,7 +221,10 @@ public sealed class MediaCard
         }
     }
 
-    /// <summary>Établit le tri des nouveaux films, sans réécrire le classement existant.</summary>
+    /// <summary>
+    /// Établit le tri des nouveaux films, sans réécrire le
+    /// classement existant.
+    /// </summary>
     public void EnsureMovieSortTitle(
         DuneConfiguration configuration
     )
@@ -344,7 +337,10 @@ public sealed class MediaCard
         return (new XDocument(Document), _revision);
     }
 
-    /// <summary>Reprend le statut et la date appliqués après un traitement réussi par yaDIS2.</summary>
+    /// <summary>
+    /// Reprend le statut et la date appliqués après un
+    /// traitement réussi par yaDIS2.
+    /// </summary>
     public void MarkProcessed(DateOnly processingDate)
     {
         string? previousStatus = Header.Element("status")?.Value;
@@ -449,13 +445,24 @@ public sealed class MediaCard
         {
             File.Delete(file);
         }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
+        // Un échec de nettoyage ne doit pas masquer l'erreur de sauvegarde initiale.
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or UnauthorizedAccessException
+            )
+        {
+            Trace.TraceWarning(
+                "Nettoyage du fichier temporaire impossible : {0}. {1}",
+                file,
+                exception.Message
+            );
+        }
     }
 
     /// <summary>
-    /// Releases owned resources and temporary artwork, where
-    /// applicable.
+    /// Libère les ressources possédées et les illustrations
+    /// temporaires.
     /// </summary>
     public void Dispose()
     {
@@ -480,8 +487,8 @@ public sealed class MediaCard
     }
 
     /// <summary>
-    /// Updates series metadata while preserving manually edited
-    /// episodes.
+    /// Actualise la série en préservant les épisodes modifiés
+    /// manuellement.
     /// </summary>
     public void ApplyTvdb(SeriesDetails series, string order)
     {
@@ -550,197 +557,5 @@ public sealed class MediaCard
                 }
             }
         });
-    }
-}
-
-/// <summary>
-/// Edits one episode within its owning media card.
-/// </summary>
-public sealed class Episode(MediaCard owner, XElement node)
-    : INotifyPropertyChanged
-{
-    internal XElement Node => node;
-
-    /// <summary>
-    /// Notifies bindings when the displayed state changes.
-    /// </summary>
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private static int Numeric(
-        XElement element,
-        string attribute
-    )
-    {
-        return
-            int.TryParse(
-                (string?)element.Attribute(attribute),
-                out var number
-            )
-            && number >= 0
-            ? number
-            : 0;
-    }
-
-    /// <summary>
-    /// Gets the season number stored for an episode.
-    /// </summary>
-    public int Season => Numeric(node, "season");
-
-    /// <summary>
-    /// Gets the episode number within its season.
-    /// </summary>
-    public int Number => Numeric(node, "episode");
-
-    /// <summary>
-    /// Gets the episode's navigation key.
-    /// </summary>
-    public string Key =>
-        (string?)node.Attribute("key")
-        ?? $"{Season:00}_{Number:000}_000";
-
-    /// <summary>
-    /// Gets the display label for this selection.
-    /// </summary>
-    public string Label =>
-        $"S{Season:00} · E{Number:00} — {Title}";
-
-    /// <summary>
-    /// Indicates whether metadata was edited manually.
-    /// </summary>
-    public bool IsManual =>
-        (string?)node.Attribute("manual_edit") == "yes";
-
-    private string Get(string field)
-    {
-        return node.Element(field)?.Value ?? "";
-    }
-
-    private void Set(string field, string? value)
-    {
-        if (Get(field) == (value ?? ""))
-        {
-            return;
-        }
-
-        owner.Update(() =>
-        {
-            MediaCard.Put(node, field, value);
-            node.SetAttributeValue("manual_edit", "yes");
-        });
-    }
-
-    /// <summary>
-    /// Gets or sets the displayed title.
-    /// </summary>
-    public string Title
-    {
-        get => Get("title");
-        set => Set("title", value);
-    }
-
-    /// <summary>
-    /// Gets or sets the synopsis.
-    /// </summary>
-    public string Plot
-    {
-        get => Get("plot");
-        set => Set("plot", value);
-    }
-
-    /// <summary>
-    /// Gets or sets the episode's original air date.
-    /// </summary>
-    public string Aired
-    {
-        get => Get("aired");
-        set => Set("aired", value);
-    }
-
-    /// <summary>
-    /// Gets or sets the stored rating text.
-    /// </summary>
-    public string Rating
-    {
-        get => Get("rating");
-        set => Set("rating", value);
-    }
-
-    /// <summary>
-    /// Gets or sets the episode director names.
-    /// </summary>
-    public string Director
-    {
-        get => Get("director");
-        set => Set("director", value);
-    }
-
-    /// <summary>
-    /// Gets the local video path stored for the episode.
-    /// </summary>
-    public string VideoPath => Get("file");
-
-    /// <summary>
-    /// Gets the staged or saved episode thumbnail path.
-    /// </summary>
-    public string ImagePath =>
-        owner.ArtworkPath($"{Season}x{Number}.jpg");
-
-    internal void MarkImageManual()
-    {
-        MediaCard.Put(node, "image", "");
-        node.SetAttributeValue(
-            "manual_image",
-            $"{Season}x{Number}.jpg"
-        );
-    }
-
-    internal void Notify()
-    {
-        PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs(string.Empty)
-        );
-    }
-}
-
-/// <summary>
-/// Encodes artwork URLs in the existing cache-compatible
-/// format.
-/// </summary>
-public static class LegacyArtwork
-{
-    // Same reversible URL/cache scheme as the existing 2.4
-    // bridge.
-
-    /// <summary>
-    /// Encodes an artwork URL in the legacy episode cache
-    /// format.
-    /// </summary>
-    public static string Encode(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return "";
-        }
-
-        Uri url = Uri.TryCreate(
-            value,
-            UriKind.Absolute,
-            out var absolute
-        )
-            ? absolute
-            : new Uri(
-                new Uri("https://artworks.thetvdb.com/"),
-                value.TrimStart('/')
-            );
-        if (url.Scheme is not ("http" or "https"))
-        {
-            throw new InvalidDataException(
-                "URL d'image invalide."
-            );
-        }
-
-        byte[] bytes = Encoding.UTF8.GetBytes(url.AbsoluteUri);
-        return $"episodes/v4url_{Convert.ToHexString(bytes)}/{Convert.ToHexString(SHA256.HashData(bytes).AsSpan(0, 8))}-1.jpg";
     }
 }

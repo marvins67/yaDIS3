@@ -2,7 +2,9 @@ namespace YaDIS3.Desktop.ViewModels;
 
 public sealed partial class ConfigurationViewModel
 {
-    /// <summary>Langue des synopsis.</summary>
+    /// <summary>
+    /// Langue des synopsis.
+    /// </summary>
     public string Language
     {
         get => _settings.Language;
@@ -13,7 +15,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Mode basique sans catalogue central.</summary>
+    /// <summary>
+    /// Mode basique sans catalogue central.
+    /// </summary>
     public bool BasicMode
     {
         get => _settings.BasicMode;
@@ -28,7 +32,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Destination de l’interface Dune.</summary>
+    /// <summary>
+    /// Destination de l’interface Dune.
+    /// </summary>
     public string Destination
     {
         get => _settings.Destination;
@@ -39,7 +45,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Articles ignorés pour le nouveau titre de tri.</summary>
+    /// <summary>
+    /// Articles ignorés pour le nouveau titre de tri.
+    /// </summary>
     public bool IgnoreArticles
     {
         get => _settings.IgnoreArticles;
@@ -53,7 +61,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Liste des articles.</summary>
+    /// <summary>
+    /// Liste des articles.
+    /// </summary>
     public string Articles
     {
         get => _settings.Articles;
@@ -64,7 +74,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Sélection automatique des nouveaux films.</summary>
+    /// <summary>
+    /// Sélection automatique des nouveaux films.
+    /// </summary>
     public bool AutoSelect
     {
         get => _settings.AutoSelect;
@@ -75,7 +87,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Sélection recevant les nouveaux films.</summary>
+    /// <summary>
+    /// Sélection recevant les nouveaux films.
+    /// </summary>
     public string AutoSelectName
     {
         get => _settings.AutoSelectName;
@@ -89,7 +103,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Boîtiers des films.</summary>
+    /// <summary>
+    /// Boîtiers des films.
+    /// </summary>
     public bool UseCases
     {
         get => _settings.Cases;
@@ -100,7 +116,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Cadre de sélection Dune.</summary>
+    /// <summary>
+    /// Cadre de sélection Dune.
+    /// </summary>
     public bool SelectionBox
     {
         get => _settings.SelectionBox;
@@ -111,7 +129,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Barre de défilement Dune.</summary>
+    /// <summary>
+    /// Barre de défilement Dune.
+    /// </summary>
     public bool Scrollbar
     {
         get => _settings.Scrollbar;
@@ -122,7 +142,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Fonds AAI.</summary>
+    /// <summary>
+    /// Fonds AAI.
+    /// </summary>
     public bool AaiBackgrounds
     {
         get => _settings.Aai;
@@ -133,7 +155,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Qualité JPEG de 1 à 100.</summary>
+    /// <summary>
+    /// Qualité JPEG de 1 à 100.
+    /// </summary>
     public int JpegQuality
     {
         get => _settings.JpegQuality;
@@ -144,7 +168,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Période des nouveautés.</summary>
+    /// <summary>
+    /// Période des nouveautés.
+    /// </summary>
     public int LastDays
     {
         get => _settings.LastDays;
@@ -155,7 +181,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Fichier de configuration TVDB.</summary>
+    /// <summary>
+    /// Fichier de configuration TVDB.
+    /// </summary>
     public string TvdbPath
     {
         get => _settings.TvdbPath;
@@ -166,7 +194,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Correspondances de chemins déjà disponibles dans yaDIS3.</summary>
+    /// <summary>
+    /// Correspondances de chemins déjà disponibles dans yaDIS3.
+    /// </summary>
     public string Mappings
     {
         get => _settings.Mappings;
@@ -177,17 +207,23 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Position historique des options de base selon le mode.</summary>
+    /// <summary>
+    /// Position historique des options de base selon le mode.
+    /// </summary>
     public double DatabaseTop => BasicMode ? 118 : 231;
 
-    /// <summary>Complément de l'option AAI.</summary>
+    /// <summary>
+    /// Complément de l'option AAI.
+    /// </summary>
     public bool JpegBackgrounds
     {
         get => !AaiBackgrounds;
         set => AaiBackgrounds = !value;
     }
 
-    /// <summary>Premier bit des catégories historiques.</summary>
+    /// <summary>
+    /// Premier bit des catégories historiques.
+    /// </summary>
     public bool RecentEnabled
     {
         get =>
@@ -205,7 +241,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Tri alphabétique (0) ou par date d'ajout (1).</summary>
+    /// <summary>
+    /// Tri alphabétique (0) ou par date d'ajout (1).
+    /// </summary>
     public int RecentSortIndex
     {
         get => _settings.SortRecentByDate ? 1 : 0;

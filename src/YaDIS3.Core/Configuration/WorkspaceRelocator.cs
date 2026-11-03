@@ -1,6 +1,9 @@
 namespace YaDIS3.Core;
 
-/// <summary>Reprend SyncWorkspace tout en conservant une sauvegarde de l'ancienne destination.</summary>
+/// <summary>
+/// Reprend SyncWorkspace tout en conservant une sauvegarde de
+/// l'ancienne destination.
+/// </summary>
 public sealed class WorkspaceRelocator(
     IExportFileSystem? fileSystem = null
 )
@@ -8,7 +11,9 @@ public sealed class WorkspaceRelocator(
     private readonly IExportFileSystem _files =
         fileSystem ?? new ExportFileSystem();
 
-    /// <summary>Copie tous les fichiers ; la source reste disponible.</summary>
+    /// <summary>
+    /// Copie tous les fichiers ; la source reste disponible.
+    /// </summary>
     public void Copy(
         string source,
         string destination,

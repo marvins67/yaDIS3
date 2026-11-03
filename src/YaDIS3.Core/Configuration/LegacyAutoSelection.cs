@@ -2,7 +2,10 @@ using System.Xml.Linq;
 
 namespace YaDIS3.Core;
 
-/// <summary>Reprend AddToSelection sans doublon ni création implicite de sélection.</summary>
+/// <summary>
+/// Reprend AddToSelection sans doublon ni création implicite de
+/// sélection.
+/// </summary>
 public sealed class LegacyAutoSelection(
     IExportFileSystem? fileSystem = null
 )
@@ -10,7 +13,9 @@ public sealed class LegacyAutoSelection(
     private readonly IExportFileSystem _files =
         fileSystem ?? new ExportFileSystem();
 
-    /// <summary>Ajoute le film à la fin de la sélection existante.</summary>
+    /// <summary>
+    /// Ajoute le film à la fin de la sélection existante.
+    /// </summary>
     public void Add(
         string workspace,
         string selectionName,

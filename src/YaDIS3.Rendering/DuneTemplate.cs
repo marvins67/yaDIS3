@@ -1,27 +1,25 @@
-using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace YaDIS3.Rendering;
 
 /// <summary>
-/// Loads a template and resolves its bundled image and font
-/// assets.
+/// Charge un template et résout ses images et ses polices.
 /// </summary>
 public sealed class DuneTemplate
 {
     /// <summary>
-    /// Gets the directory that contains the loaded template.
+    /// Dossier contenant le template chargé.
     /// </summary>
     public string Directory { get; }
 
     /// <summary>
-    /// Gets the XML root for the loaded data.
+    /// Racine XML des données chargées.
     /// </summary>
     public XElement Root { get; }
 
     /// <summary>
-    /// Gets the template's display name.
+    /// Nom affiché du template.
     /// </summary>
     public string Name =>
         (string?)Root.Attribute("name")
@@ -128,8 +126,8 @@ public sealed class DuneTemplate
     }
 
     /// <summary>
-    /// Loads and validates a template with optional shared
-    /// image resources.
+    /// Charge et valide un template avec ses éventuelles images
+    /// partagées.
     /// </summary>
     public static DuneTemplate Load(
         string directory,
@@ -162,8 +160,8 @@ public sealed class DuneTemplate
     }
 
     /// <summary>
-    /// Resolves a template resource while rejecting paths
-    /// outside the template.
+    /// Résout une ressource en refusant les chemins sortant du
+    /// template.
     /// </summary>
     public string? Asset(string name, bool required = false)
     {
@@ -199,7 +197,7 @@ public sealed class DuneTemplate
     }
 
     /// <summary>
-    /// Gets the font files available in the template.
+    /// Fichiers de polices disponibles dans le template.
     /// </summary>
     public IEnumerable<string> Fonts =>
         _assets.Values.Where(pathValue =>
@@ -211,8 +209,8 @@ public sealed class DuneTemplate
         );
 
     /// <summary>
-    /// Gets a required template element or reports an
-    /// incomplete template.
+    /// Obtient un élément obligatoire ou signale un template
+    /// incomplet.
     /// </summary>
     public XElement Node(string path)
     {
@@ -223,7 +221,7 @@ public sealed class DuneTemplate
     }
 
     /// <summary>
-    /// Loads the templates distributed with the application.
+    /// Charge les templates distribués avec l'application.
     /// </summary>
     public static IReadOnlyList<DuneTemplate> Bundled(
         string? baseDirectory = null
@@ -255,97 +253,10 @@ public sealed class DuneTemplate
     }
 
     /// <summary>
-    /// Returns the template's display name.
+    /// Renvoie le nom affiché du template.
     /// </summary>
     public override string ToString()
     {
         return Name;
-    }
-}
-
-internal static class XmlFields
-{
-    /// <summary>
-    /// Finds an XML element using a slash-separated relative
-    /// path.
-    /// </summary>
-    public static XElement? XPath(
-        this XElement node,
-        string path
-    )
-    {
-        XElement? current = node;
-        foreach (
-            string part in path.Split(
-                '/',
-                StringSplitOptions.RemoveEmptyEntries
-            )
-        )
-        {
-            current = current?.Element(part);
-        }
-
-        return current;
-    }
-
-    /// <summary>
-    /// Reads an XML element's text, or returns an empty string.
-    /// </summary>
-    public static string ValueAt(this XElement node, string path)
-    {
-        return node.XPath(path)?.Value ?? "";
-    }
-
-    /// <summary>
-    /// Reads an XML attribute with an optional fallback value.
-    /// </summary>
-    public static string Attr(
-        this XElement? node,
-        string name,
-        string fallback = ""
-    )
-    {
-        return (string?)node?.Attribute(name) ?? fallback;
-    }
-
-    /// <summary>
-    /// Reads an integer XML attribute with an optional fallback
-    /// value.
-    /// </summary>
-    public static int Int(
-        this XElement? node,
-        string name,
-        int fallback = 0
-    )
-    {
-        return int.TryParse(
-            node.Attr(name),
-            NumberStyles.Integer,
-            CultureInfo.InvariantCulture,
-            out var number
-        )
-            ? number
-            : fallback;
-    }
-
-    /// <summary>
-    /// Reads a finite numeric XML attribute with an optional
-    /// fallback value.
-    /// </summary>
-    public static float Float(
-        this XElement? node,
-        string name,
-        float fallback = 0
-    )
-    {
-        return
-            float.TryParse(
-                node.Attr(name),
-                NumberStyles.Float,
-                CultureInfo.InvariantCulture,
-                out var number
-            ) && float.IsFinite(number)
-            ? number
-            : fallback;
     }
 }

@@ -2,13 +2,18 @@ using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
-/// <summary>Valide et enregistre le statut uniquement après un rendu réussi.</summary>
+/// <summary>
+/// Valide et enregistre le statut uniquement après un rendu
+/// réussi.
+/// </summary>
 public sealed class MediaProcessingService
 {
     private readonly IWorkspaceRepository _repository;
     private readonly TimeProvider _timeProvider;
 
-    /// <summary>Injecte le stockage et l'horloge du traitement.</summary>
+    /// <summary>
+    /// Injecte le stockage et l'horloge du traitement.
+    /// </summary>
     public MediaProcessingService(
         IWorkspaceRepository repository,
         TimeProvider timeProvider
@@ -20,7 +25,10 @@ public sealed class MediaProcessingService
         _timeProvider = timeProvider;
     }
 
-    /// <summary>Produit les images puis applique la transition d'état de yaDIS2.</summary>
+    /// <summary>
+    /// Produit les images puis applique la transition d'état de
+    /// yaDIS2.
+    /// </summary>
     public async Task<ProcessingResult> ProcessAsync(
         MediaCard card,
         DuneTemplate template,

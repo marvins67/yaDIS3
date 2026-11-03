@@ -9,7 +9,10 @@ using YaDIS3.Rendering;
 
 namespace YaDIS3.Desktop.ViewModels;
 
-/// <summary>Modifie une copie des préférences ; seule la validation les applique à l'application.</summary>
+/// <summary>
+/// Modifie une copie des préférences ; seule la validation les
+/// applique à l'application.
+/// </summary>
 public sealed partial class ConfigurationViewModel
     : ObservableViewModel,
         IDisposable
@@ -17,6 +20,7 @@ public sealed partial class ConfigurationViewModel
     private DuneConfiguration _settings;
     private XDocument _groups = new(new XElement("groups"));
     private readonly bool _hasWorkspace;
+    private readonly DuneConfigurationStore _configurationStore;
     private readonly Func<
         ConfigurationSnapshot,
         string,
@@ -33,7 +37,10 @@ public sealed partial class ConfigurationViewModel
     private Bitmap? _preview;
     private SourceFolderViewModel? _folder;
 
-    /// <summary>Injecte les documents et la fonction de validation, sans écrire à l'ouverture.</summary>
+    /// <summary>
+    /// Injecte les documents et la fonction de validation, sans
+    /// écrire à l'ouverture.
+    /// </summary>
     public ConfigurationViewModel(
         ConfigurationSnapshot snapshot,
         string workspace,
@@ -45,9 +52,11 @@ public sealed partial class ConfigurationViewModel
             CancellationToken,
             Task
         > save,
-        ILogger<ConfigurationViewModel>? logger = null
+        ILogger<ConfigurationViewModel>? logger = null,
+        DuneConfigurationStore? configurationStore = null
     )
     {
+        _configurationStore = configurationStore ?? new();
         _logger =
             logger
             ?? NullLogger<ConfigurationViewModel>.Instance;
@@ -72,46 +81,70 @@ public sealed partial class ConfigurationViewModel
         });
     }
 
-    /// <summary>Thèmes disponibles dans l'application.</summary>
+    /// <summary>
+    /// Thèmes disponibles dans l'application.
+    /// </summary>
     public IReadOnlyList<DuneTemplate> Templates { get; }
 
-    /// <summary>Langues déjà prises en charge pour le rendu.</summary>
+    /// <summary>
+    /// Langues déjà prises en charge pour le rendu.
+    /// </summary>
     public IReadOnlyList<string> Languages { get; } =
     ["fr", "en"];
 
-    /// <summary>Le périmètre de ce portage est limité à Dune.</summary>
+    /// <summary>
+    /// Le périmètre de ce portage est limité à Dune.
+    /// </summary>
     public IReadOnlyList<string> Modes { get; } = ["Dune"];
 
-    /// <summary>Dossiers de la copie de travail.</summary>
+    /// <summary>
+    /// Dossiers de la copie de travail.
+    /// </summary>
     public ObservableCollection<SourceFolderViewModel> Folders { get; } =
     [];
 
-    /// <summary>Sélections activables sans modifier leurs membres.</summary>
+    /// <summary>
+    /// Sélections activables sans modifier leurs membres.
+    /// </summary>
     public ObservableCollection<ConfigurationChoice> Selections { get; } =
     [];
 
-    /// <summary>Catégories 03 à 11 du menu des films.</summary>
+    /// <summary>
+    /// Catégories 03 à 11 du menu des films.
+    /// </summary>
     public ObservableCollection<ConfigurationChoice> Categories { get; } =
     [];
 
-    /// <summary>Raccourcis ordonnés du menu principal.</summary>
+    /// <summary>
+    /// Raccourcis ordonnés du menu principal.
+    /// </summary>
     public ObservableCollection<DuneShortcut> Shortcuts { get; } =
     [];
 
-    /// <summary>Genres actuellement présents dans les fiches de films.</summary>
+    /// <summary>
+    /// Genres actuellement présents dans les fiches de films.
+    /// </summary>
     public ObservableCollection<string> Genres { get; } = [];
 
-    /// <summary>Options historiques du tri des nouveautés.</summary>
+    /// <summary>
+    /// Options historiques du tri des nouveautés.
+    /// </summary>
     public IReadOnlyList<string> RecentSorts { get; } =
     ["Alphabétique", "Date d'ajout"];
 
-    /// <summary>Retrait du dossier sélectionné dans la copie de travail.</summary>
+    /// <summary>
+    /// Retrait du dossier sélectionné dans la copie de travail.
+    /// </summary>
     public ICommand RemoveFolderCommand { get; }
 
-    /// <summary>Ajout du raccourci proposé.</summary>
+    /// <summary>
+    /// Ajout du raccourci proposé.
+    /// </summary>
     public ICommand AddShortcutCommand { get; }
 
-    /// <summary>Chemin proposé, appliqué sur OK.</summary>
+    /// <summary>
+    /// Chemin proposé, appliqué sur OK.
+    /// </summary>
     public string WorkspacePath
     {
         get => _workspace;
@@ -122,7 +155,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Erreur de validation affichée dans la fenêtre.</summary>
+    /// <summary>
+    /// Erreur de validation affichée dans la fenêtre.
+    /// </summary>
     public string Message
     {
         get => _message;
@@ -133,7 +168,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Empêche la fermeture pendant l'enregistrement.</summary>
+    /// <summary>
+    /// Empêche la fermeture pendant l'enregistrement.
+    /// </summary>
     public bool IsBusy
     {
         get => _busy;
@@ -144,10 +181,15 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Options du catalogue central disponibles hors mode basique.</summary>
+    /// <summary>
+    /// Options du catalogue central disponibles hors mode
+    /// basique.
+    /// </summary>
     public bool NormalMode => !BasicMode;
 
-    /// <summary>Dossier proposé à l'édition ou à la suppression.</summary>
+    /// <summary>
+    /// Dossier proposé à l'édition ou à la suppression.
+    /// </summary>
     public SourceFolderViewModel? SelectedFolder
     {
         get => _folder;
@@ -159,23 +201,33 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Active Éditer et Supprimer.</summary>
+    /// <summary>
+    /// Active Éditer et Supprimer.
+    /// </summary>
     public bool HasFolder => SelectedFolder is not null;
 
-    /// <summary>Noms des sélections pour les listes déroulantes.</summary>
+    /// <summary>
+    /// Noms des sélections pour les listes déroulantes.
+    /// </summary>
     public IReadOnlyList<string> SelectionNames =>
         Selections.Select(value => value.Name).ToArray();
 
-    /// <summary>Illustration fournie avec le thème, si présente.</summary>
+    /// <summary>
+    /// Illustration fournie avec le thème, si présente.
+    /// </summary>
     public Bitmap? TemplatePreview => _preview;
 
-    /// <summary>Auteur et version provenant de template.xml.</summary>
+    /// <summary>
+    /// Auteur et version provenant de template.xml.
+    /// </summary>
     public string TemplateDescription =>
         SelectedTemplate is null
             ? ""
             : $"Auteur : {SelectedTemplate.Root.Attribute("author")?.Value}\nVersion : {SelectedTemplate.Root.Attribute("version")?.Value}";
 
-    /// <summary>Thème proposé sans changer immédiatement le rendu actif.</summary>
+    /// <summary>
+    /// Thème proposé sans changer immédiatement le rendu actif.
+    /// </summary>
     public DuneTemplate? SelectedTemplate
     {
         get => _template;
@@ -308,7 +360,10 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Préserve les documents existants si le premier dossier choisi est déjà un workspace.</summary>
+    /// <summary>
+    /// Préserve les documents existants si le premier dossier
+    /// choisi est déjà un workspace.
+    /// </summary>
     public void ChooseWorkspace(string path) =>
         ChoosePath(() =>
         {
@@ -318,14 +373,15 @@ public sealed partial class ConfigurationViewModel
             );
             if (!_hasWorkspace)
             {
-                LoadDraft(
-                    new DuneConfigurationStore().Load(target)
-                );
+                LoadDraft(_configurationStore.Load(target));
             }
             WorkspacePath = target;
         });
 
-    /// <summary>Applique la proposition du sélecteur à la copie de travail.</summary>
+    /// <summary>
+    /// Applique la proposition du sélecteur à la copie de
+    /// travail.
+    /// </summary>
     public void ChooseDestination(string path) =>
         ChoosePath(() =>
             Destination = ConfigurationFolderChoice.Resolve(
@@ -353,7 +409,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Valide l'ajout ou l'édition dans la copie de travail.</summary>
+    /// <summary>
+    /// Valide l'ajout ou l'édition dans la copie de travail.
+    /// </summary>
     public void UpdateFolder(
         SourceFolderViewModel draft,
         SourceFolderViewModel? original = null
@@ -386,7 +444,10 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Produit les documents proposés, sans toucher à la bibliothèque active.</summary>
+    /// <summary>
+    /// Produit les documents proposés, sans toucher à la
+    /// bibliothèque active.
+    /// </summary>
     public ConfigurationSnapshot Snapshot() =>
         new(
             _settings with
@@ -436,7 +497,10 @@ public sealed partial class ConfigurationViewModel
         return groups;
     }
 
-    /// <summary>Valide puis applique les changements ; un échec laisse le dialogue ouvert.</summary>
+    /// <summary>
+    /// Valide puis applique les changements ; un échec laisse le
+    /// dialogue ouvert.
+    /// </summary>
     public async Task<bool> ApplyAsync(
         CancellationToken cancellationToken = default
     )
@@ -500,7 +564,9 @@ public sealed partial class ConfigurationViewModel
         Exception exception
     );
 
-    /// <summary>Libère l'aperçu et annule l'opération à la fermeture.</summary>
+    /// <summary>
+    /// Libère l'aperçu et annule l'opération à la fermeture.
+    /// </summary>
     public void Dispose()
     {
         _lifetime.Cancel();

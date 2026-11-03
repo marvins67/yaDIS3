@@ -4,7 +4,10 @@ using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
-/// <summary>Retire les anciens critères après une sauvegarde manuelle réussie.</summary>
+/// <summary>
+/// Retire les anciens critères après une sauvegarde manuelle
+/// réussie.
+/// </summary>
 public sealed class LegacyIndexedCardSaver(
     IWorkspaceRepository repository,
     IExportFileSystem? fileSystem = null
@@ -13,7 +16,10 @@ public sealed class LegacyIndexedCardSaver(
     private readonly IExportFileSystem _fileSystem =
         fileSystem ?? new ExportFileSystem();
 
-    /// <summary>Conserve les contrôles de conflit avant de modifier les index historiques.</summary>
+    /// <summary>
+    /// Conserve les contrôles de conflit avant de modifier les
+    /// index historiques.
+    /// </summary>
     public async Task SaveAsync(
         MediaCard card,
         CancellationToken cancellationToken = default

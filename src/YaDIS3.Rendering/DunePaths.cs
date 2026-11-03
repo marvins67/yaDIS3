@@ -3,13 +3,8 @@ using System.Text.RegularExpressions;
 namespace YaDIS3.Rendering;
 
 /// <summary>
-/// Maps a local media root to a Dune playback address.
-/// </summary>
-public sealed record PathMapping(string Source, string Dune);
-
-/// <summary>
-/// Validates paths and resolves local files to Dune
-/// addresses.
+/// Valide les chemins et résout les fichiers locaux vers leurs
+/// adresses Dune.
 /// </summary>
 public static class DunePaths
 {
@@ -19,8 +14,8 @@ public static class DunePaths
     );
 
     /// <summary>
-    /// Rejects control characters that could corrupt Dune
-    /// configuration.
+    /// Refuse les caractères de contrôle pouvant corrompre la
+    /// configuration Dune.
     /// </summary>
     public static string CleanValue(string value)
     {
@@ -35,8 +30,8 @@ public static class DunePaths
     }
 
     /// <summary>
-    /// Validates a Dune address and normalizes its trailing
-    /// separator.
+    /// Valide une adresse Dune et normalise son séparateur
+    /// final.
     /// </summary>
     public static string ValidateDune(string value)
     {
@@ -82,8 +77,8 @@ public static class DunePaths
     }
 
     /// <summary>
-    /// Indicates whether the path uses a Windows drive or UNC
-    /// root.
+    /// Indique si le chemin utilise un lecteur Windows ou une
+    /// racine UNC.
     /// </summary>
     public static bool Windows(string value)
     {
@@ -92,8 +87,8 @@ public static class DunePaths
     }
 
     /// <summary>
-    /// Joins a local directory and filename across supported
-    /// path styles.
+    /// Assemble un dossier local et un nom de fichier pour les
+    /// syntaxes de chemin prises en charge.
     /// </summary>
     public static string JoinLocal(string directory, string name)
     {
@@ -103,8 +98,8 @@ public static class DunePaths
     }
 
     /// <summary>
-    /// Maps a local video path to a validated Dune playback
-    /// address.
+    /// Convertit un chemin vidéo local en adresse de lecture
+    /// Dune validée.
     /// </summary>
     public static string Resolve(
         string file,
@@ -179,7 +174,8 @@ public static class DunePaths
     }
 
     /// <summary>
-    /// Parses one local-to-Dune root mapping per input line.
+    /// Lit une correspondance entre racine locale et adresse
+    /// Dune par ligne.
     /// </summary>
     public static IReadOnlyList<PathMapping> Parse(string text)
     {

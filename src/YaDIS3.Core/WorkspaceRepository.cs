@@ -6,16 +6,8 @@ using System.Xml.Linq;
 namespace YaDIS3.Core;
 
 /// <summary>
-/// Contains the cards and warnings loaded from a workspace.
-/// </summary>
-public sealed record Workspace(
-    string Directory,
-    IReadOnlyList<MediaCard> Cards,
-    IReadOnlyList<string> Warnings
-);
-
-/// <summary>
-/// Loads cards and saves metadata and artwork with backups.
+/// Charge les fiches et sauvegarde leurs métadonnées et
+/// illustrations.
 /// </summary>
 public sealed class WorkspaceRepository
     : IWorkspaceRepository,
@@ -54,8 +46,8 @@ public sealed class WorkspaceRepository
     }
 
     /// <summary>
-    /// Loads readable workspace cards and reports individual
-    /// file failures.
+    /// Charge les fiches lisibles et signale les fichiers en
+    /// échec.
     /// </summary>
     public Workspace Open(
         string path,
@@ -128,7 +120,7 @@ public sealed class WorkspaceRepository
     }
 
     /// <summary>
-    /// Creates the data directory for a new workspace.
+    /// Crée le dossier de données d'un nouveau workspace.
     /// </summary>
     public void Create(string path)
     {
@@ -138,8 +130,8 @@ public sealed class WorkspaceRepository
     }
 
     /// <summary>
-    /// Saves a card and its staged artwork with conflict checks
-    /// and backups.
+    /// Sauvegarde une fiche et ses illustrations avec contrôles
+    /// de conflit et sauvegardes.
     /// </summary>
     public async Task SaveAsync(
         MediaCard card,
@@ -155,46 +147,11 @@ public sealed class WorkspaceRepository
                 card.Snapshot();
             IReadOnlyList<StagedArtwork> images =
                 card.PendingArtwork();
-            void CheckXml()
-            {
-                if (FileHash(card.FilePath) != card.SourceHash)
-                {
-                    throw new IOException(
-                        "Cette fiche a changé sur le disque. Rouvrez la bibliothèque avant d'enregistrer."
-                    );
-                }
-            }
-
-            CheckXml();
-            foreach (StagedArtwork image in images)
-            {
-                if (FileHash(image.Target) != image.OriginalHash)
-                {
-                    throw new IOException(
-                        "Une illustration a été modifiée par un autre programme. Rouvrez la bibliothèque."
-                    );
-                }
-            }
+            CheckXmlUnchanged(card);
+            ValidateArtwork(images);
 
             Directory.CreateDirectory(card.DataDirectory);
-            using var stream = new MemoryStream();
-            using (
-                XmlWriter xml = XmlWriter.Create(
-                    stream,
-                    new XmlWriterSettings
-                    {
-                        Encoding = new UTF8Encoding(false),
-                        Indent = false,
-                        CloseOutput = false,
-                    }
-                )
-            )
-            {
-                snapshot.Document.Save(xml);
-            }
-
-            byte[] bytes = stream.ToArray();
-            Parse(bytes);
+            byte[] bytes = SerializeMetadata(snapshot.Document);
             temporary =
                 card.FilePath
                 + "."
@@ -205,46 +162,9 @@ public sealed class WorkspaceRepository
                 bytes,
                 cancellationToken
             );
-            CheckXml();
-            foreach (StagedArtwork image in images)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (FileHash(image.Target) != image.OriginalHash)
-                {
-                    throw new IOException(
-                        "Une illustration a changé pendant l'enregistrement."
-                    );
-                }
-
-                bool existed = File.Exists(image.Target);
-                if (existed)
-                {
-                    File.Copy(
-                        image.Target,
-                        image.Target + ".yadis3-modern.bak",
-                        true
-                    );
-                }
-
-                string copy =
-                    image.Target
-                    + "."
-                    + Guid.NewGuid().ToString("N")
-                    + ".tmp";
-                try
-                {
-                    File.Copy(image.Temporary, copy);
-                    File.Move(copy, image.Target, true);
-                }
-                finally
-                {
-                    MediaCard.TryDelete(copy);
-                }
-
-                changed.Add((image.Target, existed));
-            }
-
-            CheckXml();
+            CheckXmlUnchanged(card);
+            CommitArtwork(images, changed, cancellationToken);
+            CheckXmlUnchanged(card);
             if (File.Exists(card.FilePath))
             {
                 File.Copy(
@@ -260,48 +180,10 @@ public sealed class WorkspaceRepository
             card.CompleteArtwork(images);
             card.MarkSaved(snapshot.Revision, Hash(bytes));
         }
-        // Restore committed artwork, then propagate the failure.
+        // Restaurer les illustrations déjà remplacées avant de propager l’erreur.
         catch (Exception saveError)
         {
-            var errors = new List<Exception>();
-            foreach (
-                (string Target, bool Existed) entry in changed
-                    .AsEnumerable()
-                    .Reverse()
-            )
-            {
-                try
-                {
-                    if (entry.Existed)
-                    {
-                        File.Copy(
-                            entry.Target + ".yadis3-modern.bak",
-                            entry.Target,
-                            true
-                        );
-                    }
-                    else
-                    {
-                        File.Delete(entry.Target);
-                    }
-                }
-                catch (Exception exception)
-                    when (exception
-                            is IOException
-                                or UnauthorizedAccessException
-                    )
-                {
-                    errors.Add(exception);
-                }
-            }
-
-            if (errors.Count > 0)
-            {
-                throw new AggregateException(
-                    "Sauvegarde et restauration échouées. Les originaux restent dans les fichiers .yadis3-modern.bak.",
-                    new[] { saveError }.Concat(errors)
-                );
-            }
+            RestoreArtwork(changed, saveError);
 
             throw;
         }
@@ -316,9 +198,148 @@ public sealed class WorkspaceRepository
         }
     }
 
+    private static void CheckXmlUnchanged(MediaCard card)
+    {
+        if (FileHash(card.FilePath) != card.SourceHash)
+        {
+            throw new IOException(
+                "Cette fiche a changé sur le disque. Rouvrez la bibliothèque avant d'enregistrer."
+            );
+        }
+    }
+
+    private static void ValidateArtwork(
+        IReadOnlyList<StagedArtwork> images
+    )
+    {
+        foreach (StagedArtwork image in images)
+        {
+            if (FileHash(image.Target) != image.OriginalHash)
+            {
+                throw new IOException(
+                    "Une illustration a été modifiée par un autre programme. Rouvrez la bibliothèque."
+                );
+            }
+        }
+    }
+
+    private static byte[] SerializeMetadata(XDocument document)
+    {
+        using MemoryStream stream = new();
+        using (
+            XmlWriter writer = XmlWriter.Create(
+                stream,
+                new XmlWriterSettings
+                {
+                    Encoding = new UTF8Encoding(false),
+                    Indent = false,
+                    CloseOutput = false,
+                }
+            )
+        )
+        {
+            document.Save(writer);
+        }
+        byte[] bytes = stream.ToArray();
+        Parse(bytes);
+        return bytes;
+    }
+
+    private static void CommitArtwork(
+        IReadOnlyList<StagedArtwork> images,
+        List<(string Target, bool Existed)> changed,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (StagedArtwork image in images)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (FileHash(image.Target) != image.OriginalHash)
+            {
+                throw new IOException(
+                    "Une illustration a changé pendant l'enregistrement."
+                );
+            }
+            bool existed = File.Exists(image.Target);
+            if (existed)
+            {
+                File.Copy(
+                    image.Target,
+                    image.Target + ".yadis3-modern.bak",
+                    true
+                );
+            }
+            CommitArtworkFile(image);
+            changed.Add((image.Target, existed));
+        }
+    }
+
+    private static void CommitArtworkFile(StagedArtwork image)
+    {
+        string temporary =
+            image.Target
+            + "."
+            + Guid.NewGuid().ToString("N")
+            + ".tmp";
+        try
+        {
+            File.Copy(image.Temporary, temporary);
+            File.Move(temporary, image.Target, true);
+        }
+        finally
+        {
+            MediaCard.TryDelete(temporary);
+        }
+    }
+
+    private static void RestoreArtwork(
+        List<(string Target, bool Existed)> changed,
+        Exception saveError
+    )
+    {
+        List<Exception> errors = [];
+        foreach (
+            (string target, bool existed) in changed
+                .AsEnumerable()
+                .Reverse()
+        )
+        {
+            try
+            {
+                if (existed)
+                {
+                    File.Copy(
+                        target + ".yadis3-modern.bak",
+                        target,
+                        true
+                    );
+                }
+                else
+                {
+                    File.Delete(target);
+                }
+            }
+            catch (Exception exception)
+                when (exception
+                        is IOException
+                            or UnauthorizedAccessException
+                )
+            {
+                errors.Add(exception);
+            }
+        }
+        if (errors.Count > 0)
+        {
+            throw new AggregateException(
+                "Sauvegarde et restauration échouées. Les originaux restent dans les fichiers .yadis3-modern.bak.",
+                new[] { saveError }.Concat(errors)
+            );
+        }
+    }
+
     /// <summary>
-    /// Creates an editable series card from a local video
-    /// directory.
+    /// Crée une fiche de série éditable à partir d'un dossier
+    /// vidéo local.
     /// </summary>
     public MediaCard CreateManualSeries(
         Workspace workspace,
@@ -396,7 +417,10 @@ public sealed class WorkspaceRepository
         return card;
     }
 
-    /// <summary>Libère le verrou d'écriture lorsque le workspace est fermé.</summary>
+    /// <summary>
+    /// Libère le verrou d'écriture lorsque le workspace est
+    /// fermé.
+    /// </summary>
     public void Dispose()
     {
         _writer.Dispose();

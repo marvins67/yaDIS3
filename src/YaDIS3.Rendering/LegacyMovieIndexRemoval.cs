@@ -5,7 +5,10 @@ using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
-/// <summary>Reprend RemoveFromIndex lors de l'enregistrement d'une fiche modifiée.</summary>
+/// <summary>
+/// Reprend RemoveFromIndex lors de l'enregistrement d'une fiche
+/// modifiée.
+/// </summary>
 internal sealed class LegacyMovieIndexRemoval(
     IExportFileSystem fileSystem
 )

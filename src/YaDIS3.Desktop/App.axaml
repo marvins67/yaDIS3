@@ -1,6 +1,10 @@
-<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="using:YaDIS3.Desktop"
-             x:Class="YaDIS3.Desktop.App" RequestedThemeVariant="Light">
+<Application
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="using:YaDIS3.Desktop"
+  x:Class="YaDIS3.Desktop.App"
+  RequestedThemeVariant="Light"
+>
   <Application.Resources>
     <ui:LibraryStateConverter x:Key="LibraryStateConverter" />
   </Application.Resources>
@@ -32,7 +36,10 @@
       <Setter Property="BorderBrush" Value="#C6C6C6" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Background">
-        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+        <LinearGradientBrush
+          StartPoint="0%,0%"
+          EndPoint="0%,100%"
+        >
           <GradientStop Color="#FFFFFF" Offset="0" />
           <GradientStop Color="#F4F4F4" Offset="1" />
         </LinearGradientBrush>
@@ -56,7 +63,10 @@
     <Style Selector="ListBoxItem">
       <Setter Property="Padding" Value="3,0" />
       <Setter Property="MinHeight" Value="20" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter
+        Property="HorizontalContentAlignment"
+        Value="Stretch"
+      />
     </Style>
     <Style Selector="TabItem">
       <Setter Property="Padding" Value="8,4" />

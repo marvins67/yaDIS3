@@ -1,24 +1,36 @@
 namespace YaDIS3.Core;
 
-/// <summary>Permet de substituer le stockage du workspace dans les traitements.</summary>
+/// <summary>
+/// Permet de substituer le stockage du workspace dans les
+/// traitements.
+/// </summary>
 public interface IWorkspaceRepository
 {
-    /// <summary>Charge les fiches existantes.</summary>
+    /// <summary>
+    /// Charge les fiches existantes.
+    /// </summary>
     Workspace Open(
         string path,
         CancellationToken cancellationToken = default
     );
 
-    /// <summary>Enregistre une fiche avec les contrôles de conflit du workspace.</summary>
+    /// <summary>
+    /// Enregistre une fiche avec les contrôles de conflit du
+    /// workspace.
+    /// </summary>
     Task SaveAsync(
         MediaCard card,
         CancellationToken cancellationToken = default
     );
 
-    /// <summary>Crée un workspace vide.</summary>
+    /// <summary>
+    /// Crée un workspace vide.
+    /// </summary>
     void Create(string path);
 
-    /// <summary>Crée une fiche pour une série locale.</summary>
+    /// <summary>
+    /// Crée une fiche pour une série locale.
+    /// </summary>
     MediaCard CreateManualSeries(
         Workspace workspace,
         string videoDirectory,

@@ -1,6 +1,8 @@
 namespace YaDIS3.Desktop.ViewModels;
 
-/// <summary>Case à cocher indépendante du document actif.</summary>
+/// <summary>
+/// Case à cocher indépendante du document actif.
+/// </summary>
 public sealed class ConfigurationChoice(
     string name,
     bool enabled
@@ -8,10 +10,14 @@ public sealed class ConfigurationChoice(
 {
     private bool _enabled = enabled;
 
-    /// <summary>Nom affiché sans renommer l'entrée XML.</summary>
+    /// <summary>
+    /// Nom affiché sans renommer l'entrée XML.
+    /// </summary>
     public string Name { get; } = name;
 
-    /// <summary>Activation proposée.</summary>
+    /// <summary>
+    /// Activation proposée.
+    /// </summary>
     public bool Enabled
     {
         get => _enabled;

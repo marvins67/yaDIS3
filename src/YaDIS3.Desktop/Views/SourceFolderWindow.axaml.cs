@@ -5,10 +5,15 @@ using YaDIS3.Desktop.ViewModels;
 
 namespace YaDIS3.Desktop.Views;
 
-/// <summary>Héberge la saisie et le sélecteur natif ; la validation appartient au modèle de vue.</summary>
+/// <summary>
+/// Héberge la saisie et le sélecteur natif ; la validation
+/// appartient au modèle de vue.
+/// </summary>
 public sealed partial class SourceFolderWindow : Window
 {
-    /// <summary>Charge la boîte d'ajout ou d'édition.</summary>
+    /// <summary>
+    /// Charge la boîte d'ajout ou d'édition.
+    /// </summary>
     public SourceFolderWindow() => InitializeComponent();
 
     private void Accept(object? sender, RoutedEventArgs args) =>

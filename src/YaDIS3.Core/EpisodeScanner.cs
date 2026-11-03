@@ -5,18 +5,8 @@ using System.Xml.Linq;
 namespace YaDIS3.Core;
 
 /// <summary>
-/// Identifies an episode detected in a local video
-/// filename.
-/// </summary>
-public sealed record VideoEpisode(
-    int Season,
-    int Number,
-    string File
-);
-
-/// <summary>
-/// Detects local episodes and merges them into a series
-/// card.
+/// Détecte les épisodes locaux et les fusionne avec une fiche de
+/// série.
 /// </summary>
 public static class EpisodeScanner
 {
@@ -49,8 +39,8 @@ public static class EpisodeScanner
     };
 
     /// <summary>
-    /// Finds supported video files and extracts their episode
-    /// numbers.
+    /// Recherche les fichiers vidéo reconnus et extrait leurs
+    /// numéros d'épisode.
     /// </summary>
     public static IReadOnlyList<VideoEpisode> Detect(
         string directory
@@ -175,8 +165,8 @@ public static class EpisodeScanner
     }
 
     /// <summary>
-    /// Merges detected video paths without deleting existing
-    /// episodes.
+    /// Fusionne les chemins vidéo détectés sans supprimer les
+    /// épisodes existants.
     /// </summary>
     public static void Synchronize(
         MediaCard card,

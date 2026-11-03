@@ -4,7 +4,9 @@ using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
-/// <summary>Écrit les fiches sans modifier les fichiers vidéo sources.</summary>
+/// <summary>
+/// Écrit les fiches sans modifier les fichiers vidéo sources.
+/// </summary>
 internal sealed class LegacyDuneMediaWriter(
     DuneTemplate template,
     RenderOptions options,

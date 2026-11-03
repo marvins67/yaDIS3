@@ -4,7 +4,7 @@ using YaDIS3.Core;
 namespace YaDIS3.Desktop.ViewModels;
 
 /// <summary>
-/// Provides the compact library filters and selection labels.
+/// Filtres de bibliothèque et libellés de sélection.
 /// </summary>
 public sealed partial class MainWindowViewModel
 {
@@ -15,19 +15,19 @@ public sealed partial class MainWindowViewModel
     private bool _invertStateFilter;
 
     /// <summary>
-    /// Gets the available media categories.
+    /// Catégories de médias disponibles.
     /// </summary>
     public IReadOnlyList<string> MediaFilters { get; } =
     ["Films et séries", "Films", "Séries TV"];
 
     /// <summary>
-    /// Gets the available preview and edit states.
+    /// États de traitement et d'édition proposés par le filtre.
     /// </summary>
     public IReadOnlyList<string> StateFilters { get; } =
     ["Tous les états", "Avec aperçu", "Sans aperçu", "Modifiés"];
 
     /// <summary>
-    /// Gets or sets the selected media category.
+    /// Catégorie de médias sélectionnée.
     /// </summary>
     public int MediaFilterIndex
     {
@@ -41,11 +41,14 @@ public sealed partial class MainWindowViewModel
         }
     }
 
-    /// <summary>Choisit l'icône télévision lorsque le filtre porte sur les séries.</summary>
+    /// <summary>
+    /// Choisit l'icône télévision lorsque le filtre porte sur
+    /// les séries.
+    /// </summary>
     public bool IsSeriesFilter => MediaFilterIndex == 2;
 
     /// <summary>
-    /// Gets or sets the selected preview or edit state.
+    /// État de traitement ou d'édition sélectionné.
     /// </summary>
     public int StateFilterIndex
     {
@@ -59,7 +62,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets whether the selected state is excluded.
+    /// Inverse le filtre de l'état sélectionné.
     /// </summary>
     public bool InvertStateFilter
     {
@@ -73,18 +76,18 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Indicates whether a workspace has been opened.
+    /// Indique si un workspace est ouvert.
     /// </summary>
     public bool HasWorkspace => _workspace is not null;
 
     /// <summary>
-    /// Indicates whether the selection has a rendered preview.
+    /// Indique si la sélection possède un aperçu généré.
     /// </summary>
     public bool HasRenderedPreview =>
         RenderedPreview is not null;
 
     /// <summary>
-    /// Gets the empty-preview guidance for the current selection.
+    /// Message affiché en l'absence d'aperçu pour la sélection.
     /// </summary>
     public string PreviewHint =>
         HasCard
@@ -92,24 +95,25 @@ public sealed partial class MainWindowViewModel
             : "Ouvrez une bibliothèque et sélectionnez un film ou une série.";
 
     /// <summary>
-    /// Gets the label for the selected media's information tab.
+    /// Libellé de l'onglet d'informations du média sélectionné.
     /// </summary>
     public string MediaTabTitle =>
         IsSeries ? "Série TV" : "Film";
 
     /// <summary>
-    /// Gets the number of visible and loaded cards.
+    /// Nombre de fiches visibles et chargées.
     /// </summary>
     public string VisibleCountLabel =>
         $"{VisibleCards.Count} / {Cards.Count} fiche(s)";
 
     /// <summary>
-    /// Gets the cast names preserved in the selected metadata.
+    /// Noms des acteurs conservés dans les métadonnées
+    /// sélectionnées.
     /// </summary>
     public string ActorsText => ReadNames("actors", "actor");
 
     /// <summary>
-    /// Gets the genres preserved in the selected metadata.
+    /// Genres conservés dans les métadonnées sélectionnées.
     /// </summary>
     public string GenresText => ReadNames("genres", "genre");
 

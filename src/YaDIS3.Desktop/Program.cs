@@ -5,7 +5,7 @@ namespace YaDIS3.Desktop;
 internal static class Program
 {
     /// <summary>
-    /// Starts the desktop application and its event loop.
+    /// Démarre l'application et sa boucle d'événements.
     /// </summary>
     [STAThread]
     public static void Main(string[] args)
@@ -14,7 +14,7 @@ internal static class Program
     }
 
     /// <summary>
-    /// Configures Avalonia for the current desktop platform.
+    /// Configure Avalonia pour la plateforme courante.
     /// </summary>
     public static AppBuilder BuildAvaloniaApp()
     {

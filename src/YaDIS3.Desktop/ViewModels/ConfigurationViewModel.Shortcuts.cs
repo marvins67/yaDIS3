@@ -10,11 +10,15 @@ public sealed partial class ConfigurationViewModel
     private string? _shortcutSelection;
     private string? _shortcutGenre;
 
-    /// <summary>Types de raccourcis de SetupForm.</summary>
+    /// <summary>
+    /// Types de raccourcis de SetupForm.
+    /// </summary>
     public IReadOnlyList<string> ShortcutTypes { get; } =
     ["Sélection", "Genre", "Dossier"];
 
-    /// <summary>Type du raccourci proposé.</summary>
+    /// <summary>
+    /// Type du raccourci proposé.
+    /// </summary>
     public int ShortcutType
     {
         get => _shortcutType;
@@ -28,16 +32,24 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Champs de dossier personnalisé.</summary>
+    /// <summary>
+    /// Champs de dossier personnalisé.
+    /// </summary>
     public bool IsFolderShortcut => ShortcutType == 2;
 
-    /// <summary>Liste de sélections.</summary>
+    /// <summary>
+    /// Liste de sélections.
+    /// </summary>
     public bool IsSelectionShortcut => ShortcutType == 0;
 
-    /// <summary>Liste de genres.</summary>
+    /// <summary>
+    /// Liste de genres.
+    /// </summary>
     public bool IsGenreShortcut => ShortcutType == 1;
 
-    /// <summary>Nom du dossier personnalisé.</summary>
+    /// <summary>
+    /// Nom du dossier personnalisé.
+    /// </summary>
     public string ShortcutName
     {
         get => _shortcutName;
@@ -48,7 +60,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Adresse du dossier personnalisé.</summary>
+    /// <summary>
+    /// Adresse du dossier personnalisé.
+    /// </summary>
     public string ShortcutPath
     {
         get => _shortcutPath;
@@ -59,7 +73,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Sélection proposée.</summary>
+    /// <summary>
+    /// Sélection proposée.
+    /// </summary>
     public string? ShortcutSelection
     {
         get => _shortcutSelection;
@@ -70,7 +86,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Genre proposé.</summary>
+    /// <summary>
+    /// Genre proposé.
+    /// </summary>
     public string? ShortcutGenre
     {
         get => _shortcutGenre;
@@ -81,7 +99,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Reprend la validation ChangeAddButtonState.</summary>
+    /// <summary>
+    /// Reprend la validation ChangeAddButtonState.
+    /// </summary>
     public bool CanAddShortcut =>
         ShortcutType switch
         {
@@ -92,7 +112,9 @@ public sealed partial class ConfigurationViewModel
             _ => false,
         };
 
-    /// <summary>Ajoute sans dédoublonnage, comme dans SetupForm.</summary>
+    /// <summary>
+    /// Ajoute sans dédoublonnage, comme dans SetupForm.
+    /// </summary>
     public void AddShortcut()
     {
         if (!CanAddShortcut)
@@ -113,7 +135,9 @@ public sealed partial class ConfigurationViewModel
         );
     }
 
-    /// <summary>Déplace l'entrée sans modifier les autres raccourcis.</summary>
+    /// <summary>
+    /// Déplace l'entrée sans modifier les autres raccourcis.
+    /// </summary>
     public void MoveShortcut(int from, int to)
     {
         if (
@@ -128,7 +152,9 @@ public sealed partial class ConfigurationViewModel
         }
     }
 
-    /// <summary>Retire uniquement les entrées sélectionnées.</summary>
+    /// <summary>
+    /// Retire uniquement les entrées sélectionnées.
+    /// </summary>
     public void RemoveShortcuts(
         IEnumerable<DuneShortcut> shortcuts
     )

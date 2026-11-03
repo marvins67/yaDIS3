@@ -5,7 +5,10 @@ namespace YaDIS3.Rendering;
 
 public sealed partial class TemplateRenderer
 {
-    /// <summary>Conserve une icône de bandeau par dossier, sans fichiers nav-*.</summary>
+    /// <summary>
+    /// Conserve une icône de bandeau par dossier, sans fichiers
+    /// nav-*.
+    /// </summary>
     internal void RenderLegacyNavigation(
         IReadOnlyList<(
             string Directory,
@@ -50,7 +53,7 @@ public sealed partial class TemplateRenderer
     private int NavigationWidth(string caption, XElement text)
     {
         _fonts.TryGetValue(
-            FontKey(text.Attr("font")),
+            NormalizeFontName(text.Attr("font")),
             out SKTypeface? face
         );
         using SKFont font = new(
@@ -85,12 +88,12 @@ public sealed partial class TemplateRenderer
         XElement text
     )
     {
-        SKBitmap image = New(
+        SKBitmap image = CreateBitmap(
             area.Int("width"),
             area.Int("height")
         );
         using SKCanvas canvas = new(image);
-        Image(
+        DrawImage(
             canvas,
             ReadImage(
                 _template.Asset(area.Attr("image"), true),
@@ -98,7 +101,10 @@ public sealed partial class TemplateRenderer
             ),
             SKRect.Create(image.Width, image.Height)
         );
-        using SKBitmap labels = New(image.Width, image.Height);
+        using SKBitmap labels = CreateBitmap(
+            image.Width,
+            image.Height
+        );
         using (SKCanvas labelCanvas = new(labels))
         {
             int x = (int)
@@ -125,7 +131,7 @@ public sealed partial class TemplateRenderer
             ApplyMask(labels, mask);
         }
 
-        Image(
+        DrawImage(
             canvas,
             labels,
             SKRect.Create(image.Width, image.Height)
@@ -207,7 +213,10 @@ public sealed partial class TemplateRenderer
         DrawText(canvas, text, caption);
     }
 
-    /// <summary>Les bandeaux actifs font partie du fond dans l'export original.</summary>
+    /// <summary>
+    /// Les bandeaux actifs font partie du fond dans l'export
+    /// original.
+    /// </summary>
     internal void OverlayNavigation(
         string directory,
         string iconPath,
@@ -225,7 +234,7 @@ public sealed partial class TemplateRenderer
         using (SKCanvas canvas = new(background))
         {
             using SKBitmap icon = AaiCodec.Load(iconPath);
-            Image(canvas, icon, Rect(area));
+            DrawImage(canvas, icon, ReadRectangle(area));
         }
 
         SaveBackground(
@@ -239,7 +248,10 @@ public sealed partial class TemplateRenderer
         }
     }
 
-    /// <summary>La saga reprend son fanart et son titre, pas le menu des films.</summary>
+    /// <summary>
+    /// La saga reprend son fanart et son titre, pas le menu des
+    /// films.
+    /// </summary>
     internal void RenderSagaBackground(
         MediaContext poster,
         string title,
@@ -247,16 +259,20 @@ public sealed partial class TemplateRenderer
         string directory
     )
     {
-        using SKBitmap background = New(1920, 1080, true);
+        using SKBitmap background = CreateBitmap(
+            CanvasWidth,
+            CanvasHeight,
+            true
+        );
         using SKCanvas canvas = new(background);
-        using SKBitmap framed = Framed(poster);
+        using SKBitmap framed = CreateFramedArtwork(poster);
         XElement scene = new(
             _template.Node("movie/saga/iconview/background")
         );
         foreach (
             XElement text in scene
                 .Elements("text")
-                .Where(node => Kind(node) == "title")
+                .Where(node => ReadElementKind(node) == "title")
         )
         {
             text.SetAttributeValue("type", "static");
@@ -267,7 +283,7 @@ public sealed partial class TemplateRenderer
         {
             scene
                 .Elements("image")
-                .Where(node => Kind(node) == "fanart")
+                .Where(node => ReadElementKind(node) == "fanart")
                 .Remove();
         }
 
@@ -284,7 +300,10 @@ public sealed partial class TemplateRenderer
         _mediaImages.Clear();
     }
 
-    /// <summary>Conserve les dimensions des étiquettes et des drapeaux yaDIS2.</summary>
+    /// <summary>
+    /// Conserve les dimensions des étiquettes et des drapeaux
+    /// yaDIS2.
+    /// </summary>
     internal void RenderLegacyIndexLabel(
         string directory,
         string caption,
@@ -297,7 +316,7 @@ public sealed partial class TemplateRenderer
                 : "menu/index/" + kind + "/text"
         );
         _fonts.TryGetValue(
-            FontKey(text.Attr("font")),
+            NormalizeFontName(text.Attr("font")),
             out SKTypeface? face
         );
         using SKFont font = new(
@@ -343,7 +362,7 @@ public sealed partial class TemplateRenderer
         bool selected
     )
     {
-        using SKBitmap image = New(width, height);
+        using SKBitmap image = CreateBitmap(width, height);
         using SKCanvas canvas = new(image);
         XElement text = new(source);
         text.SetAttributeValue("x", country ? 64 : 0);
@@ -364,7 +383,7 @@ public sealed partial class TemplateRenderer
         );
         if (country)
         {
-            Image(
+            DrawImage(
                 canvas,
                 ReadImage(
                     _template.Asset("flag_" + caption + ".png"),

@@ -7,8 +7,8 @@ using YaDIS3.Core;
 namespace YaDIS3.Rendering;
 
 /// <summary>
-/// Builds a standalone catalog without modifying media
-/// files.
+/// Construit un catalogue autonome sans modifier les fichiers
+/// vidéo.
 /// </summary>
 public sealed partial class DuneExporter(
     DuneTemplate template,
@@ -33,20 +33,6 @@ public sealed partial class DuneExporter(
         new() { WriteIndented = true };
 
     private const string Marker = "yadis3-export.json";
-
-    private sealed record Manifest(
-        string Producer,
-        int Version,
-        string Template,
-        int MediaCount,
-        int EpisodeCount
-    );
-
-    private sealed record Playback(
-        MediaContext Media,
-        IReadOnlyList<string> MovieUrls,
-        IReadOnlyDictionary<XElement, string> Episodes
-    );
 
     private string Extension =>
         options.AaiBackgrounds ? ".aai" : ".jpg";
@@ -78,8 +64,8 @@ public sealed partial class DuneExporter(
                 return LegacyCatalogOwned(directory);
             }
 
-            Manifest? marker =
-                JsonSerializer.Deserialize<Manifest>(
+            ExportManifest? marker =
+                JsonSerializer.Deserialize<ExportManifest>(
                     File.ReadAllText(
                         Path.Combine(directory, Marker)
                     )
@@ -121,7 +107,7 @@ public sealed partial class DuneExporter(
                 );
     }
 
-    private Playback Plan(
+    private MediaPlaybackPlan Plan(
         MediaContext media,
         List<string> warnings
     )
@@ -238,8 +224,8 @@ public sealed partial class DuneExporter(
     }
 
     /// <summary>
-    /// Renders and replaces the managed Dune catalog with
-    /// rollback support.
+    /// Produit le catalogue Dune avec restauration de la
+    /// destination en cas d'échec.
     /// </summary>
     public ExportResult Export(
         IReadOnlyList<MediaContext> media,
@@ -341,41 +327,13 @@ public sealed partial class DuneExporter(
                 template,
                 options
             );
-            foreach (Playback plan in plans)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                progress?.Report(
-                    "Traitement : "
-                        + SafeCaption(plan.Media.Title)
-                );
-                string output = Path.Combine(
-                    stage,
-                    Relative(plan.Media)
-                        .Replace(
-                            '/',
-                            Path.DirectorySeparatorChar
-                        )
-                );
-                renderer.Render(
-                    plan.Media,
-                    output,
-                    progress,
-                    cancellationToken
-                );
-                WriteMedia(plan, output);
-                // yaDIS2 garde les aperçus dans le workspace, pas dans l'export.
-                foreach (
-                    string preview in Directory.EnumerateFiles(
-                        output,
-                        "preview.jpg",
-                        SearchOption.AllDirectories
-                    )
-                )
-                {
-                    File.Delete(preview);
-                }
-            }
-
+            RenderExportMedia(
+                renderer,
+                plans,
+                stage,
+                progress,
+                cancellationToken
+            );
             WriteIndexes(
                 renderer,
                 plans.Select(item => item.Media).ToArray(),
@@ -384,65 +342,7 @@ public sealed partial class DuneExporter(
             );
             int count = plans.Sum(item => item.Episodes.Count);
             cancellationToken.ThrowIfCancellationRequested();
-            if (Directory.Exists(destination))
-            {
-                if (
-                    !Owned(destination)
-                        && Directory
-                            .EnumerateFileSystemEntries(
-                                destination
-                            )
-                            .Any()
-                    || (
-                        File.GetAttributes(destination)
-                        & FileAttributes.ReparsePoint
-                    ) != 0
-                )
-                {
-                    throw new IOException(
-                        "Le dossier de destination a changé pendant l'export."
-                    );
-                }
-
-                if (Directory.Exists(backup))
-                {
-                    if (
-                        !Owned(backup)
-                        || (
-                            File.GetAttributes(backup)
-                            & FileAttributes.ReparsePoint
-                        ) != 0
-                    )
-                    {
-                        backup +=
-                            "-" + Guid.NewGuid().ToString("N");
-                    }
-                    else
-                    {
-                        Directory.Delete(backup, true);
-                    }
-                }
-
-                Directory.Move(destination, backup);
-            }
-
-            try
-            {
-                Directory.Move(stage, destination);
-            }
-            catch
-            {
-                if (
-                    Directory.Exists(backup)
-                    && !Directory.Exists(destination)
-                )
-                {
-                    Directory.Move(backup, destination);
-                }
-
-                throw;
-            }
-
+            CommitExportStage(stage, destination, backup);
             return new(
                 destination,
                 media.Count,
@@ -465,7 +365,10 @@ public sealed partial class DuneExporter(
         }
     }
 
-    private void WriteMedia(Playback plan, string output)
+    private void WriteMedia(
+        MediaPlaybackPlan plan,
+        string output
+    )
     {
         new LegacyDuneMediaWriter(
             template,
@@ -496,8 +399,8 @@ public sealed partial class DuneExporter(
     }
 
     /// <summary>
-    /// Updates a card's render cache and copies its generated
-    /// preview.
+    /// Actualise le cache de rendu d'une fiche et recopie son
+    /// aperçu.
     /// </summary>
     public static ProcessingResult Process(
         MediaContext media,
@@ -519,35 +422,6 @@ public sealed partial class DuneExporter(
             ".stage-" + Guid.NewGuid().ToString("N")
         );
         string target = Path.Combine(parent, media.Id);
-        bool RenderCacheOwned(string path)
-        {
-            try
-            {
-                using JsonDocument document = JsonDocument.Parse(
-                    File.ReadAllText(
-                        Path.Combine(path, "render.json")
-                    )
-                );
-                return document.RootElement.TryGetProperty(
-                        "Producer",
-                        out var name
-                    )
-                    && name.GetString() == "yaDIS3.Modern"
-                    && (
-                        File.GetAttributes(path)
-                        & FileAttributes.ReparsePoint
-                    ) == 0;
-            }
-            catch (Exception exception)
-                when (exception
-                        is IOException
-                            or JsonException
-                            or UnauthorizedAccessException
-                )
-            {
-                return false;
-            }
-        }
 
         if (
             Directory.Exists(target) && !RenderCacheOwned(target)
@@ -589,74 +463,8 @@ public sealed partial class DuneExporter(
                 )
             );
             cancellationToken.ThrowIfCancellationRequested();
-            string backup = target + ".previous";
-            if (Directory.Exists(target))
-            {
-                if (!RenderCacheOwned(target))
-                {
-                    throw new IOException(
-                        "Le cache a changé pendant le rendu."
-                    );
-                }
-
-                if (Directory.Exists(backup))
-                {
-                    if (RenderCacheOwned(backup))
-                    {
-                        Directory.Delete(backup, true);
-                    }
-                    else
-                    {
-                        backup +=
-                            "-" + Guid.NewGuid().ToString("N");
-                    }
-                }
-
-                Directory.Move(target, backup);
-            }
-
-            try
-            {
-                Directory.Move(stage, target);
-            }
-            catch
-            {
-                if (
-                    Directory.Exists(backup)
-                    && !Directory.Exists(target)
-                )
-                {
-                    Directory.Move(backup, target);
-                }
-
-                throw;
-            }
-
-            string preview = Path.Combine(
-                media.DataDirectory,
-                "preview.jpg"
-            );
-            string temporary =
-                preview
-                + "."
-                + Guid.NewGuid().ToString("N")
-                + ".tmp";
-            try
-            {
-                File.Copy(
-                    Path.Combine(target, "preview.jpg"),
-                    temporary
-                );
-                File.Move(temporary, preview, true);
-            }
-            finally
-            {
-                if (File.Exists(temporary))
-                {
-                    File.Delete(temporary);
-                }
-            }
-
+            CommitRenderStage(stage, target);
+            string preview = CopyRenderedPreview(target, media);
             if (options.BasicMode)
             {
                 new LegacyBasicDuneWriter(
@@ -690,5 +498,222 @@ public sealed partial class DuneExporter(
                 Directory.Delete(stage, true);
             }
         }
+    }
+
+    private void RenderExportMedia(
+        TemplateRenderer renderer,
+        IReadOnlyList<MediaPlaybackPlan> plans,
+        string stage,
+        IProgress<string>? progress,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (MediaPlaybackPlan plan in plans)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(
+                "Traitement : " + SafeCaption(plan.Media.Title)
+            );
+            string output = Path.Combine(
+                stage,
+                Relative(plan.Media)
+                    .Replace('/', Path.DirectorySeparatorChar)
+            );
+            renderer.Render(
+                plan.Media,
+                output,
+                progress,
+                cancellationToken
+            );
+            WriteMedia(plan, output);
+            // yaDIS2 garde les aperçus dans le workspace, pas dans l'export.
+            foreach (
+                string preview in Directory.EnumerateFiles(
+                    output,
+                    "preview.jpg",
+                    SearchOption.AllDirectories
+                )
+            )
+            {
+                File.Delete(preview);
+            }
+        }
+    }
+
+    private static void CommitExportStage(
+        string stage,
+        string destination,
+        string backup
+    )
+    {
+        if (Directory.Exists(destination))
+        {
+            if (
+                !Owned(destination)
+                    && Directory
+                        .EnumerateFileSystemEntries(destination)
+                        .Any()
+                || (
+                    File.GetAttributes(destination)
+                    & FileAttributes.ReparsePoint
+                ) != 0
+            )
+            {
+                throw new IOException(
+                    "Le dossier de destination a changé pendant l'export."
+                );
+            }
+
+            if (Directory.Exists(backup))
+            {
+                if (
+                    !Owned(backup)
+                    || (
+                        File.GetAttributes(backup)
+                        & FileAttributes.ReparsePoint
+                    ) != 0
+                )
+                {
+                    backup += "-" + Guid.NewGuid().ToString("N");
+                }
+                else
+                {
+                    Directory.Delete(backup, true);
+                }
+            }
+
+            Directory.Move(destination, backup);
+        }
+
+        try
+        {
+            Directory.Move(stage, destination);
+        }
+        catch
+        {
+            if (
+                Directory.Exists(backup)
+                && !Directory.Exists(destination)
+            )
+            {
+                Directory.Move(backup, destination);
+            }
+
+            throw;
+        }
+    }
+
+    private static bool RenderCacheOwned(string path)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(
+                File.ReadAllText(
+                    Path.Combine(path, "render.json")
+                )
+            );
+            return document.RootElement.TryGetProperty(
+                    "Producer",
+                    out var name
+                )
+                && name.GetString() == "yaDIS3.Modern"
+                && (
+                    File.GetAttributes(path)
+                    & FileAttributes.ReparsePoint
+                ) == 0;
+        }
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or JsonException
+                        or UnauthorizedAccessException
+            )
+        {
+            return false;
+        }
+    }
+
+    private static void CommitRenderStage(
+        string stage,
+        string target
+    )
+    {
+        string backup = target + ".previous";
+
+        if (Directory.Exists(target))
+        {
+            if (!RenderCacheOwned(target))
+            {
+                throw new IOException(
+                    "Le cache a changé pendant le rendu."
+                );
+            }
+
+            if (Directory.Exists(backup))
+            {
+                if (RenderCacheOwned(backup))
+                {
+                    Directory.Delete(backup, true);
+                }
+                else
+                {
+                    backup += "-" + Guid.NewGuid().ToString("N");
+                }
+            }
+
+            Directory.Move(target, backup);
+        }
+
+        try
+        {
+            Directory.Move(stage, target);
+        }
+        catch
+        {
+            if (
+                Directory.Exists(backup)
+                && !Directory.Exists(target)
+            )
+            {
+                Directory.Move(backup, target);
+            }
+
+            throw;
+        }
+    }
+
+    private static string CopyRenderedPreview(
+        string target,
+        MediaContext media
+    )
+    {
+        string preview = Path.Combine(
+            media.DataDirectory,
+            "preview.jpg"
+        );
+
+        string temporary =
+            preview
+            + "."
+            + Guid.NewGuid().ToString("N")
+            + ".tmp";
+
+        try
+        {
+            File.Copy(
+                Path.Combine(target, "preview.jpg"),
+                temporary
+            );
+            File.Move(temporary, preview, true);
+        }
+        finally
+        {
+            if (File.Exists(temporary))
+            {
+                File.Delete(temporary);
+            }
+        }
+
+        return preview;
     }
 }

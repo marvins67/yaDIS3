@@ -8,8 +8,7 @@ using YaDIS3.Desktop.ViewModels;
 namespace YaDIS3.Desktop.Views;
 
 /// <summary>
-/// Hosts the media editor and desktop file selection
-/// dialogs.
+/// Héberge l'éditeur et les sélecteurs de fichiers natifs.
 /// </summary>
 public sealed partial class MainWindow : Window
 {
@@ -21,8 +20,7 @@ public sealed partial class MainWindow : Window
         (MainWindowViewModel)DataContext!;
 
     /// <summary>
-    /// Initializes the editor window and its lifetime event
-    /// handlers.
+    /// Initialise la fenêtre et ses événements de fermeture.
     /// </summary>
     public MainWindow()
     {

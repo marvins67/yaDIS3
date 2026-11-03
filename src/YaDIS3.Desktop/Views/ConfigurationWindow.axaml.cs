@@ -8,14 +8,20 @@ using YaDIS3.Desktop.ViewModels;
 
 namespace YaDIS3.Desktop.Views;
 
-/// <summary>Héberge les contrôles ; le modèle de vue n'applique les modifications que sur OK.</summary>
+/// <summary>
+/// Héberge les contrôles ; le modèle de vue n'applique les
+/// modifications que sur OK.
+/// </summary>
 public sealed partial class ConfigurationWindow : Window
 {
     private int _draggedShortcut = -1;
     private ConfigurationViewModel Model =>
         (ConfigurationViewModel)DataContext!;
 
-    /// <summary>Charge la vue et bloque la fermeture pendant l'enregistrement.</summary>
+    /// <summary>
+    /// Charge la vue et bloque la fermeture pendant
+    /// l'enregistrement.
+    /// </summary>
     public ConfigurationWindow()
     {
         InitializeComponent();

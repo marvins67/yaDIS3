@@ -7,7 +7,8 @@ using Avalonia.Platform;
 namespace YaDIS3.Desktop;
 
 /// <summary>
-/// Displays an item's edit state and saved preview state.
+/// Affiche l'état d'édition d'une fiche et la présence de son
+/// aperçu.
 /// </summary>
 public sealed class LibraryStateConverter : IMultiValueConverter
 {
@@ -16,7 +17,7 @@ public sealed class LibraryStateConverter : IMultiValueConverter
     );
 
     /// <summary>
-    /// Returns the state glyph or its matching indicator brush.
+    /// Renvoie l'icône d'état ou sa couleur associée.
     /// </summary>
     public object Convert(
         IList<object?> values,

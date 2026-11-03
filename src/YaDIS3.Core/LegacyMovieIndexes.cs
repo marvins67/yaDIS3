@@ -3,10 +3,15 @@ using System.Xml.Linq;
 
 namespace YaDIS3.Core;
 
-/// <summary>Reprend les regroupements de ProcessForm.AddToIndex.</summary>
+/// <summary>
+/// Reprend les regroupements de ProcessForm.AddToIndex.
+/// </summary>
 public static class LegacyMovieIndexes
 {
-    /// <summary>Les séries ne participent pas aux index de films de yaDIS2.</summary>
+    /// <summary>
+    /// Les séries ne participent pas aux index de films de
+    /// yaDIS2.
+    /// </summary>
     public static IReadOnlyList<LegacyIndexEntry> Create(
         XElement info,
         XElement? technical

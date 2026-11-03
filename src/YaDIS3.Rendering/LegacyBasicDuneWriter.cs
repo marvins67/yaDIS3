@@ -3,7 +3,10 @@ using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
-/// <summary>Reprend le mode basique de ProcessForm : interface auprès des fichiers vidéo.</summary>
+/// <summary>
+/// Reprend le mode basique de ProcessForm : interface auprès des
+/// fichiers vidéo.
+/// </summary>
 internal sealed class LegacyBasicDuneWriter(
     DuneTemplate template,
     RenderOptions options,

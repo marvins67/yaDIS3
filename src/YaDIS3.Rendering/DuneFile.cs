@@ -16,7 +16,8 @@ internal sealed class DuneFile(
     );
 
     /// <summary>
-    /// Adds or replaces a validated Dune configuration value.
+    /// Ajoute ou remplace une valeur validée de configuration
+    /// Dune.
     /// </summary>
     public DuneFile Set(string key, object? value)
     {
@@ -28,8 +29,8 @@ internal sealed class DuneFile(
     }
 
     /// <summary>
-    /// Configures a background and hides the standard Dune
-    /// chrome.
+    /// Configure le fond et masque les éléments standard de
+    /// l'interface Dune.
     /// </summary>
     public DuneFile Screen(string background)
     {
@@ -59,7 +60,8 @@ internal sealed class DuneFile(
     }
 
     /// <summary>
-    /// Configures the catalog grid from its template area.
+    /// Configure la grille du catalogue à partir de la zone du
+    /// template.
     /// </summary>
     public DuneFile Grid(XElement area, int columns, int rows)
     {
@@ -75,8 +77,8 @@ internal sealed class DuneFile(
     }
 
     /// <summary>
-    /// Configures normal and selected artwork for a catalog
-    /// entry.
+    /// Configure les illustrations normale et sélectionnée d'une
+    /// entrée.
     /// </summary>
     public DuneFile Icon(string path, string scale = "1")
     {
@@ -88,8 +90,8 @@ internal sealed class DuneFile(
     }
 
     /// <summary>
-    /// Adds a navigation or playback item to the Dune
-    /// configuration.
+    /// Ajoute une entrée de navigation ou de lecture à la
+    /// configuration Dune.
     /// </summary>
     public DuneFile Item(
         int index,
@@ -120,7 +122,10 @@ internal sealed class DuneFile(
         return this;
     }
 
-    /// <summary>Reprend la recherche littérale de CreateIndexItem, limitée aux entrées.</summary>
+    /// <summary>
+    /// Reprend la recherche littérale de CreateIndexItem,
+    /// limitée aux entrées.
+    /// </summary>
     public bool ContainsIndexCaption(string caption)
     {
         string marker = caption + "|";
@@ -136,7 +141,10 @@ internal sealed class DuneFile(
         );
     }
 
-    /// <summary>Conserve les entrées existantes avec leur numérotation historique.</summary>
+    /// <summary>
+    /// Conserve les entrées existantes avec leur numérotation
+    /// historique.
+    /// </summary>
     public DuneFile ImportIndexItems(string content)
     {
         foreach (string line in content.Split('\n'))
@@ -159,7 +167,10 @@ internal sealed class DuneFile(
         return this;
     }
 
-    /// <summary>Ajoute une version seulement si son libellé n'existe pas déjà.</summary>
+    /// <summary>
+    /// Ajoute une version seulement si son libellé n'existe pas
+    /// déjà.
+    /// </summary>
     public void AddIndexMovie(
         string caption,
         string url,
@@ -219,7 +230,9 @@ internal sealed class DuneFile(
         }
     }
 
-    /// <summary>Importe les propriétés dans l'ordre exact de yaDIS2.</summary>
+    /// <summary>
+    /// Importe les propriétés dans l'ordre exact de yaDIS2.
+    /// </summary>
     public static DuneFile FromLegacy(
         string content,
         IExportFileSystem? fileSystem = null
@@ -241,7 +254,9 @@ internal sealed class DuneFile(
         return file;
     }
 
-    /// <summary>Écrit le format historique, BOM et CRLF inclus.</summary>
+    /// <summary>
+    /// Écrit le format historique, BOM et CRLF inclus.
+    /// </summary>
     public void Save(string directory)
     {
         _fileSystem.CreateDirectory(directory);

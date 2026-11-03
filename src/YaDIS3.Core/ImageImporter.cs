@@ -1,42 +1,14 @@
 namespace YaDIS3.Core;
 
 /// <summary>
-/// Identifies the artwork slot to update on a media card.
-/// </summary>
-public enum ArtworkKind
-{
-    /// <summary>Movie or series poster.</summary>
-    Poster,
-
-    /// <summary>Wide series banner.</summary>
-    Banner,
-
-    /// <summary>Background artwork.</summary>
-    Fanart,
-
-    /// <summary>Episode thumbnail.</summary>
-    Episode,
-}
-
-/// <summary>
-/// Converts imported images to the workspace JPEG format.
-/// </summary>
-public interface IJpegEncoder
-{
-    /// <summary>
-    /// Converts the source image to a JPEG at the target path.
-    /// </summary>
-    void Encode(string source, string target);
-}
-
-/// <summary>
-/// Stages artwork replacements until the card is saved.
+/// Conserve les illustrations importées en attente de
+/// l'enregistrement de la fiche.
 /// </summary>
 public sealed class ImageImporter(IJpegEncoder encoder)
 {
     /// <summary>
-    /// Stages an image for the requested card or episode
-    /// artwork slot.
+    /// Prépare l'illustration de la fiche ou de l'épisode à
+    /// remplacer.
     /// </summary>
     public void Import(
         MediaCard card,

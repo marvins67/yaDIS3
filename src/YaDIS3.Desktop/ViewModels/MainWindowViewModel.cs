@@ -3,29 +3,29 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Avalonia.Media.Imaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using YaDIS3.Core;
-using YaDIS3.Rendering;
 
 namespace YaDIS3.Desktop.ViewModels;
 
 /// <summary>
-/// Coordinates card editing, TVDB queries, rendering, and
-/// export.
+/// Coordonne l'édition des fiches, TVDB, le rendu et l'export.
 /// </summary>
 public sealed partial class MainWindowViewModel
     : INotifyPropertyChanged,
         IDisposable
 {
-    private readonly WorkspaceRepository _repository = new();
-
-    private readonly ImageImporter _importer = new(
-        new SkiaJpegEncoder()
-    );
-
-    private readonly HttpClient _http = new()
-    {
-        Timeout = TimeSpan.FromSeconds(45),
-    };
+    private readonly IWorkspaceRepository _repository;
+    private readonly ImageImporter _importer;
+    private readonly HttpClient _http;
+    private readonly DuneConfigurationStore _configurationStore;
+    private readonly DuneConfigurationService _configurationService;
+    private readonly SourceFolderScanner _sourceScanner;
+    private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly ILogger<ConfigurationViewModel> _configurationLogger;
+    private readonly ServiceProvider? _ownedServices;
+    private bool _disposed;
 
     private TvdbClient? _tvdb;
 
@@ -59,104 +59,108 @@ public sealed partial class MainWindowViewModel
     private bool _busy;
 
     /// <summary>
-    /// Notifies bindings when the displayed state changes.
+    /// Signale aux liaisons de données que l'état affiché a
+    /// changé.
     /// </summary>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
-    /// Gets all cards loaded from the workspace.
+    /// Ensemble des fiches chargées depuis le workspace.
     /// </summary>
     public ObservableCollection<MediaCard> Cards { get; } = [];
 
     /// <summary>
-    /// Gets the cards matching the current title filter.
+    /// Fiches correspondant aux filtres courants de la
+    /// bibliothèque.
     /// </summary>
     public ObservableCollection<MediaCard> VisibleCards { get; } =
     [];
 
     /// <summary>
-    /// Gets the series returned by the most recent TVDB search.
+    /// Séries renvoyées par la dernière recherche TVDB.
     /// </summary>
     public ObservableCollection<SeriesMatch> SearchResults { get; } =
     [];
 
     /// <summary>
-    /// Gets the episode orders offered for the selected search
-    /// result.
+    /// Ordres d'épisodes proposés pour le résultat de recherche
+    /// sélectionné.
     /// </summary>
     public ObservableCollection<EpisodeOrder> Orders { get; } =
     [];
 
     /// <summary>
-    /// Gets the command that saves modified cards.
+    /// Commande d'enregistrement des fiches modifiées.
     /// </summary>
     public ICommand SaveCommand { get; }
 
     /// <summary>
-    /// Gets the command that searches TVDB for series.
+    /// Commande de recherche des séries sur TVDB.
     /// </summary>
     public ICommand SearchCommand { get; }
 
     /// <summary>
-    /// Gets the command that applies the selected TVDB result.
+    /// Commande d'application du résultat TVDB sélectionné.
     /// </summary>
     public ICommand ApplySeriesCommand { get; }
 
     /// <summary>
-    /// Gets the command that saves and opens the previous
-    /// episode.
+    /// Commande d'enregistrement et de passage à l'épisode
+    /// précédent.
     /// </summary>
     public ICommand PreviousEpisodeCommand { get; }
 
     /// <summary>
-    /// Gets the command that saves and opens the next episode.
+    /// Commande d'enregistrement et de passage à l'épisode
+    /// suivant.
     /// </summary>
     public ICommand NextEpisodeCommand { get; }
 
     /// <summary>
-    /// Gets the current workspace path or its empty-state
-    /// label.
+    /// Chemin du workspace courant ou libellé indiquant son
+    /// absence.
     /// </summary>
     public string WorkspacePath =>
         _workspace?.Directory ?? "Aucune bibliothèque ouverte";
 
     /// <summary>
-    /// Indicates whether any loaded card has unsaved edits.
+    /// Indique si une fiche chargée contient des modifications
+    /// non enregistrées.
     /// </summary>
     public bool HasChanges =>
         Cards.Any(cardValue => cardValue.IsDirty);
 
     /// <summary>
-    /// Indicates whether a media card is selected.
+    /// Indique si une fiche est sélectionnée.
     /// </summary>
     public bool HasCard => SelectedCard is not null;
 
     /// <summary>
-    /// Indicates whether the current card represents a series.
+    /// Indique si la fiche représente une série.
     /// </summary>
     public bool IsSeries => SelectedCard?.IsSeries == true;
 
     /// <summary>
-    /// Indicates whether an episode is selected.
+    /// Indique si un épisode est sélectionné.
     /// </summary>
     public bool HasEpisode => SelectedEpisode is not null;
 
     /// <summary>
-    /// Gets the total and modified card counts for the status
-    /// display.
+    /// Nombre total de fiches et nombre de fiches modifiées pour
+    /// la barre d'état.
     /// </summary>
     public string CountLabel =>
         $"{Cards.Count} fiche(s) · {Cards.Count(cardValue => cardValue.IsDirty)} modifiée(s)";
 
     /// <summary>
-    /// Gets the description of the migrated features available
-    /// in this build.
+    /// Description des fonctionnalités disponibles dans cette
+    /// version.
     /// </summary>
     public string MigrationNote { get; } =
         "Édition, rendu des templates et export Dune disponibles. Choisissez un template puis Traiter, ou exportez la bibliothèque depuis l’onglet Export Dune.";
 
     /// <summary>
-    /// Gets the selected episode's position within the series.
+    /// Position de l'épisode sélectionné dans la série.
     /// </summary>
     public string EpisodePosition =>
         SelectedCard is null || SelectedEpisode is null
@@ -164,8 +168,7 @@ public sealed partial class MainWindowViewModel
             : $"Épisode {SelectedCard.Episodes.IndexOf(SelectedEpisode) + 1} / {SelectedCard.Episodes.Count}";
 
     /// <summary>
-    /// Gets or sets the latest operation status shown in the
-    /// window.
+    /// Dernier état d'opération affiché dans la fenêtre.
     /// </summary>
     public string Status
     {
@@ -178,7 +181,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Indicates whether a UI operation is in progress.
+    /// Indique si une opération de l'interface est en cours.
     /// </summary>
     public bool IsBusy
     {
@@ -191,7 +194,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the manual TVDB search text.
+    /// Texte de recherche manuelle TVDB.
     /// </summary>
     public string Query
     {
@@ -204,7 +207,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the title filter applied to the card list.
+    /// Texte du filtre appliqué à la liste des fiches.
     /// </summary>
     public string Filter
     {
@@ -218,7 +221,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets the TVDB configuration status label.
+    /// Libellé d'état de la configuration TVDB.
     /// </summary>
     public string CredentialsLabel
     {
@@ -231,7 +234,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets the current poster image.
+    /// Affiche actuellement chargée.
     /// </summary>
     public Bitmap? Poster
     {
@@ -240,7 +243,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets the current fanart image.
+    /// Fanart actuellement chargé.
     /// </summary>
     public Bitmap? Fanart
     {
@@ -249,7 +252,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets the current banner image.
+    /// Bannière actuellement chargée.
     /// </summary>
     public Bitmap? Banner
     {
@@ -258,7 +261,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets the current episode thumbnail image.
+    /// Miniature de l'épisode actuellement chargé.
     /// </summary>
     public Bitmap? EpisodeImage
     {
@@ -267,7 +270,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the media card currently being edited.
+    /// Fiche en cours d'édition.
     /// </summary>
     public MediaCard? SelectedCard
     {
@@ -295,7 +298,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the episode currently being edited.
+    /// Épisode en cours d'édition.
     /// </summary>
     public Episode? SelectedEpisode
     {
@@ -312,7 +315,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the selected TVDB search result.
+    /// Résultat de recherche TVDB sélectionné.
     /// </summary>
     public SeriesMatch? SelectedMatch
     {
@@ -325,7 +328,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the episode order to request from TVDB.
+    /// Ordre des épisodes à demander à TVDB.
     /// </summary>
     public EpisodeOrder? SelectedOrder
     {
@@ -338,11 +341,64 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Initializes editor commands and the bundled Dune
-    /// templates.
+    /// Initialise les commandes d'édition et les templates
+    /// fournis.
     /// </summary>
     public MainWindowViewModel()
+        : this(DesktopServices.CreateProvider()) { }
+
+    private MainWindowViewModel(ServiceProvider services)
+        : this(
+            services.GetRequiredService<IWorkspaceRepository>(),
+            services.GetRequiredService<ImageImporter>(),
+            services.GetRequiredService<IHttpClientFactory>(),
+            services.GetRequiredService<DuneConfigurationStore>(),
+            services.GetRequiredService<DuneConfigurationService>(),
+            services.GetRequiredService<SourceFolderScanner>(),
+            services.GetRequiredService<
+                ILogger<MainWindowViewModel>
+            >(),
+            services.GetRequiredService<
+                ILogger<ConfigurationViewModel>
+            >()
+        )
     {
+        _ownedServices = services;
+    }
+
+    /// <summary>
+    /// Injecte les services et initialise les commandes sans
+    /// effectuer de requête réseau.
+    /// </summary>
+    public MainWindowViewModel(
+        IWorkspaceRepository repository,
+        ImageImporter importer,
+        IHttpClientFactory clients,
+        DuneConfigurationStore configurationStore,
+        DuneConfigurationService configurationService,
+        SourceFolderScanner sourceScanner,
+        ILogger<MainWindowViewModel> logger,
+        ILogger<ConfigurationViewModel> configurationLogger
+    )
+    {
+        ArgumentNullException.ThrowIfNull(repository);
+        ArgumentNullException.ThrowIfNull(importer);
+        ArgumentNullException.ThrowIfNull(clients);
+        ArgumentNullException.ThrowIfNull(configurationStore);
+        ArgumentNullException.ThrowIfNull(configurationService);
+        ArgumentNullException.ThrowIfNull(sourceScanner);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(configurationLogger);
+        _repository = repository;
+        _importer = importer;
+        _http = clients.CreateClient(
+            DesktopServices.TvdbClientName
+        );
+        _configurationStore = configurationStore;
+        _configurationService = configurationService;
+        _sourceScanner = sourceScanner;
+        _logger = logger;
+        _configurationLogger = configurationLogger;
         InitializeDune();
         SaveCommand = new UiCommand(() =>
             RunAsync(SaveAllAsync)
@@ -362,8 +418,8 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Runs one UI operation and reports failures through the
-    /// status text.
+    /// Exécute une opération et présente ses erreurs dans la
+    /// barre d'état.
     /// </summary>
     public async Task RunAsync(Func<Task> action)
     {
@@ -382,9 +438,10 @@ public sealed partial class MainWindowViewModel
         {
             Status = "Opération annulée.";
         }
-        // Report failures at the UI boundary without closing the editor.
+        // Présenter l'erreur à l'utilisateur laisse l'éditeur et ses brouillons ouverts.
         catch (Exception exception)
         {
+            OperationFailed(_logger, exception);
             Status = exception.Message;
         }
         finally
@@ -395,377 +452,6 @@ public sealed partial class MainWindowViewModel
             RefreshFilter();
             NotifyAll();
         }
-    }
-
-    /// <summary>
-    /// Opens a workspace and refreshes the visible card
-    /// selection.
-    /// </summary>
-    public async Task OpenAsync(string path, bool create = false)
-    {
-        if (create)
-        {
-            _repository.Create(path);
-        }
-
-        Workspace loaded = await Task.Run(() =>
-            _repository.Open(path)
-        );
-        foreach (MediaCard card in Cards)
-        {
-            card.PropertyChanged -= CardChanged;
-            card.Dispose();
-        }
-
-        _workspace = loaded;
-        Cards.Clear();
-        VisibleCards.Clear();
-        LoadDunePreferences();
-        ConfigurationSnapshot snapshot =
-            new DuneConfigurationStore().Load(loaded.Directory);
-        foreach (MediaCard card in loaded.Cards)
-        {
-            if (!IsConfiguredSource(card, snapshot))
-            {
-                card.Dispose();
-                continue;
-            }
-            Cards.Add(card);
-            card.PropertyChanged += CardChanged;
-        }
-
-        RefreshFilter();
-        SelectedCard = VisibleCards.FirstOrDefault();
-        Status =
-            loaded.Warnings.Count == 0
-                ? "Bibliothèque ouverte."
-                : string.Join(" · ", loaded.Warnings);
-        NotifyAll();
-    }
-
-    private void CardChanged(
-        object? sender,
-        PropertyChangedEventArgs args
-    )
-    {
-        Notify(nameof(CountLabel));
-        Notify(nameof(HasChanges));
-        Notify(nameof(ActorsText));
-        Notify(nameof(GenresText));
-        if (StateFilterIndex == 3 && !IsBusy)
-        {
-            RefreshFilter();
-        }
-    }
-
-    private void RefreshFilter()
-    {
-        MediaCard? previous = _selectedCard;
-        VisibleCards.Clear();
-        foreach (
-            MediaCard card in Cards.Where(MatchesLibraryFilters)
-        )
-        {
-            VisibleCards.Add(card);
-        }
-
-        SelectedCard =
-            previous is not null
-            && VisibleCards.Contains(previous)
-                ? previous
-                : VisibleCards.FirstOrDefault();
-        Notify(nameof(VisibleCountLabel));
-    }
-
-    /// <summary>
-    /// Saves every modified card in the current workspace.
-    /// </summary>
-    public async Task SaveAllAsync()
-    {
-        foreach (
-            MediaCard card in Cards.Where(cardValue =>
-                cardValue.IsDirty
-            )
-        )
-        {
-            await new LegacyIndexedCardSaver(
-                _repository
-            ).SaveAsync(card, OperationToken);
-        }
-
-        Status =
-            "Modifications enregistrées. Les copies précédentes portent le suffixe .yadis3-modern.bak.";
-        RefreshImages();
-        NotifyAll();
-    }
-
-    /// <summary>
-    /// Creates and saves a series card from a local video
-    /// folder.
-    /// </summary>
-    public async Task AddManualSeriesAsync(string directory)
-    {
-        Workspace current =
-            _workspace
-            ?? throw new InvalidOperationException(
-                "Ouvrez ou créez d'abord une bibliothèque."
-            );
-        IReadOnlyList<VideoEpisode> detected = await Task.Run(
-            () =>
-                EpisodeScanner.Detect(directory)
-        );
-        MediaCard card = _repository.CreateManualSeries(
-            current,
-            directory,
-            detected
-        );
-        await new LegacyIndexedCardSaver(_repository).SaveAsync(
-            card,
-            OperationToken
-        );
-        RememberManualSource(directory);
-        Cards.Add(card);
-        card.PropertyChanged += CardChanged;
-        MediaFilterIndex = 2;
-        StateFilterIndex = 0;
-        InvertStateFilter = false;
-        Filter = "";
-        SelectedCard = card;
-        Status =
-            $"Série manuelle créée : {card.Episodes.Count} épisode(s).";
-    }
-
-    /// <summary>
-    /// Detects video episodes and merges them into the selected
-    /// series.
-    /// </summary>
-    public async Task ScanAsync(string directory)
-    {
-        MediaCard card =
-            SelectedCard
-            ?? throw new InvalidOperationException(
-                "Sélectionnez une série."
-            );
-        IReadOnlyList<VideoEpisode> found = await Task.Run(() =>
-            EpisodeScanner.Detect(directory)
-        );
-        EpisodeScanner.Synchronize(card, found);
-        SelectedEpisode =
-            card.Episodes.Count > 0 ? card.Episodes[0] : null;
-        Notify(nameof(SelectedCard));
-        Status =
-            $"{card.Episodes.Count} épisode(s). Les informations existantes sont conservées ; enregistrez les changements.";
-    }
-
-    /// <summary>
-    /// Loads TVDB credentials from the selected configuration
-    /// file.
-    /// </summary>
-    public void ConfigureTvdb(string file)
-    {
-        _tvdb?.Dispose();
-        _tvdb = new TvdbClient(_http, TvdbSettings.Load(file));
-        CredentialsLabel = "TVDB v4 configuré";
-        Status = "Configuration TVDB chargée.";
-    }
-
-    /// <summary>
-    /// Searches TVDB series titles using the configured
-    /// language.
-    /// </summary>
-    public async Task SearchAsync()
-    {
-        TvdbClient api =
-            _tvdb
-            ?? throw new InvalidOperationException(
-                "Chargez votre tvdb-v4.json avec Configuration TVDB."
-            );
-        IReadOnlyList<SeriesMatch> found = await api.SearchAsync(
-            Query,
-            cancellationToken: OperationToken
-        );
-        SearchResults.Clear();
-        Orders.Clear();
-        SelectedMatch = null;
-        SelectedOrder = null;
-        foreach (SeriesMatch match in found)
-        {
-            SearchResults.Add(match);
-        }
-
-        Status =
-            found.Count == 0
-                ? "Aucune série trouvée. Vous pouvez ajouter une série manuelle depuis son dossier."
-                : $"{found.Count} résultat(s) TVDB.";
-    }
-
-    /// <summary>
-    /// Refreshes the episode orders available for the search
-    /// selection.
-    /// </summary>
-    public async Task LoadOrdersAsync()
-    {
-        SeriesMatch? match = SelectedMatch;
-        if (match is null || _tvdb is null)
-        {
-            return;
-        }
-
-        Orders.Clear();
-        SelectedOrder = null;
-        IReadOnlyList<EpisodeOrder> available =
-            await _tvdb.AvailableOrdersAsync(
-                match.Id,
-                OperationToken
-            );
-        if (SelectedMatch != match)
-        {
-            return;
-        }
-
-        foreach (EpisodeOrder order in available)
-        {
-            Orders.Add(order);
-        }
-
-        SelectedOrder =
-            available.FirstOrDefault(o =>
-                o.Code == SelectedCard?.Order
-            ) ?? (available.Count > 0 ? available[0] : null);
-    }
-
-    /// <summary>
-    /// Applies the selected TVDB series metadata to the current
-    /// draft.
-    /// </summary>
-    public async Task ApplySeriesAsync()
-    {
-        TvdbClient api =
-            _tvdb
-            ?? throw new InvalidOperationException(
-                "TVDB non configuré."
-            );
-        MediaCard card =
-            SelectedCard
-            ?? throw new InvalidOperationException(
-                "Sélectionnez une série."
-            );
-        SeriesMatch match =
-            SelectedMatch
-            ?? throw new InvalidOperationException(
-                "Choisissez une série dans les résultats."
-            );
-        EpisodeOrder order =
-            SelectedOrder
-            ?? throw new InvalidOperationException(
-                "Choisissez un ordre disponible."
-            );
-        SeriesDetails result = await api.SeriesAsync(
-            match.Id,
-            order.Code,
-            cancellationToken: OperationToken
-        );
-        card.ApplyTvdb(result, order.Code);
-        Notify(nameof(SelectedCard));
-        Status =
-            "Informations TVDB appliquées au brouillon. Cliquez sur Enregistrer.";
-    }
-
-    /// <summary>
-    /// Imports artwork into the current card's unsaved draft.
-    /// </summary>
-    public void ImportImage(ArtworkKind kind, string path)
-    {
-        MediaCard card =
-            SelectedCard
-            ?? throw new InvalidOperationException(
-                "Sélectionnez une fiche."
-            );
-        _importer.Import(card, kind, path, SelectedEpisode);
-        RefreshImages();
-        Status =
-            "Image importée dans le brouillon. Cliquez sur Enregistrer pour la conserver.";
-    }
-
-    /// <summary>
-    /// Saves episode edits before moving to an adjacent
-    /// episode.
-    /// </summary>
-    public async Task NavigateAndSaveAsync(int direction)
-    {
-        if (SelectedCard is null || SelectedEpisode is null)
-        {
-            return;
-        }
-
-        int index =
-            SelectedCard.Episodes.IndexOf(SelectedEpisode)
-            + direction;
-        if (index < 0 || index >= SelectedCard.Episodes.Count)
-        {
-            return;
-        }
-
-        if (SelectedCard.IsDirty)
-        {
-            await new LegacyIndexedCardSaver(
-                _repository
-            ).SaveAsync(SelectedCard);
-        }
-
-        SelectedEpisode = SelectedCard.Episodes[index];
-        Status = "Épisode enregistré.";
-    }
-
-    /// <summary>
-    /// Reloads artwork and the rendered preview for the
-    /// selection.
-    /// </summary>
-    public void RefreshImages()
-    {
-        Poster = LoadImage(SelectedCard?.PosterPath);
-        Banner = LoadImage(SelectedCard?.BannerPath);
-        Fanart = LoadImage(SelectedCard?.FanartPath);
-        EpisodeImage = LoadImage(SelectedEpisode?.ImagePath);
-        RefreshRenderedPreview();
-    }
-
-    private static Bitmap? LoadImage(string? path)
-    {
-        if (path is null || !File.Exists(path))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var stream = new MemoryStream(
-                File.ReadAllBytes(path)
-            );
-            return new Bitmap(stream);
-        }
-        catch (Exception exception)
-            when (exception
-                    is IOException
-                        or UnauthorizedAccessException
-                        or ArgumentException
-                        or InvalidDataException
-            )
-        {
-            return null;
-        }
-    }
-
-    private void Replace(
-        ref Bitmap? field,
-        Bitmap? value,
-        [CallerMemberName] string? name = null
-    )
-    {
-        Bitmap? previous = field;
-        field = value;
-        Notify(name);
-        previous?.Dispose();
     }
 
     private void Notify([CallerMemberName] string? name = null)
@@ -785,11 +471,17 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Releases owned resources and temporary artwork, where
-    /// applicable.
+    /// Libère les ressources possédées et les illustrations
+    /// temporaires.
     /// </summary>
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+        _disposed = true;
+
         foreach (MediaCard card in Cards)
         {
             card.PropertyChanged -= CardChanged;
@@ -803,78 +495,17 @@ public sealed partial class MainWindowViewModel
         _renderedPreview?.Dispose();
         _activeOperation?.Cancel();
         _tvdb?.Dispose();
-        _repository.Dispose();
+        _ownedServices?.Dispose();
         _http.Dispose();
     }
-}
 
-internal sealed class UiCommand(Func<Task> action) : ICommand
-{
-    private bool _running;
-
-    /// <summary>
-    /// Notifies command bindings when execution availability
-    /// changes.
-    /// </summary>
-    public event EventHandler? CanExecuteChanged;
-
-    /// <summary>
-    /// Indicates whether the command is currently idle.
-    /// </summary>
-    public bool CanExecute(object? parameter)
-    {
-        return !_running;
-    }
-
-    /// <summary>
-    /// Runs the command while preventing overlapping
-    /// executions.
-    /// </summary>
-    public async void Execute(object? parameter)
-    {
-        if (_running)
-        {
-            return;
-        }
-
-        _running = true;
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-        try
-        {
-            await action();
-        }
-        finally
-        {
-            _running = false;
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-        }
-    }
-}
-
-internal static class ListExtensions
-{
-    /// <summary>
-    /// Finds an item's index using the default equality
-    /// comparer.
-    /// </summary>
-    public static int IndexOf<T>(
-        this IReadOnlyList<T> source,
-        T value
-    )
-    {
-        for (var i = 0; i < source.Count; i++)
-        {
-            if (
-                EqualityComparer<T>.Default.Equals(
-                    source[i],
-                    value
-                )
-            )
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
+    [LoggerMessage(
+        1,
+        LogLevel.Error,
+        "Échec d'une opération de la fenêtre principale"
+    )]
+    private static partial void OperationFailed(
+        ILogger logger,
+        Exception exception
+    );
 }

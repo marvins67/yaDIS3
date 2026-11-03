@@ -1,6 +1,19 @@
-<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:YaDIS3.Desktop.ViewModels" xmlns:core="using:YaDIS3.Core" xmlns:render="using:YaDIS3.Rendering"
-        x:Class="YaDIS3.Desktop.Views.MainWindow" x:DataType="vm:MainWindowViewModel" Title="yaDIS3" Width="1075" Height="797" MinWidth="943" MinHeight="693" FontFamily="Segoe UI, Arial" FontSize="12">
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:vm="using:YaDIS3.Desktop.ViewModels"
+  xmlns:core="using:YaDIS3.Core"
+  xmlns:render="using:YaDIS3.Rendering"
+  x:Class="YaDIS3.Desktop.Views.MainWindow"
+  x:DataType="vm:MainWindowViewModel"
+  Title="yaDIS3"
+  Width="1075"
+  Height="797"
+  MinWidth="943"
+  MinHeight="693"
+  FontFamily="Segoe UI, Arial"
+  FontSize="12"
+>
   <Window.Styles>
     <Style Selector="Button.toolbar, SplitButton.toolbar">
       <Setter Property="Height" Value="38" />
@@ -9,7 +22,10 @@
       <Setter Property="FontSize" Value="12" />
       <Setter Property="BorderBrush" Value="#C6C6C6" />
       <Setter Property="Background">
-        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+        <LinearGradientBrush
+          StartPoint="0%,0%"
+          EndPoint="0%,100%"
+        >
           <GradientStop Color="#FFFFFF" Offset="0" />
           <GradientStop Color="#F4F4F4" Offset="1" />
         </LinearGradientBrush>
@@ -41,10 +57,18 @@
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Template">
         <ControlTemplate>
-          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-            <ContentPresenter Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}"
-                              VerticalAlignment="Center" HorizontalAlignment="Center" />
+          <Border
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            Padding="{TemplateBinding Padding}"
+          >
+            <ContentPresenter
+              Content="{TemplateBinding Header}"
+              ContentTemplate="{TemplateBinding HeaderTemplate}"
+              VerticalAlignment="Center"
+              HorizontalAlignment="Center"
+            />
           </Border>
         </ControlTemplate>
       </Setter>
@@ -60,244 +84,639 @@
     </Style>
   </Window.Styles>
   <Grid Margin="8,0,8,0" RowDefinitions="51,*,6,242,8,22">
-    <Grid x:Name="MainToolbar" ColumnDefinitions="*,Auto" Margin="0,4,0,9">
-      <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-        <StackPanel Orientation="Horizontal" Spacing="6" IsEnabled="{Binding !IsBusy}">
-          <Button x:Name="ConfigureButton" Classes="toolbar" Width="104" Click="ShowConfiguration">
+    <Grid
+      x:Name="MainToolbar"
+      ColumnDefinitions="*,Auto"
+      Margin="0,4,0,9"
+    >
+      <ScrollViewer
+        HorizontalScrollBarVisibility="Hidden"
+        VerticalScrollBarVisibility="Disabled"
+      >
+        <StackPanel
+          Orientation="Horizontal"
+          Spacing="6"
+          IsEnabled="{Binding !IsBusy}"
+        >
+          <Button
+            x:Name="ConfigureButton"
+            Classes="toolbar"
+            Width="104"
+            Click="ShowConfiguration"
+          >
             <StackPanel Orientation="Horizontal" Spacing="7">
-              <Image Source="avares://yaDIS3.Desktop/Assets/Icons/tools.png" Width="24" Height="24" />
-              <TextBlock Text="Configurer" VerticalAlignment="Center" />
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/tools.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="Configurer"
+                VerticalAlignment="Center"
+              />
             </StackPanel>
-
           </Button>
-          <SplitButton Classes="toolbar" Width="98" Command="{Binding ProcessCommand}" IsEnabled="{Binding HasCard}">
+          <SplitButton
+            Classes="toolbar"
+            Width="98"
+            Command="{Binding ProcessCommand}"
+            IsEnabled="{Binding HasCard}"
+          >
             <StackPanel Orientation="Horizontal" Spacing="7">
-              <Image Source="avares://yaDIS3.Desktop/Assets/Icons/process.png" Width="24" Height="24" />
-              <TextBlock Text="Traiter" VerticalAlignment="Center" />
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/process.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="Traiter"
+                VerticalAlignment="Center"
+              />
             </StackPanel>
             <SplitButton.Flyout>
               <Flyout>
-                <Button Content="Traiter la fiche sélectionnée" Command="{Binding ProcessCommand}" />
+                <Button
+                  Content="Traiter la fiche sélectionnée"
+                  Command="{Binding ProcessCommand}"
+                />
               </Flyout>
             </SplitButton.Flyout>
           </SplitButton>
-          <Button Classes="toolbar" Width="90" Command="{Binding ExportCommand}" IsEnabled="{Binding CanExport}">
+          <Button
+            Classes="toolbar"
+            Width="90"
+            Command="{Binding ExportCommand}"
+            IsEnabled="{Binding CanExport}"
+          >
             <StackPanel Orientation="Horizontal" Spacing="7">
-              <Image Source="avares://yaDIS3.Desktop/Assets/Icons/download_to_computer.png" Width="24" Height="24" />
-              <TextBlock Text="Exporter" VerticalAlignment="Center" />
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/download_to_computer.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="Exporter"
+                VerticalAlignment="Center"
+              />
             </StackPanel>
           </Button>
-          <Button Classes="toolbar" Width="98" Click="RefreshWorkspace" IsEnabled="{Binding HasWorkspace}">
+          <Button
+            Classes="toolbar"
+            Width="98"
+            Click="RefreshWorkspace"
+            IsEnabled="{Binding HasWorkspace}"
+          >
             <StackPanel Orientation="Horizontal" Spacing="7">
-              <Image Source="avares://yaDIS3.Desktop/Assets/Icons/refresh.png" Width="24" Height="24" />
-              <TextBlock Text="Rafraîchir" VerticalAlignment="Center" />
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/refresh.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="Rafraîchir"
+                VerticalAlignment="Center"
+              />
             </StackPanel>
           </Button>
           <Grid Width="145">
-            <ComboBox x:Name="MediaFilterChoice" Classes="toolbarFilter" ItemsSource="{Binding MediaFilters}"
-                      SelectedIndex="{Binding MediaFilterIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" />
-            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/film.png" Width="24" Height="24" Margin="6,0,0,0"
-                   HorizontalAlignment="Left" IsHitTestVisible="False" IsVisible="{Binding !IsSeriesFilter}" />
-            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/television.png" Width="24" Height="24" Margin="6,0,0,0"
-                   HorizontalAlignment="Left" IsHitTestVisible="False" IsVisible="{Binding IsSeriesFilter}" />
+            <ComboBox
+              x:Name="MediaFilterChoice"
+              Classes="toolbarFilter"
+              ItemsSource="{Binding MediaFilters}"
+              SelectedIndex="{Binding MediaFilterIndex, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+            />
+            <Image
+              Source="avares://yaDIS3.Desktop/Assets/Icons/film.png"
+              Width="24"
+              Height="24"
+              Margin="6,0,0,0"
+              HorizontalAlignment="Left"
+              IsHitTestVisible="False"
+              IsVisible="{Binding !IsSeriesFilter}"
+            />
+            <Image
+              Source="avares://yaDIS3.Desktop/Assets/Icons/television.png"
+              Width="24"
+              Height="24"
+              Margin="6,0,0,0"
+              HorizontalAlignment="Left"
+              IsHitTestVisible="False"
+              IsVisible="{Binding IsSeriesFilter}"
+            />
           </Grid>
           <Grid Width="145">
-            <ComboBox Classes="toolbarFilter" ItemsSource="{Binding StateFilters}"
-                      SelectedIndex="{Binding StateFilterIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" />
-            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/tag_green.png" Width="24" Height="24" Margin="6,0,0,0"
-                   HorizontalAlignment="Left" IsHitTestVisible="False" />
+            <ComboBox
+              Classes="toolbarFilter"
+              ItemsSource="{Binding StateFilters}"
+              SelectedIndex="{Binding StateFilterIndex, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+            />
+            <Image
+              Source="avares://yaDIS3.Desktop/Assets/Icons/tag_green.png"
+              Width="24"
+              Height="24"
+              Margin="6,0,0,0"
+              HorizontalAlignment="Left"
+              IsHitTestVisible="False"
+            />
           </Grid>
-          <CheckBox Content="Inverser le filtre" IsChecked="{Binding InvertStateFilter, Mode=TwoWay}"
-                    Margin="3,0" VerticalAlignment="Center" />
+          <CheckBox
+            Content="Inverser le filtre"
+            IsChecked="{Binding InvertStateFilter, Mode=TwoWay}"
+            Margin="3,0"
+            VerticalAlignment="Center"
+          />
         </StackPanel>
       </ScrollViewer>
-      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="6,0,0,0">
-        <Button Classes="toolbar" Width="54" ToolTip.Tip="Outils">
+      <StackPanel
+        Grid.Column="1"
+        Orientation="Horizontal"
+        Spacing="6"
+        Margin="6,0,0,0"
+      >
+        <Button
+          Classes="toolbar"
+          Width="54"
+          ToolTip.Tip="Outils"
+        >
           <StackPanel Orientation="Horizontal" Spacing="7">
-            <Image Source="avares://yaDIS3.Desktop/Assets/Icons/computer_process.png" Width="24" Height="24" />
-            <TextBlock Text="▾" VerticalAlignment="Center" FontSize="9" />
+            <Image
+              Source="avares://yaDIS3.Desktop/Assets/Icons/computer_process.png"
+              Width="24"
+              Height="24"
+            />
+            <TextBlock
+              Text="▾"
+              VerticalAlignment="Center"
+              FontSize="9"
+            />
           </StackPanel>
           <Button.Flyout>
             <Flyout>
               <StackPanel Spacing="6" Width="250">
-                <Button Content="Ouvrir une bibliothèque…" Click="OpenWorkspace" />
-                <Button Content="Créer une bibliothèque…" Click="CreateWorkspace" />
-                <Button Content="Ajouter une série manuelle…" Click="AddManualSeries" />
-                <Button Content="Configuration TVDB…" Click="ConfigureTvdb" />
+                <Button
+                  Content="Ouvrir une bibliothèque…"
+                  Click="OpenWorkspace"
+                />
+                <Button
+                  Content="Créer une bibliothèque…"
+                  Click="CreateWorkspace"
+                />
+                <Button
+                  Content="Ajouter une série manuelle…"
+                  Click="AddManualSeries"
+                />
+                <Button
+                  Content="Configuration TVDB…"
+                  Click="ConfigureTvdb"
+                />
                 <Separator />
-                <Button Content="Enregistrer les modifications" Command="{Binding SaveCommand}" IsEnabled="{Binding HasChanges}" />
+                <Button
+                  Content="Enregistrer les modifications"
+                  Command="{Binding SaveCommand}"
+                  IsEnabled="{Binding HasChanges}"
+                />
                 <TextBlock Text="Rechercher dans la bibliothèque :" />
-                <TextBox Text="{Binding Filter, Mode=TwoWay}" PlaceholderText="Titre à rechercher…" />
+                <TextBox
+                  Text="{Binding Filter, Mode=TwoWay}"
+                  PlaceholderText="Titre à rechercher…"
+                />
               </StackPanel>
             </Flyout>
           </Button.Flyout>
         </Button>
-        <Button Classes="toolbar" Width="54" Click="ShowAbout" ToolTip.Tip="À propos de yaDIS3">
-          <Image Source="avares://yaDIS3.Desktop/Assets/Icons/info_big.png" Width="24" Height="24" />
+        <Button
+          Classes="toolbar"
+          Width="54"
+          Click="ShowAbout"
+          ToolTip.Tip="À propos de yaDIS3"
+        >
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/info_big.png"
+            Width="24"
+            Height="24"
+          />
         </Button>
       </StackPanel>
     </Grid>
     <Grid Grid.Row="1" ColumnDefinitions="254,8,*">
-      <ListBox x:Name="LibraryList" ItemsSource="{Binding VisibleCards}" SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
-               IsEnabled="{Binding !IsBusy}" BorderBrush="#A5A5A5" BorderThickness="1" Background="White">
+      <ListBox
+        x:Name="LibraryList"
+        ItemsSource="{Binding VisibleCards}"
+        SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
+        IsEnabled="{Binding !IsBusy}"
+        BorderBrush="#A5A5A5"
+        BorderThickness="1"
+        Background="White"
+      >
         <ListBox.ContextMenu>
           <ContextMenu>
-            <MenuItem Header="Changer de titre…" Click="ShowTvdbSearch" IsEnabled="{Binding IsSeries}" />
+            <MenuItem
+              Header="Changer de titre…"
+              Click="ShowTvdbSearch"
+              IsEnabled="{Binding IsSeries}"
+            />
           </ContextMenu>
         </ListBox.ContextMenu>
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="core:MediaCard">
-            <Grid ColumnDefinitions="18,*" Height="19" ToolTip.Tip="{Binding DisplayName}">
-              <Image Width="16" Height="16" VerticalAlignment="Center">
+            <Grid
+              ColumnDefinitions="18,*"
+              Height="19"
+              ToolTip.Tip="{Binding DisplayName}"
+            >
+              <Image
+                Width="16"
+                Height="16"
+                VerticalAlignment="Center"
+              >
                 <Image.Source>
-                  <MultiBinding Converter="{StaticResource LibraryStateConverter}" ConverterParameter="image">
+                  <MultiBinding
+                    Converter="{StaticResource LibraryStateConverter}"
+                    ConverterParameter="image"
+                  >
                     <Binding Path="FilePath" />
                     <Binding Path="IsDirty" />
                   </MultiBinding>
                 </Image.Source>
               </Image>
-              <TextBlock Text="{Binding DisplayName}" Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+              <TextBlock
+                Text="{Binding DisplayName}"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                TextTrimming="CharacterEllipsis"
+              />
             </Grid>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
-      <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" Background="Transparent" />
-      <Border x:Name="PreviewPanel" Grid.Column="2" BorderBrush="#777777" BorderThickness="1" Background="#B4B4B4" Padding="8">
-        <Image x:Name="DunePreview" Source="{Binding RenderedPreview}" Stretch="Uniform" />
+      <GridSplitter
+        Grid.Column="1"
+        ResizeDirection="Columns"
+        HorizontalAlignment="Stretch"
+        Background="Transparent"
+      />
+      <Border
+        x:Name="PreviewPanel"
+        Grid.Column="2"
+        BorderBrush="#777777"
+        BorderThickness="1"
+        Background="#B4B4B4"
+        Padding="8"
+      >
+        <Image
+          x:Name="DunePreview"
+          Source="{Binding RenderedPreview}"
+          Stretch="Uniform"
+        />
       </Border>
     </Grid>
-    <GridSplitter Grid.Row="2" ResizeDirection="Rows" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="Transparent" />
-    <TabControl x:Name="EditorTabs" Grid.Row="3" IsEnabled="{Binding !IsBusy}" Background="#FAFAFA" Padding="0">
+    <GridSplitter
+      Grid.Row="2"
+      ResizeDirection="Rows"
+      VerticalAlignment="Stretch"
+      HorizontalAlignment="Stretch"
+      Background="Transparent"
+    />
+    <TabControl
+      x:Name="EditorTabs"
+      Grid.Row="3"
+      IsEnabled="{Binding !IsBusy}"
+      Background="#FAFAFA"
+      Padding="0"
+    >
       <TabItem Header="{Binding MediaTabTitle}">
-        <Grid x:Name="InformationPanel" Margin="8,3" ColumnDefinitions="406,6,*" IsEnabled="{Binding HasCard}">
+        <Grid
+          x:Name="InformationPanel"
+          Margin="8,3"
+          ColumnDefinitions="406,6,*"
+          IsEnabled="{Binding HasCard}"
+        >
           <Grid RowDefinitions="39,42,42,42,*">
             <Grid ColumnDefinitions="282,6,56,6,56">
               <StackPanel>
                 <TextBlock Text="Titre :" Classes="fieldLabel" />
-                <TextBox x:Name="TitleEditor" Classes="legacyField" Text="{Binding SelectedCard?.Title, Mode=TwoWay}" />
+                <TextBox
+                  x:Name="TitleEditor"
+                  Classes="legacyField"
+                  Text="{Binding SelectedCard?.Title, Mode=TwoWay}"
+                />
               </StackPanel>
               <StackPanel Grid.Column="2">
                 <TextBlock Text="Année :" Classes="fieldLabel" />
-                <TextBox Classes="legacyField" Text="{Binding SelectedCard?.Year, Mode=TwoWay}" />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding SelectedCard?.Year, Mode=TwoWay}"
+                />
               </StackPanel>
               <StackPanel Grid.Column="4">
                 <TextBlock Text="Note :" Classes="fieldLabel" />
-                <TextBox Classes="legacyField" Text="{Binding SelectedCard?.Rating, Mode=TwoWay}" />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding SelectedCard?.Rating, Mode=TwoWay}"
+                />
               </StackPanel>
             </Grid>
             <StackPanel Grid.Row="1">
               <TextBlock Text="Acteurs :" Classes="fieldLabel" />
-              <TextBox Classes="legacyField" Text="{Binding ActorsText}" IsReadOnly="True" />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding ActorsText}"
+                IsReadOnly="True"
+              />
             </StackPanel>
             <StackPanel Grid.Row="2">
               <TextBlock Text="Genres :" Classes="fieldLabel" />
-              <TextBox Classes="legacyField" Text="{Binding GenresText}" IsReadOnly="True" />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding GenresText}"
+                IsReadOnly="True"
+              />
             </StackPanel>
             <StackPanel Grid.Row="3">
-              <TextBlock Text="Diffuseur :" Classes="fieldLabel" />
-              <TextBox Classes="legacyField" Text="{Binding SelectedCard?.Network, Mode=TwoWay}" />
+              <TextBlock
+                Text="Diffuseur :"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding SelectedCard?.Network, Mode=TwoWay}"
+              />
             </StackPanel>
           </Grid>
           <Grid Grid.Column="2" RowDefinitions="Auto,149,*">
             <TextBlock Text="Synopsis :" Classes="fieldLabel" />
-            <TextBox Grid.Row="1" Text="{Binding SelectedCard?.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap"
-                     VerticalContentAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            <TextBox
+              Grid.Row="1"
+              Text="{Binding SelectedCard?.Plot, Mode=TwoWay}"
+              AcceptsReturn="True"
+              TextWrapping="Wrap"
+              VerticalContentAlignment="Top"
+              ScrollViewer.VerticalScrollBarVisibility="Auto"
+            />
           </Grid>
         </Grid>
       </TabItem>
       <TabItem Header="Affiche" IsVisible="{Binding !IsSeries}">
         <Grid RowDefinitions="Auto,*" Margin="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Importer une image…" Click="ImportPoster" IsEnabled="{Binding HasCard}" />
-            <TextBlock Text="La nouvelle image sera conservée à l’enregistrement." Classes="muted" VerticalAlignment="Center" />
+            <Button
+              Content="Importer une image…"
+              Click="ImportPoster"
+              IsEnabled="{Binding HasCard}"
+            />
+            <TextBlock
+              Text="La nouvelle image sera conservée à l’enregistrement."
+              Classes="muted"
+              VerticalAlignment="Center"
+            />
           </StackPanel>
-          <Image Grid.Row="1" Source="{Binding Poster}" Stretch="Uniform" Margin="0,6,0,0" HorizontalAlignment="Left" />
+          <Image
+            Grid.Row="1"
+            Source="{Binding Poster}"
+            Stretch="Uniform"
+            Margin="0,6,0,0"
+            HorizontalAlignment="Left"
+          />
         </Grid>
       </TabItem>
       <TabItem Header="Bannière" IsVisible="{Binding IsSeries}">
         <Grid RowDefinitions="Auto,*" Margin="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Importer une image…" Click="ImportBanner" IsEnabled="{Binding HasCard}" />
-            <TextBlock Text="La nouvelle image sera conservée à l’enregistrement." Classes="muted" VerticalAlignment="Center" />
+            <Button
+              Content="Importer une image…"
+              Click="ImportBanner"
+              IsEnabled="{Binding HasCard}"
+            />
+            <TextBlock
+              Text="La nouvelle image sera conservée à l’enregistrement."
+              Classes="muted"
+              VerticalAlignment="Center"
+            />
           </StackPanel>
-          <Image Grid.Row="1" Source="{Binding Banner}" Stretch="Uniform" Margin="0,6,0,0" HorizontalAlignment="Left" />
+          <Image
+            Grid.Row="1"
+            Source="{Binding Banner}"
+            Stretch="Uniform"
+            Margin="0,6,0,0"
+            HorizontalAlignment="Left"
+          />
         </Grid>
       </TabItem>
       <TabItem Header="Fanart">
         <Grid RowDefinitions="Auto,*" Margin="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Importer une image…" Click="ImportFanart" IsEnabled="{Binding HasCard}" />
-            <TextBlock Text="La nouvelle image sera conservée à l’enregistrement." Classes="muted" VerticalAlignment="Center" />
+            <Button
+              Content="Importer une image…"
+              Click="ImportFanart"
+              IsEnabled="{Binding HasCard}"
+            />
+            <TextBlock
+              Text="La nouvelle image sera conservée à l’enregistrement."
+              Classes="muted"
+              VerticalAlignment="Center"
+            />
           </StackPanel>
-          <Image Grid.Row="1" Source="{Binding Fanart}" Stretch="Uniform" Margin="0,6,0,0" HorizontalAlignment="Left" />
+          <Image
+            Grid.Row="1"
+            Source="{Binding Fanart}"
+            Stretch="Uniform"
+            Margin="0,6,0,0"
+            HorizontalAlignment="Left"
+          />
         </Grid>
       </TabItem>
       <TabItem Header="Épisodes" IsVisible="{Binding IsSeries}">
         <Grid Margin="8" RowDefinitions="Auto,*" RowSpacing="6">
-          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+          <Grid
+            ColumnDefinitions="Auto,*,Auto"
+            ColumnSpacing="8"
+          >
             <StackPanel Orientation="Horizontal" Spacing="4">
-              <Button Content="◀" Command="{Binding PreviousEpisodeCommand}" IsEnabled="{Binding HasEpisode}" />
-              <Button Content="▶" Command="{Binding NextEpisodeCommand}" IsEnabled="{Binding HasEpisode}" />
+              <Button
+                Content="◀"
+                Command="{Binding PreviousEpisodeCommand}"
+                IsEnabled="{Binding HasEpisode}"
+              />
+              <Button
+                Content="▶"
+                Command="{Binding NextEpisodeCommand}"
+                IsEnabled="{Binding HasEpisode}"
+              />
             </StackPanel>
-            <ComboBox x:Name="EpisodeChoice" Grid.Column="1" ItemsSource="{Binding SelectedCard?.Episodes}" SelectedItem="{Binding SelectedEpisode, Mode=TwoWay}" HorizontalAlignment="Stretch">
+            <ComboBox
+              x:Name="EpisodeChoice"
+              Grid.Column="1"
+              ItemsSource="{Binding SelectedCard?.Episodes}"
+              SelectedItem="{Binding SelectedEpisode, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+            >
               <ComboBox.ItemTemplate>
                 <DataTemplate x:DataType="core:Episode">
                   <TextBlock Text="{Binding Label}" />
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-              <CheckBox Content="Aperçu de l’épisode" IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}" IsEnabled="{Binding HasEpisode}" />
-              <Button Content="Analyser les vidéos…" Click="ScanEpisodes" />
+            <StackPanel
+              Grid.Column="2"
+              Orientation="Horizontal"
+              Spacing="8"
+            >
+              <CheckBox
+                Content="Aperçu de l’épisode"
+                IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}"
+                IsEnabled="{Binding HasEpisode}"
+              />
+              <Button
+                Content="Analyser les vidéos…"
+                Click="ScanEpisodes"
+              />
             </StackPanel>
           </Grid>
-          <Grid Grid.Row="1" ColumnDefinitions="2*,12,3*,12,210" IsEnabled="{Binding HasEpisode}">
+          <Grid
+            Grid.Row="1"
+            ColumnDefinitions="2*,12,3*,12,210"
+            IsEnabled="{Binding HasEpisode}"
+          >
             <StackPanel Spacing="3">
-              <TextBlock Text="Titre de l’épisode :" Classes="fieldLabel" />
-              <TextBox x:Name="EpisodeTitleEditor" Text="{Binding SelectedEpisode?.Title, Mode=TwoWay}" />
-              <TextBlock Text="Diffusion (AAAA-MM-JJ) :" Classes="fieldLabel" />
+              <TextBlock
+                Text="Titre de l’épisode :"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                x:Name="EpisodeTitleEditor"
+                Text="{Binding SelectedEpisode?.Title, Mode=TwoWay}"
+              />
+              <TextBlock
+                Text="Diffusion (AAAA-MM-JJ) :"
+                Classes="fieldLabel"
+              />
               <Grid ColumnDefinitions="*,65" ColumnSpacing="6">
                 <TextBox Text="{Binding SelectedEpisode?.Aired, Mode=TwoWay}" />
-                <TextBox Grid.Column="1" Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}" PlaceholderText="Note" />
+                <TextBox
+                  Grid.Column="1"
+                  Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}"
+                  PlaceholderText="Note"
+                />
               </Grid>
-              <TextBlock Text="Réalisation :" Classes="fieldLabel" />
+              <TextBlock
+                Text="Réalisation :"
+                Classes="fieldLabel"
+              />
               <TextBox Text="{Binding SelectedEpisode?.Director, Mode=TwoWay}" />
-              <TextBlock Text="{Binding EpisodePosition}" Classes="muted" />
+              <TextBlock
+                Text="{Binding EpisodePosition}"
+                Classes="muted"
+              />
             </StackPanel>
-            <Grid Grid.Column="2" RowDefinitions="Auto,*" RowSpacing="3">
-              <TextBlock Text="Synopsis :" Classes="fieldLabel" />
-              <TextBox Grid.Row="1" Text="{Binding SelectedEpisode?.Plot, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            <Grid
+              Grid.Column="2"
+              RowDefinitions="Auto,*"
+              RowSpacing="3"
+            >
+              <TextBlock
+                Text="Synopsis :"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Grid.Row="1"
+                Text="{Binding SelectedEpisode?.Plot, Mode=TwoWay}"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                VerticalContentAlignment="Top"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+              />
             </Grid>
             <Grid Grid.Column="4" RowDefinitions="*,Auto">
-              <Image Source="{Binding EpisodeImage}" Stretch="Uniform" />
-              <Button Content="Choisir l’image…" Grid.Row="1" Click="ImportEpisodeImage" Margin="0,4,0,0" />
+              <Image
+                Source="{Binding EpisodeImage}"
+                Stretch="Uniform"
+              />
+              <Button
+                Content="Choisir l’image…"
+                Grid.Row="1"
+                Click="ImportEpisodeImage"
+                Margin="0,4,0,0"
+              />
             </Grid>
           </Grid>
         </Grid>
       </TabItem>
-      <TabItem Header="Recherche TVDB" IsVisible="False" x:Name="TvdbSearchTab">
-        <Grid Margin="10,16" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="12">
+      <TabItem
+        Header="Recherche TVDB"
+        IsVisible="False"
+        x:Name="TvdbSearchTab"
+      >
+        <Grid
+          Margin="10,16"
+          RowDefinitions="Auto,Auto,*,Auto,Auto"
+          RowSpacing="12"
+        >
           <StackPanel Orientation="Horizontal" Spacing="12">
-            <Button Content="Configuration TVDB" Click="ConfigureTvdb" />
-            <TextBlock Text="{Binding CredentialsLabel}" Classes="muted" VerticalAlignment="Center" />
+            <Button
+              Content="Configuration TVDB"
+              Click="ConfigureTvdb"
+            />
+            <TextBlock
+              Text="{Binding CredentialsLabel}"
+              Classes="muted"
+              VerticalAlignment="Center"
+            />
           </StackPanel>
-          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="Titre à rechercher…" />
-            <Button Grid.Column="1" Content="Rechercher" Command="{Binding SearchCommand}" />
+          <Grid
+            Grid.Row="1"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="8"
+          >
+            <TextBox
+              Text="{Binding Query, Mode=TwoWay}"
+              PlaceholderText="Titre à rechercher…"
+            />
+            <Button
+              Grid.Column="1"
+              Content="Rechercher"
+              Command="{Binding SearchCommand}"
+            />
           </Grid>
-          <ListBox x:Name="TvdbResults" Grid.Row="2" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedMatch, Mode=TwoWay}" SelectionChanged="SearchSelectionChanged">
+          <ListBox
+            x:Name="TvdbResults"
+            Grid.Row="2"
+            ItemsSource="{Binding SearchResults}"
+            SelectedItem="{Binding SelectedMatch, Mode=TwoWay}"
+            SelectionChanged="SearchSelectionChanged"
+          >
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="core:SeriesMatch">
                 <StackPanel Margin="4,8" Spacing="6">
-                  <TextBlock Text="{Binding Label}" FontWeight="SemiBold" />
-                  <TextBlock Text="{Binding Overview}" TextWrapping="Wrap" MaxHeight="72" />
+                  <TextBlock
+                    Text="{Binding Label}"
+                    FontWeight="SemiBold"
+                  />
+                  <TextBlock
+                    Text="{Binding Overview}"
+                    TextWrapping="Wrap"
+                    MaxHeight="72"
+                  />
                 </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
-          <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-            <TextBlock Text="Ordre des épisodes" VerticalAlignment="Center" />
-            <ComboBox Grid.Column="1" ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}" HorizontalAlignment="Stretch">
+          <Grid
+            Grid.Row="3"
+            ColumnDefinitions="Auto,*,Auto"
+            ColumnSpacing="12"
+          >
+            <TextBlock
+              Text="Ordre des épisodes"
+              VerticalAlignment="Center"
+            />
+            <ComboBox
+              Grid.Column="1"
+              ItemsSource="{Binding Orders}"
+              SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+            >
               <ComboBox.ItemTemplate>
                 <DataTemplate x:DataType="core:EpisodeOrder">
                   <TextBlock Text="{Binding Name}" />
@@ -305,50 +724,145 @@
               </ComboBox.ItemTemplate>
             </ComboBox>
           </Grid>
-          <Button Grid.Row="4" Content="Appliquer les informations à la série" Command="{Binding ApplySeriesCommand}" HorizontalAlignment="Left" />
+          <Button
+            Grid.Row="4"
+            Content="Appliquer les informations à la série"
+            Command="{Binding ApplySeriesCommand}"
+            HorizontalAlignment="Left"
+          />
         </Grid>
       </TabItem>
-      <TabItem Header="Export Dune" IsVisible="False" x:Name="DuneSettingsTab">
+      <TabItem
+        Header="Export Dune"
+        IsVisible="False"
+        x:Name="DuneSettingsTab"
+      >
         <ScrollViewer>
           <StackPanel Margin="10,16" Spacing="12">
-            <TextBlock Text="Template et rendu" Classes="section" />
-            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-              <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}" HorizontalAlignment="Stretch">
+            <TextBlock
+              Text="Template et rendu"
+              Classes="section"
+            />
+            <Grid
+              ColumnDefinitions="*,Auto,Auto"
+              ColumnSpacing="8"
+            >
+              <ComboBox
+                ItemsSource="{Binding Templates}"
+                SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
+                HorizontalAlignment="Stretch"
+              >
                 <ComboBox.ItemTemplate>
                   <DataTemplate x:DataType="render:DuneTemplate">
                     <TextBlock Text="{Binding Name}" />
                   </DataTemplate>
                 </ComboBox.ItemTemplate>
               </ComboBox>
-              <Button Grid.Column="1" Content="Charger un template…" Click="ChooseTemplate" />
-              <ComboBox Grid.Column="2" ItemsSource="{Binding TemplateLanguages}" SelectedItem="{Binding TemplateLanguage, Mode=TwoWay}" />
+              <Button
+                Grid.Column="1"
+                Content="Charger un template…"
+                Click="ChooseTemplate"
+              />
+              <ComboBox
+                Grid.Column="2"
+                ItemsSource="{Binding TemplateLanguages}"
+                SelectedItem="{Binding TemplateLanguage, Mode=TwoWay}"
+              />
             </Grid>
             <StackPanel Orientation="Horizontal" Spacing="16">
-              <CheckBox Content="Fonds AAI (sinon JPEG)" IsChecked="{Binding AaiBackgrounds, Mode=TwoWay}" />
-              <CheckBox Content="Boîtiers des films" IsChecked="{Binding UseCases, Mode=TwoWay}" />
+              <CheckBox
+                Content="Fonds AAI (sinon JPEG)"
+                IsChecked="{Binding AaiBackgrounds, Mode=TwoWay}"
+              />
+              <CheckBox
+                Content="Boîtiers des films"
+                IsChecked="{Binding UseCases, Mode=TwoWay}"
+              />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="12">
-              <Button Content="Traiter la fiche sélectionnée" Command="{Binding ProcessCommand}" />
-              <CheckBox Content="Aperçu de l’épisode sélectionné" IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}" IsEnabled="{Binding HasEpisode}" />
+              <Button
+                Content="Traiter la fiche sélectionnée"
+                Command="{Binding ProcessCommand}"
+              />
+              <CheckBox
+                Content="Aperçu de l’épisode sélectionné"
+                IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}"
+                IsEnabled="{Binding HasEpisode}"
+              />
             </StackPanel>
-            <TextBlock Text="Chemins de lecture du Dune" Classes="section" />
-            <TextBlock Text="Une correspondance par ligne : racine locale =&gt; adresse Dune. Si aucune ne correspond, le chemin Dune enregistré dans la fiche est utilisé." TextWrapping="Wrap" Classes="muted" />
-            <TextBox Text="{Binding PathMappings, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="84" PlaceholderText="Z:\Séries =&gt; smb://nas/Series&#10;/Volumes/Films =&gt; storage_label://MEDIAS/Films" />
+            <TextBlock
+              Text="Chemins de lecture du Dune"
+              Classes="section"
+            />
+            <TextBlock
+              Text="Une correspondance par ligne : racine locale =&gt; adresse Dune. Si aucune ne correspond, le chemin Dune enregistré dans la fiche est utilisé."
+              TextWrapping="Wrap"
+              Classes="muted"
+            />
+            <TextBox
+              Text="{Binding PathMappings, Mode=TwoWay}"
+              AcceptsReturn="True"
+              TextWrapping="Wrap"
+              MinHeight="84"
+              PlaceholderText="Z:\Séries =&gt; smb://nas/Series&#10;/Volumes/Films =&gt; storage_label://MEDIAS/Films"
+            />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-              <TextBox Text="{Binding ExportParentPath, Mode=TwoWay}" PlaceholderText="Dossier de destination" />
-              <Button Grid.Column="1" Content="Parcourir…" Click="ChooseExportDestination" />
+              <TextBox
+                Text="{Binding ExportParentPath, Mode=TwoWay}"
+                PlaceholderText="Dossier de destination"
+              />
+              <Button
+                Grid.Column="1"
+                Content="Parcourir…"
+                Click="ChooseExportDestination"
+              />
             </Grid>
-            <Button Content="Exporter toute la bibliothèque vers Dune" Command="{Binding ExportCommand}" HorizontalAlignment="Left" />
-            <TextBlock Text="L’export utilise le dossier de destination choisi. Sa version précédente est conservée avec le suffixe .previous." TextWrapping="Wrap" Classes="muted" />
+            <Button
+              Content="Exporter toute la bibliothèque vers Dune"
+              Command="{Binding ExportCommand}"
+              HorizontalAlignment="Left"
+            />
+            <TextBlock
+              Text="L’export utilise le dossier de destination choisi. Sa version précédente est conservée avec le suffixe .previous."
+              TextWrapping="Wrap"
+              Classes="muted"
+            />
           </StackPanel>
         </ScrollViewer>
       </TabItem>
     </TabControl>
-    <Grid Grid.Row="5" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10">
-      <TextBlock Text="{Binding VisibleCountLabel}" VerticalAlignment="Center" />
-      <ProgressBar Grid.Column="1" IsVisible="{Binding IsBusy}" IsIndeterminate="True" Width="70" Height="5" VerticalAlignment="Center" />
-      <TextBlock Text="{Binding Status}" Grid.Column="2" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding Status}" />
-      <Button Content="Annuler" Grid.Column="3" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" Padding="6,0" />
+    <Grid
+      Grid.Row="5"
+      ColumnDefinitions="Auto,Auto,*,Auto"
+      ColumnSpacing="10"
+    >
+      <TextBlock
+        Text="{Binding VisibleCountLabel}"
+        VerticalAlignment="Center"
+      />
+      <ProgressBar
+        Grid.Column="1"
+        IsVisible="{Binding IsBusy}"
+        IsIndeterminate="True"
+        Width="70"
+        Height="5"
+        VerticalAlignment="Center"
+      />
+      <TextBlock
+        Text="{Binding Status}"
+        Grid.Column="2"
+        Classes="muted"
+        TextTrimming="CharacterEllipsis"
+        VerticalAlignment="Center"
+        ToolTip.Tip="{Binding Status}"
+      />
+      <Button
+        Content="Annuler"
+        Grid.Column="3"
+        Command="{Binding CancelCommand}"
+        IsVisible="{Binding IsBusy}"
+        Padding="6,0"
+      />
     </Grid>
   </Grid>
 </Window>

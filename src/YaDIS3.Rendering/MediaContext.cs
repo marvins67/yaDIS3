@@ -6,34 +6,33 @@ using YaDIS3.Core;
 namespace YaDIS3.Rendering;
 
 /// <summary>
-/// Provides an immutable metadata snapshot for rendering
-/// and export.
+/// Fige les métadonnées utilisées pendant un rendu ou un export.
 /// </summary>
 public sealed class MediaContext
 {
     /// <summary>
-    /// Gets the XML root for the loaded data.
+    /// Racine XML des données chargées.
     /// </summary>
     public XElement Root { get; }
 
     /// <summary>
-    /// Gets the card's legacy item header.
+    /// En-tête historique de la fiche.
     /// </summary>
     public XElement Header { get; }
 
     /// <summary>
-    /// Gets the metadata used to render the card.
+    /// Métadonnées utilisées pour dessiner la fiche.
     /// </summary>
     public XElement Info { get; }
 
     /// <summary>
-    /// Gets the directory containing the card metadata and
-    /// artwork.
+    /// Dossier contenant les métadonnées et les illustrations de
+    /// la fiche.
     /// </summary>
     public string DataDirectory { get; }
 
     /// <summary>
-    /// Gets or sets the displayed title.
+    /// Titre affiché.
     /// </summary>
     public string Title =>
         Info.ValueAt("title") is { Length: > 0 } title
@@ -41,24 +40,24 @@ public sealed class MediaContext
             : Header.ValueAt("filename");
 
     /// <summary>
-    /// Indicates whether the current card represents a series.
+    /// Indique si la fiche représente une série.
     /// </summary>
     public bool IsSeries => Header.ValueAt("type") == "1";
 
     /// <summary>
-    /// Gets the stable identifier used for this catalog entry.
+    /// Identifiant stable de cette entrée du catalogue.
     /// </summary>
     public string Id { get; }
 
     /// <summary>
-    /// Gets the card's episodes in their stored navigation
-    /// order.
+    /// Épisodes classés dans leur ordre de navigation
+    /// enregistré.
     /// </summary>
     public IReadOnlyList<XElement> Episodes { get; }
 
     /// <summary>
-    /// Copies the card metadata for a stable render and export
-    /// snapshot.
+    /// Copie les métadonnées afin de stabiliser le rendu et
+    /// l'export.
     /// </summary>
     public MediaContext(MediaCard card)
     {
@@ -93,7 +92,8 @@ public sealed class MediaContext
     }
 
     /// <summary>
-    /// Resolves an artwork filename within the card directory.
+    /// Résout le chemin d'une illustration dans le dossier de la
+    /// fiche.
     /// </summary>
     public string Artwork(string name)
     {
@@ -101,7 +101,7 @@ public sealed class MediaContext
     }
 
     /// <summary>
-    /// Gets the season number stored for an episode.
+    /// Numéro de saison enregistré pour l'épisode.
     /// </summary>
     public static int Season(XElement episode)
     {
@@ -109,19 +109,18 @@ public sealed class MediaContext
     }
 
     /// <summary>
-    /// Gets the episode number within its season.
+    /// Numéro de l'épisode dans sa saison.
     /// </summary>
     public static int Number(XElement episode)
     {
         return episode.Int("episode");
     }
 
-    // Preserve the legacy key's viewing season (specials may be
-    // positioned in another season).
+    // La clé historique peut ranger les épisodes spéciaux dans une autre saison.
 
     /// <summary>
-    /// Gets the navigation season, preserving special-episode
-    /// placement.
+    /// Saison de navigation conservant le placement des épisodes
+    /// spéciaux.
     /// </summary>
     public static string ViewingSeason(XElement episode)
     {
@@ -129,8 +128,8 @@ public sealed class MediaContext
     }
 
     /// <summary>
-    /// Gets a safe, stable folder name for an episode's Dune
-    /// entry.
+    /// Nom de dossier stable et compatible avec la navigation
+    /// Dune.
     /// </summary>
     public static string EpisodeFolder(XElement episode)
     {

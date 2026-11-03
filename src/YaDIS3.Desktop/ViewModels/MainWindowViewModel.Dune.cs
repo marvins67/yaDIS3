@@ -8,8 +8,7 @@ using YaDIS3.Rendering;
 namespace YaDIS3.Desktop.ViewModels;
 
 /// <summary>
-/// Coordinates card editing, TVDB queries, rendering, and
-/// export.
+/// Coordonne l'édition des fiches, TVDB, le rendu et l'export.
 /// </summary>
 public sealed partial class MainWindowViewModel
 {
@@ -32,34 +31,34 @@ public sealed partial class MainWindowViewModel
     private CancellationTokenSource? _activeOperation;
 
     /// <summary>
-    /// Gets the templates available for rendering and export.
+    /// Templates disponibles pour le rendu et l'export.
     /// </summary>
     public ObservableCollection<DuneTemplate> Templates { get; } =
     [];
 
     /// <summary>
-    /// Gets the supported template languages.
+    /// Langues de rendu prises en charge.
     /// </summary>
     public IReadOnlyList<string> TemplateLanguages { get; } =
     ["fr", "en"];
 
     /// <summary>
-    /// Gets the command that renders the selected card.
+    /// Commande de traitement de la fiche sélectionnée.
     /// </summary>
     public ICommand ProcessCommand { get; private set; } = null!;
 
     /// <summary>
-    /// Gets the command that exports the Dune catalog.
+    /// Commande d'export du catalogue Dune.
     /// </summary>
     public ICommand ExportCommand { get; private set; } = null!;
 
     /// <summary>
-    /// Gets the command that cancels the active operation.
+    /// Commande d'annulation de l'opération en cours.
     /// </summary>
     public ICommand CancelCommand { get; private set; } = null!;
 
     /// <summary>
-    /// Gets or sets the template used for rendering and export.
+    /// Template sélectionné pour le rendu et l'export.
     /// </summary>
     public DuneTemplate? SelectedTemplate
     {
@@ -72,7 +71,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the language used for template labels.
+    /// Langue des libellés du template.
     /// </summary>
     public string TemplateLanguage
     {
@@ -85,7 +84,8 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the local-root to Dune-address mappings.
+    /// Correspondances entre les racines locales et les adresses
+    /// Dune.
     /// </summary>
     public string PathMappings
     {
@@ -98,8 +98,8 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets the parent directory for the managed
-    /// export.
+    /// Dossier de destination de l'export géré par
+    /// l'application.
     /// </summary>
     public string ExportParentPath
     {
@@ -112,8 +112,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets whether backgrounds use AAI instead of
-    /// JPEG.
+    /// Utilise des fonds AAI à la place des JPEG.
     /// </summary>
     public bool AaiBackgrounds
     {
@@ -126,7 +125,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets whether film posters include a case frame.
+    /// Ajoute un boîtier autour des affiches de films.
     /// </summary>
     public bool UseCases
     {
@@ -139,8 +138,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets or sets whether the selected episode preview is
-    /// displayed.
+    /// Affiche l'aperçu de l'épisode sélectionné.
     /// </summary>
     public bool ShowEpisodePreview
     {
@@ -154,7 +152,7 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Gets the currently displayed rendered preview image.
+    /// Image de l'aperçu actuellement affiché.
     /// </summary>
     public Bitmap? RenderedPreview
     {
@@ -205,7 +203,8 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Loads and selects a template from the chosen directory.
+    /// Charge et sélectionne un template depuis le dossier
+    /// choisi.
     /// </summary>
     public void LoadTemplate(string directory)
     {
@@ -234,7 +233,7 @@ public sealed partial class MainWindowViewModel
     {
         _configuration = _workspace is null
             ? new()
-            : new DuneConfigurationStore()
+            : _configurationStore
                 .Load(_workspace.Directory)
                 .Settings;
         PathMappings = _configuration.Mappings;
@@ -272,7 +271,7 @@ public sealed partial class MainWindowViewModel
         )
         {
             _configuration = CurrentConfiguration();
-            new DuneConfigurationStore().SaveSettings(
+            _configurationStore.SaveSettings(
                 _workspace.Directory,
                 _configuration
             );
@@ -280,8 +279,8 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Saves and renders the selected card using the current
-    /// options.
+    /// Enregistre et traite la fiche sélectionnée avec les
+    /// options courantes.
     /// </summary>
     public async Task ProcessSelectedAsync()
     {
@@ -324,7 +323,8 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
-    /// Saves the cards and exports a standalone Dune catalog.
+    /// Enregistre les fiches et exporte un catalogue Dune
+    /// autonome.
     /// </summary>
     public async Task ExportDuneAsync()
     {

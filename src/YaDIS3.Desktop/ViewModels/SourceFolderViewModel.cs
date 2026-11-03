@@ -2,7 +2,10 @@ using YaDIS3.Core;
 
 namespace YaDIS3.Desktop.ViewModels;
 
-/// <summary>Copie éditable d'un dossier, validée avant insertion dans la liste.</summary>
+/// <summary>
+/// Copie éditable d'un dossier, validée avant insertion dans la
+/// liste.
+/// </summary>
 public sealed class SourceFolderViewModel(
     MediaSourceFolder folder
 ) : ObservableViewModel
@@ -12,7 +15,9 @@ public sealed class SourceFolderViewModel(
     private int _type = folder.Type;
     private bool _basicMode;
 
-    /// <summary>Dossier local ou volume monté.</summary>
+    /// <summary>
+    /// Dossier local ou volume monté.
+    /// </summary>
     public string Path
     {
         get => _path;
@@ -23,7 +28,9 @@ public sealed class SourceFolderViewModel(
         }
     }
 
-    /// <summary>Chemin utilisé par le Dune.</summary>
+    /// <summary>
+    /// Chemin utilisé par le Dune.
+    /// </summary>
     public string DunePath
     {
         get => _dunePath;
@@ -34,7 +41,9 @@ public sealed class SourceFolderViewModel(
         }
     }
 
-    /// <summary>Films (0) ou séries (1).</summary>
+    /// <summary>
+    /// Films (0) ou séries (1).
+    /// </summary>
     public int Type
     {
         get => _type;
@@ -45,14 +54,20 @@ public sealed class SourceFolderViewModel(
         }
     }
 
-    /// <summary>Type affiché dans la liste des dossiers.</summary>
+    /// <summary>
+    /// Type affiché dans la liste des dossiers.
+    /// </summary>
     public string TypeLabel => Type == 0 ? "Films" : "Séries TV";
 
-    /// <summary>Libellés du sélecteur de type.</summary>
+    /// <summary>
+    /// Libellés du sélecteur de type.
+    /// </summary>
     public IReadOnlyList<string> Types { get; } =
     ["Films", "Séries TV"];
 
-    /// <summary>Le mode basique ne demande pas de chemin réseau.</summary>
+    /// <summary>
+    /// Le mode basique ne demande pas de chemin réseau.
+    /// </summary>
     public bool BasicMode
     {
         get => _basicMode;
@@ -63,11 +78,15 @@ public sealed class SourceFolderViewModel(
         }
     }
 
-    /// <summary>Validation d'AddFolderForm reprise du programme original.</summary>
+    /// <summary>
+    /// Validation d'AddFolderForm reprise du programme original.
+    /// </summary>
     public bool CanAccept =>
         Path.Length > 0 && (BasicMode || DunePath.Length > 0);
 
-    /// <summary>Conserve les extensions XML du dossier original.</summary>
+    /// <summary>
+    /// Conserve les extensions XML du dossier original.
+    /// </summary>
     public MediaSourceFolder Snapshot() =>
         folder with
         {

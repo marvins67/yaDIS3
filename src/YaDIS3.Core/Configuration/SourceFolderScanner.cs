@@ -2,7 +2,10 @@ using System.Xml.Linq;
 
 namespace YaDIS3.Core;
 
-/// <summary>Découvre les enfants directs des sources selon les règles de MainForm dans yaDIS2.</summary>
+/// <summary>
+/// Découvre les enfants directs des sources selon les règles de
+/// MainForm dans yaDIS2.
+/// </summary>
 public sealed class SourceFolderScanner(
     IExportFileSystem? fileSystem = null
 )
@@ -10,7 +13,10 @@ public sealed class SourceFolderScanner(
     private readonly IExportFileSystem _files =
         fileSystem ?? new ExportFileSystem();
 
-    /// <summary>Crée les fiches absentes sans supprimer les informations existantes.</summary>
+    /// <summary>
+    /// Crée les fiches absentes sans supprimer les informations
+    /// existantes.
+    /// </summary>
     public void Scan(
         string workspace,
         IReadOnlyList<MediaSourceFolder> folders,

@@ -1,16 +1,22 @@
 namespace YaDIS3.Core;
 
-/// <summary>Conserve les noms de dossiers utilisés par yaDIS2.</summary>
+/// <summary>
+/// Conserve les noms de dossiers utilisés par yaDIS2.
+/// </summary>
 public static class LegacyExportPaths
 {
-    /// <summary>Conserve le nom original, y compris l'extension vidéo.</summary>
+    /// <summary>
+    /// Conserve le nom original, y compris l'extension vidéo.
+    /// </summary>
     public static string Media(string filename, bool series)
     {
         ValidateName(filename);
         return (series ? "01/" : "00/99/") + filename;
     }
 
-    /// <summary>La clé de navigation peut différer de la saison TVDB.</summary>
+    /// <summary>
+    /// La clé de navigation peut différer de la saison TVDB.
+    /// </summary>
     public static string Season(string key)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
@@ -22,7 +28,9 @@ public static class LegacyExportPaths
         return key[..2];
     }
 
-    /// <summary>Reprend le premier caractère sans retirer les accents.</summary>
+    /// <summary>
+    /// Reprend le premier caractère sans retirer les accents.
+    /// </summary>
     public static string Alphabet(string sortTitle)
     {
         ArgumentException.ThrowIfNullOrEmpty(sortTitle);
@@ -32,7 +40,9 @@ public static class LegacyExportPaths
             : first;
     }
 
-    /// <summary>Empêche un nom de fiche de sortir du dossier d'export.</summary>
+    /// <summary>
+    /// Empêche un nom de fiche de sortir du dossier d'export.
+    /// </summary>
     public static void ValidateName(string name)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);

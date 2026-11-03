@@ -5,14 +5,14 @@ using SkiaSharp;
 namespace YaDIS3.Rendering;
 
 /// <summary>
-/// Reads and writes Dune AAI images with straight BGRA
-/// pixels.
+/// Lit et écrit les images AAI avec des pixels BGRA non
+/// prémultipliés.
 /// </summary>
 public static class AaiCodec
 {
     /// <summary>
-    /// Writes a Dune AAI image using the legacy alpha
-    /// convention.
+    /// Écrit une image AAI selon la convention alpha historique
+    /// du Dune.
     /// </summary>
     public static void Save(SKBitmap source, string path)
     {
@@ -73,8 +73,8 @@ public static class AaiCodec
     }
 
     /// <summary>
-    /// Loads a Dune AAI image and validates its dimensions and
-    /// length.
+    /// Charge une image AAI et vérifie ses dimensions et sa
+    /// longueur.
     /// </summary>
     public static SKBitmap Load(string path)
     {

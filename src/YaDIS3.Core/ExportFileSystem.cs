@@ -2,7 +2,9 @@ using System.Text;
 
 namespace YaDIS3.Core;
 
-/// <summary>Stocke les exports sur le système de fichiers local ou monté.</summary>
+/// <summary>
+/// Stocke les exports sur le système de fichiers local ou monté.
+/// </summary>
 public sealed class ExportFileSystem : IExportFileSystem
 {
     /// <inheritdoc />
