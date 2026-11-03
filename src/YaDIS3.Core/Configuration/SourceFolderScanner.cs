@@ -24,6 +24,8 @@ public sealed class SourceFolderScanner(
         CancellationToken cancellationToken = default
     )
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(workspace);
+        ArgumentNullException.ThrowIfNull(folders);
         cancellationToken.ThrowIfCancellationRequested();
         foreach (MediaSourceFolder folder in folders)
         {
@@ -37,7 +39,6 @@ public sealed class SourceFolderScanner(
                 Update(workspace, folder, source);
             }
         }
-        MarkUnavailable(workspace, folders, cancellationToken);
     }
 
     private IEnumerable<string> Sources(
@@ -73,7 +74,8 @@ public sealed class SourceFolderScanner(
         string name = Path.GetFileName(source);
         string directory = Path.Combine(workspace, "data", name);
         string path = Path.Combine(directory, "data.xml");
-        XDocument document = _files.FileExists(path)
+        bool exists = _files.FileExists(path);
+        XDocument document = exists
             ? WorkspaceRepository.Parse(_files.ReadBytes(path))
             : NewDocument(
                 folder,
@@ -81,6 +83,7 @@ public sealed class SourceFolderScanner(
                 _files.DirectoryExists(source)
             );
         XElement item = Item(document, path);
+        XElement original = new(item);
         string type = folder.Type.ToString(
             System.Globalization.CultureInfo.InvariantCulture
         );
@@ -94,8 +97,11 @@ public sealed class SourceFolderScanner(
         item.SetElementValue("path", folder.Path);
         item.SetElementValue("type", type);
         item.SetElementValue("dunepath", folder.DunePath);
-        _files.CreateDirectory(directory);
-        Write(path, document);
+        if (!exists || !XNode.DeepEquals(original, item))
+        {
+            _files.CreateDirectory(directory);
+            Write(path, document);
+        }
     }
 
     private static XDocument NewDocument(
@@ -123,52 +129,47 @@ public sealed class SourceFolderScanner(
             )
         );
 
-    private void MarkUnavailable(
+    /// <summary>
+    /// Applique l'indisponibilité à la session, sans remplacer
+    /// le statut enregistré par le dernier traitement.
+    /// </summary>
+    public void CheckAvailability(
+        MediaCard card,
+        IReadOnlyList<MediaSourceFolder> folders
+    )
+    {
+        ArgumentNullException.ThrowIfNull(card);
+        ArgumentNullException.ThrowIfNull(folders);
+        string parent = card.SourceDirectory;
+        string source = Path.Combine(parent, card.FolderName);
+        card.SourceUnavailable =
+            folders.Any(folder => folder.Path == parent)
+            && !_files.FileExists(source)
+            && !_files.DirectoryExists(source);
+    }
+
+    internal void ValidateCards(
         string workspace,
-        IReadOnlyList<MediaSourceFolder> folders,
         CancellationToken cancellationToken
     )
     {
-        string data = Path.Combine(workspace, "data");
-        if (!_files.DirectoryExists(data))
-        {
-            return;
-        }
         foreach (
-            string directory in _files.EnumerateDirectories(data)
+            string directory in _files.EnumerateDirectories(
+                Path.Combine(workspace, "data")
+            )
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
             string path = Path.Combine(directory, "data.xml");
             if (_files.FileExists(path))
             {
-                CheckAvailability(path, folders);
+                _ = Item(
+                    WorkspaceRepository.Parse(
+                        _files.ReadBytes(path)
+                    ),
+                    path
+                );
             }
-        }
-    }
-
-    private void CheckAvailability(
-        string path,
-        IReadOnlyList<MediaSourceFolder> folders
-    )
-    {
-        XDocument document = WorkspaceRepository.Parse(
-            _files.ReadBytes(path)
-        );
-        XElement item = Item(document, path);
-        string parent = item.Element("path")?.Value ?? "";
-        string source = Path.Combine(
-            parent,
-            item.Element("filename")?.Value ?? ""
-        );
-        if (
-            folders.Any(folder => folder.Path == parent)
-            && !_files.FileExists(source)
-            && !_files.DirectoryExists(source)
-        )
-        {
-            item.SetElementValue("status", "2");
-            Write(path, document);
         }
     }
 

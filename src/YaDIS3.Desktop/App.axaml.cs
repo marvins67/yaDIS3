@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using YaDIS3.Core;
 using YaDIS3.Desktop.ViewModels;
 using YaDIS3.Desktop.Views;
 
@@ -34,11 +35,23 @@ public sealed partial class App : Application
             ServiceProvider services =
                 DesktopServices.CreateProvider();
             desktop.Exit += (_, _) => services.Dispose();
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext =
-                    services.GetRequiredService<MainWindowViewModel>(),
-            };
+            MainWindowViewModel model =
+                services.GetRequiredService<MainWindowViewModel>();
+            MainWindow window = new() { DataContext = model };
+            LastWorkspaceStore store = new(
+                Path.Combine(
+                    Environment.GetFolderPath(
+                        Environment
+                            .SpecialFolder
+                            .LocalApplicationData
+                    ),
+                    "yaDIS3"
+                ),
+                services.GetRequiredService<IExportFileSystem>()
+            );
+            window.Opened += async (_, _) =>
+                await model.RestoreWorkspaceAsync(store);
+            desktop.MainWindow = window;
         }
 
         base.OnFrameworkInitializationCompleted();

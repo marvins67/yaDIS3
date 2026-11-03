@@ -111,7 +111,9 @@ public sealed partial class MainWindow : Window
         }
 
         await Model.RunAsync(() =>
-            Model.RefreshConfiguredWorkspaceAsync()
+            Model.RefreshConfiguredWorkspaceAsync(
+                Model.OperationToken
+            )
         );
     }
 
@@ -221,7 +223,12 @@ public sealed partial class MainWindow : Window
         );
         if (path is not null)
         {
-            await Model.RunAsync(() => Model.OpenAsync(path));
+            await Model.RunAsync(() =>
+                Model.OpenAsync(
+                    path,
+                    cancellationToken: Model.OperationToken
+                )
+            );
         }
     }
 
@@ -241,7 +248,7 @@ public sealed partial class MainWindow : Window
         if (path is not null)
         {
             await Model.RunAsync(() =>
-                Model.OpenAsync(path, true)
+                Model.OpenAsync(path, true, Model.OperationToken)
             );
         }
     }

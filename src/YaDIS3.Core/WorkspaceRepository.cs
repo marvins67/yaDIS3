@@ -46,14 +46,11 @@ public sealed class WorkspaceRepository
     }
 
     /// <summary>
-    /// Charge les fiches lisibles et signale les fichiers en
-    /// échec.
+    /// Accepte la racine du workspace ou son dossier data.
     /// </summary>
-    public Workspace Open(
-        string path,
-        CancellationToken cancellationToken = default
-    )
+    public static string ResolveDirectory(string path)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
         path = Path.TrimEndingDirectorySeparator(
             Path.GetFullPath(path)
         );
@@ -68,6 +65,19 @@ public sealed class WorkspaceRepository
             path = Path.GetDirectoryName(path)!;
         }
 
+        return path;
+    }
+
+    /// <summary>
+    /// Charge les fiches lisibles et signale les fichiers en
+    /// échec.
+    /// </summary>
+    public Workspace Open(
+        string path,
+        CancellationToken cancellationToken = default
+    )
+    {
+        path = ResolveDirectory(path);
         string data = Path.Combine(path, "data");
         if (!Directory.Exists(data))
         {

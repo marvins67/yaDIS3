@@ -108,6 +108,16 @@ public sealed partial class MediaCard
     /// modifications non enregistrées.
     /// </summary>
     public MediaProcessingState ProcessingState =>
+        SourceUnavailable
+            ? MediaProcessingState.Missing
+            : StoredProcessingState;
+
+    internal bool SourceUnavailable { get; set; }
+
+    internal string SourceDirectory =>
+        Header.Element("path")?.Value ?? "";
+
+    private MediaProcessingState StoredProcessingState =>
         int.TryParse(
             Header.Element("status")?.Value,
             NumberStyles.Integer,

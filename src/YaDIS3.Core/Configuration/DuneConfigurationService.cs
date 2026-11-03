@@ -60,10 +60,15 @@ public sealed class DuneConfigurationService(
     {
         try
         {
-            new SourceFolderScanner(_files).Scan(
+            SourceFolderScanner scanner = new(_files);
+            scanner.Scan(
                 destination,
                 snapshot.Folders,
                 snapshot.Settings.BasicMode,
+                cancellationToken
+            );
+            scanner.ValidateCards(
+                destination,
                 cancellationToken
             );
         }

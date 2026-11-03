@@ -176,7 +176,7 @@ public sealed class SourceFolderScannerTests
     }
 
     [Fact]
-    public void Scan_MediaAbsent_ConserveLaFicheAvecStatutDeux()
+    public void CheckAvailability_MediaAbsent_ConserveLeStatutSurDisque()
     {
         using ExportFixture fixture = new();
         string source = Path.Combine(
@@ -194,18 +194,38 @@ public sealed class SourceFolderScannerTests
             .Root!.Element("item")!
             .SetElementValue("path", source);
         document.Save(data);
-        new SourceFolderScanner().Scan(
-            fixture.Root,
-            [new(source, 0, "smb://nas/Films")],
-            false
+        SourceFolderScanner scanner = new();
+        MediaSourceFolder[] folders =
+        [
+            new(source, 0, "smb://nas/Films"),
+        ];
+        scanner.Scan(fixture.Root, folders, false);
+        using WorkspaceRepository repository = new();
+        using MediaCard card = repository
+            .Open(fixture.Root)
+            .Cards.Single(value => !value.IsSeries);
+        scanner.CheckAvailability(card, folders);
+        Assert.Equal(
+            MediaProcessingState.Missing,
+            card.ProcessingState
         );
         Assert.Equal(
-            "2",
+            "1",
             XDocument
                 .Load(data)
                 .Root!.Element("item")!
                 .Element("status")!
                 .Value
+        );
+        Directory.CreateDirectory(source);
+        File.WriteAllBytes(
+            Path.Combine(source, card.FolderName),
+            []
+        );
+        scanner.CheckAvailability(card, folders);
+        Assert.Equal(
+            MediaProcessingState.Unchecked,
+            card.ProcessingState
         );
         Assert.NotNull(
             XDocument.Load(data).Root!.Element("info")

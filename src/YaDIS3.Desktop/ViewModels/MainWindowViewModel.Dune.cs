@@ -164,7 +164,7 @@ public sealed partial class MainWindowViewModel
         }
     }
 
-    private CancellationToken OperationToken =>
+    internal CancellationToken OperationToken =>
         _activeOperation?.Token ?? CancellationToken.None;
 
     private void InitializeDune()

@@ -86,7 +86,10 @@ public sealed partial class MainWindowViewModel
                 ),
             cancellationToken
         );
-        await OpenAsync(destination);
+        await OpenAsync(
+            destination,
+            cancellationToken: cancellationToken
+        );
         if (snapshot.Settings.TvdbPath.Length > 0)
         {
             ConfigureTvdb(snapshot.Settings.TvdbPath);
@@ -102,20 +105,10 @@ public sealed partial class MainWindowViewModel
         CancellationToken cancellationToken = default
     )
     {
-        string path = WorkspacePath;
-        ConfigurationSnapshot snapshot =
-            _configurationStore.Load(path);
-        await Task.Run(
-            () =>
-                _sourceScanner.Scan(
-                    path,
-                    snapshot.Folders,
-                    snapshot.Settings.BasicMode,
-                    cancellationToken
-                ),
-            cancellationToken
+        await OpenAsync(
+            WorkspacePath,
+            cancellationToken: cancellationToken
         );
-        await OpenAsync(path);
     }
 
     private RenderOptions ConfiguredRenderOptions() =>
@@ -142,7 +135,10 @@ public sealed partial class MainWindowViewModel
         ConfigurationSnapshot snapshot
     )
     {
-        if (!_configuration.SourceFoldersConfigured)
+        if (
+            !_configuration.SourceFoldersConfigured
+            && snapshot.Folders.Count == 0
+        )
         {
             return true;
         }
@@ -159,10 +155,19 @@ public sealed partial class MainWindowViewModel
                 source,
                 StringComparer.Ordinal
             );
+        bool knownType =
+            media.Header.Element("type")?.Value is "0" or "1";
+        string? folderFlag = media
+            .Header.Element("folder")
+            ?.Value;
         return included
+            && knownType
             && (
-                !_configuration.BasicMode
-                || media.Header.Element("folder")?.Value == "yes"
+                folderFlag == "yes"
+                || (
+                    folderFlag == "no"
+                    && !_configuration.BasicMode
+                )
             );
     }
 

@@ -6,19 +6,42 @@ namespace YaDIS3.Desktop.ViewModels;
 
 public sealed partial class MainWindowViewModel
 {
+    private LastWorkspaceStore? _lastWorkspace;
+
+    /// <summary>Rouvre et compare les sources du dernier workspace.</summary>
+    public Task RestoreWorkspaceAsync(LastWorkspaceStore store)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        _lastWorkspace = store;
+        return RunAsync(async () =>
+        {
+            if (
+                !HasWorkspace
+                && store.Load() is { Length: > 0 } path
+            )
+            {
+                await OpenAsync(
+                    path,
+                    cancellationToken: OperationToken
+                );
+            }
+        });
+    }
+
     /// <summary>
     /// Ouvre un workspace et actualise la sélection des fiches
     /// visibles.
     /// </summary>
-    public async Task OpenAsync(string path, bool create = false)
+    public async Task OpenAsync(
+        string path,
+        bool create = false,
+        CancellationToken cancellationToken = default
+    )
     {
-        if (create)
-        {
-            _repository.Create(path);
-        }
-
-        Workspace loaded = await Task.Run(() =>
-            _repository.Open(path)
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        Workspace loaded = await Task.Run(
+            () => ScanAndOpen(path, create, cancellationToken),
+            cancellationToken
         );
         foreach (MediaCard card in Cards)
         {
@@ -51,6 +74,41 @@ public sealed partial class MainWindowViewModel
                 ? "Bibliothèque ouverte."
                 : string.Join(" · ", loaded.Warnings);
         NotifyAll();
+        _lastWorkspace?.Save(loaded.Directory);
+    }
+
+    private Workspace ScanAndOpen(
+        string path,
+        bool create,
+        CancellationToken cancellationToken
+    )
+    {
+        if (create)
+        {
+            _repository.Create(path);
+        }
+        string root = WorkspaceRepository.ResolveDirectory(path);
+        ConfigurationSnapshot snapshot =
+            _configurationStore.Load(root);
+        _sourceScanner.Scan(
+            root,
+            snapshot.Folders,
+            snapshot.Settings.BasicMode,
+            cancellationToken
+        );
+        Workspace workspace = _repository.Open(
+            root,
+            cancellationToken
+        );
+        foreach (MediaCard card in workspace.Cards)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _sourceScanner.CheckAvailability(
+                card,
+                snapshot.Folders
+            );
+        }
+        return workspace;
     }
 
     private void CardChanged(
