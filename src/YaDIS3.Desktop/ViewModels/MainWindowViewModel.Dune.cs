@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Text.Json;
 using System.Windows.Input;
 using System.Xml.Linq;
 using Avalonia.Media.Imaging;
@@ -14,9 +13,6 @@ namespace YaDIS3.Desktop.ViewModels;
 /// </summary>
 public sealed partial class MainWindowViewModel
 {
-    private static readonly JsonSerializerOptions s_preferencesOptions =
-        new() { WriteIndented = true };
-
     private DuneTemplate? _selectedTemplate;
 
     private string _templateLanguage = "fr";
@@ -173,16 +169,6 @@ public sealed partial class MainWindowViewModel
     private CancellationToken OperationToken =>
         _activeOperation?.Token ?? CancellationToken.None;
 
-    private sealed record DunePreferences(
-        string Template,
-        string TemplatePath,
-        string Language,
-        bool Aai,
-        bool Cases,
-        string Mappings,
-        string Destination
-    );
-
     private void InitializeDune()
     {
         ProcessCommand = new UiCommand(() =>
@@ -246,120 +232,50 @@ public sealed partial class MainWindowViewModel
 
     private void LoadDunePreferences()
     {
-        PathMappings = "";
-        ExportParentPath = "";
-        TemplateLanguage = "fr";
-        AaiBackgrounds = false;
-        UseCases = false;
+        _configuration = _workspace is null
+            ? new()
+            : new DuneConfigurationStore()
+                .Load(_workspace.Directory)
+                .Settings;
+        PathMappings = _configuration.Mappings;
+        ExportParentPath = _configuration.Destination;
+        TemplateLanguage = _configuration.Language;
+        AaiBackgrounds = _configuration.Aai;
+        UseCases = _configuration.Cases;
         SelectedTemplate =
-            Templates.FirstOrDefault(templateValue =>
-                templateValue.Name == "Origins"
+            Templates.FirstOrDefault(value =>
+                value.Name == _configuration.Template
             ) ?? Templates.FirstOrDefault();
-        if (_workspace is null)
-        {
-            return;
-        }
-
-        string file = Path.Combine(
-            _workspace.Directory,
-            "yadis3-modern-export.json"
-        );
-        if (!File.Exists(file))
-        {
-            return;
-        }
-
-        try
-        {
-            DunePreferences? config =
-                JsonSerializer.Deserialize<DunePreferences>(
-                    File.ReadAllText(file)
-                );
-            if (config is null)
-            {
-                return;
-            }
-
-            if (
-                File.Exists(
-                    Path.Combine(
-                        config.TemplatePath,
-                        "template.xml"
-                    )
+        if (
+            File.Exists(
+                Path.Combine(
+                    _configuration.TemplatePath,
+                    "template.xml"
                 )
             )
-            {
-                LoadTemplate(config.TemplatePath);
-            }
-            else
-            {
-                SelectedTemplate =
-                    Templates.FirstOrDefault(templateValue =>
-                        templateValue.Name == config.Template
-                    ) ?? SelectedTemplate;
-            }
-
-            TemplateLanguage = config.Language is "fr" or "en"
-                ? config.Language
-                : "fr";
-            AaiBackgrounds = config.Aai;
-            UseCases = config.Cases;
-            PathMappings = config.Mappings;
-            ExportParentPath = config.Destination;
-        }
-        catch (Exception exception)
-            when (exception
-                    is IOException
-                        or UnauthorizedAccessException
-                        or JsonException
-                        or System.Xml.XmlException
-                        or InvalidDataException
-            )
+        )
         {
-            Status =
-                "Réglages Dune non chargés : "
-                + exception.Message;
+            LoadTemplate(_configuration.TemplatePath);
         }
+        if (File.Exists(_configuration.TvdbPath))
+        {
+            ConfigureTvdb(_configuration.TvdbPath);
+        }
+        Notify(nameof(CanExport));
     }
 
     private void SaveDunePreferences()
     {
-        if (_workspace is null || SelectedTemplate is null)
+        if (
+            _workspace is not null
+            && SelectedTemplate is not null
+        )
         {
-            return;
-        }
-
-        string file = Path.Combine(
-            _workspace.Directory,
-            "yadis3-modern-export.json"
-        );
-        string temporary = file + ".tmp";
-        try
-        {
-            var config = new DunePreferences(
-                SelectedTemplate.Name,
-                SelectedTemplate.Directory,
-                TemplateLanguage,
-                AaiBackgrounds,
-                UseCases,
-                PathMappings,
-                ExportParentPath
+            _configuration = CurrentConfiguration();
+            new DuneConfigurationStore().SaveSettings(
+                _workspace.Directory,
+                _configuration
             );
-            File.WriteAllText(
-                temporary,
-                JsonSerializer.Serialize(
-                    config,
-                    s_preferencesOptions
-                )
-            );
-            File.Move(temporary, file, true);
-        }
-        finally
-        {
-            if (File.Exists(temporary))
-            {
-                File.Delete(temporary);
-            }
         }
     }
 
@@ -385,11 +301,7 @@ public sealed partial class MainWindowViewModel
                 "Ouvrez une bibliothèque."
             );
         SaveDunePreferences();
-        var options = new RenderOptions(
-            TemplateLanguage,
-            AaiBackgrounds,
-            UseCases
-        );
+        RenderOptions options = ConfiguredRenderOptions();
         var progress = new Progress<string>(message =>
             Status = message
         );
@@ -403,6 +315,7 @@ public sealed partial class MainWindowViewModel
             options,
             current.Directory,
             progress,
+            _configuration,
             OperationToken
         );
         RefreshImages();
@@ -435,11 +348,7 @@ public sealed partial class MainWindowViewModel
         var media = Cards
             .Select(cardValue => new MediaContext(cardValue))
             .ToArray();
-        var options = new RenderOptions(
-            TemplateLanguage,
-            AaiBackgrounds,
-            UseCases
-        );
+        RenderOptions options = ConfiguredRenderOptions();
         string destination = ExportParentPath;
         var progress = new Progress<string>(message =>
             Status = message
@@ -449,7 +358,8 @@ public sealed partial class MainWindowViewModel
                 new DuneExporter(
                     template,
                     options,
-                    mappings
+                    mappings,
+                    catalogOptions: ConfiguredCatalogOptions()
                 ).Export(
                     media,
                     destination,

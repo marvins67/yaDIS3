@@ -27,6 +27,7 @@ public sealed class MediaProcessingService
         RenderOptions options,
         string workspace,
         IProgress<string>? progress = null,
+        DuneConfiguration? configuration = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -34,6 +35,10 @@ public sealed class MediaProcessingService
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrWhiteSpace(workspace);
+        if (configuration is not null)
+        {
+            card.EnsureMovieSortTitle(configuration);
+        }
         if (card.IsDirty)
         {
             await new LegacyIndexedCardSaver(
@@ -54,6 +59,23 @@ public sealed class MediaProcessingService
             cancellationToken
         );
         cancellationToken.ThrowIfCancellationRequested();
+        if (
+            configuration is not null
+            && !media.IsSeries
+            && configuration.AutoSelect
+            && int.TryParse(
+                media.Header.ValueAt("status"),
+                out int status
+            )
+            && status > 2
+        )
+        {
+            new LegacyAutoSelection().Add(
+                workspace,
+                configuration.AutoSelectName,
+                media.Header.ValueAt("filename")
+            );
+        }
         card.MarkProcessed(
             DateOnly.FromDateTime(
                 _timeProvider.GetLocalNow().DateTime

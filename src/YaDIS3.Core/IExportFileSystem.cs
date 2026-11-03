@@ -15,6 +15,25 @@ public interface IExportFileSystem
     /// <summary>Lit une configuration de workspace en UTF-8.</summary>
     string ReadText(string path);
 
+    /// <summary>Lit les octets exacts d'un document à restaurer.</summary>
+    byte[] ReadBytes(string path);
+
+    /// <summary>Supprime un fichier lors d'une restauration.</summary>
+    void DeleteFile(string path);
+
+    /// <summary>Remplace atomiquement un fichier de configuration validé.</summary>
+    void MoveFile(
+        string source,
+        string destination,
+        bool overwrite
+    );
+
+    /// <summary>Renomme un dossier lors de la copie du workspace.</summary>
+    void MoveDirectory(string source, string destination);
+
+    /// <summary>Lit les attributs des dossiers sources.</summary>
+    FileAttributes GetAttributes(string path);
+
     /// <summary>Écrit les octets exacts d'un fichier Dune.</summary>
     void WriteBytes(string path, byte[] bytes);
 

@@ -63,24 +63,12 @@
     <Grid x:Name="MainToolbar" ColumnDefinitions="*,Auto" Margin="0,4,0,9">
       <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
         <StackPanel Orientation="Horizontal" Spacing="6" IsEnabled="{Binding !IsBusy}">
-          <Button x:Name="ConfigureButton" Classes="toolbar" Width="104">
+          <Button x:Name="ConfigureButton" Classes="toolbar" Width="104" Click="ShowConfiguration">
             <StackPanel Orientation="Horizontal" Spacing="7">
               <Image Source="avares://yaDIS3.Desktop/Assets/Icons/tools.png" Width="24" Height="24" />
               <TextBlock Text="Configurer" VerticalAlignment="Center" />
             </StackPanel>
-            <Button.Flyout>
-              <Flyout>
-                <StackPanel Spacing="4" MinWidth="230">
-                  <TextBlock Text="Bibliothèque" Classes="section" />
-                  <Button Content="Ouvrir une bibliothèque…" Click="OpenWorkspace" />
-                  <Button Content="Créer une bibliothèque…" Click="CreateWorkspace" />
-                  <Button Content="Ajouter une série manuelle…" Click="AddManualSeries" />
-                  <Separator />
-                  <Button Content="Configuration TVDB…" Click="ConfigureTvdb" />
-                  <Button Content="Templates et export Dune…" Click="ShowDuneSettings" />
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
+
           </Button>
           <SplitButton Classes="toolbar" Width="98" Command="{Binding ProcessCommand}" IsEnabled="{Binding HasCard}">
             <StackPanel Orientation="Horizontal" Spacing="7">
@@ -93,7 +81,7 @@
               </Flyout>
             </SplitButton.Flyout>
           </SplitButton>
-          <Button Classes="toolbar" Width="90" Command="{Binding ExportCommand}">
+          <Button Classes="toolbar" Width="90" Command="{Binding ExportCommand}" IsEnabled="{Binding CanExport}">
             <StackPanel Orientation="Horizontal" Spacing="7">
               <Image Source="avares://yaDIS3.Desktop/Assets/Icons/download_to_computer.png" Width="24" Height="24" />
               <TextBlock Text="Exporter" VerticalAlignment="Center" />
@@ -132,6 +120,11 @@
           <Button.Flyout>
             <Flyout>
               <StackPanel Spacing="6" Width="250">
+                <Button Content="Ouvrir une bibliothèque…" Click="OpenWorkspace" />
+                <Button Content="Créer une bibliothèque…" Click="CreateWorkspace" />
+                <Button Content="Ajouter une série manuelle…" Click="AddManualSeries" />
+                <Button Content="Configuration TVDB…" Click="ConfigureTvdb" />
+                <Separator />
                 <Button Content="Enregistrer les modifications" Command="{Binding SaveCommand}" IsEnabled="{Binding HasChanges}" />
                 <TextBlock Text="Rechercher dans la bibliothèque :" />
                 <TextBox Text="{Binding Filter, Mode=TwoWay}" PlaceholderText="Titre à rechercher…" />

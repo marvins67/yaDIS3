@@ -231,6 +231,35 @@ public sealed class MediaCard
         }
     }
 
+    /// <summary>Établit le tri des nouveaux films, sans réécrire le classement existant.</summary>
+    public void EnsureMovieSortTitle(
+        DuneConfiguration configuration
+    )
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        if (
+            IsSeries
+            || !string.IsNullOrEmpty(
+                Info?.Element("sort_title")?.Value
+            )
+        )
+        {
+            return;
+        }
+        Update(() =>
+        {
+            XElement info = EnsureInfo();
+            Put(
+                info,
+                "sort_title",
+                LegacySortTitle.Create(
+                    info.Element("title")?.Value ?? FolderName,
+                    configuration
+                )
+            );
+        });
+    }
+
     internal XElement EnsureInfo()
     {
         if (Info is { } info)

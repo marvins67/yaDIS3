@@ -32,16 +32,30 @@ public sealed partial class MainWindow : Window
             (DataContext as IDisposable)?.Dispose();
     }
 
+    private async void ShowConfiguration(
+        object? sender,
+        RoutedEventArgs eventArgs
+    ) => await OpenConfigurationAsync();
+
     private async void ShowDuneSettings(
         object? sender,
         RoutedEventArgs eventArgs
-    )
-    {
-        await ShowUtilityDialog(
-            "DuneSettingsTab",
-            "Configuration de l’export Dune"
-        );
-    }
+    ) => await OpenConfigurationAsync(2);
+
+    private Task OpenConfigurationAsync(int tabIndex = 0) =>
+        Model.RunAsync(async () =>
+        {
+            using ConfigurationViewModel draft =
+                Model.CreateConfiguration();
+            ConfigurationWindow dialog = new()
+            {
+                DataContext = draft,
+            };
+            dialog
+                .FindControl<TabControl>("ConfigurationTabs")!
+                .SelectedIndex = tabIndex;
+            await dialog.ShowDialog(this);
+        });
 
     private async void ShowTvdbSearch(
         object? sender,
@@ -98,8 +112,9 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        string path = Model.WorkspacePath;
-        await Model.RunAsync(() => Model.OpenAsync(path));
+        await Model.RunAsync(() =>
+            Model.RefreshConfiguredWorkspaceAsync()
+        );
     }
 
     private async void ShowAbout(

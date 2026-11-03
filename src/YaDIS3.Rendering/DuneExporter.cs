@@ -248,6 +248,12 @@ public sealed partial class DuneExporter(
         CancellationToken cancellationToken = default
     )
     {
+        if (options.BasicMode)
+        {
+            throw new InvalidOperationException(
+                "En mode basique, utilisez Traiter pour écrire auprès des vidéos."
+            );
+        }
         if (media.Count == 0)
         {
             throw new InvalidOperationException(
@@ -651,6 +657,13 @@ public sealed partial class DuneExporter(
                 }
             }
 
+            if (options.BasicMode)
+            {
+                new LegacyBasicDuneWriter(
+                    template,
+                    options
+                ).Write(media, target, cancellationToken);
+            }
             new LegacyMovieIndexStore(template, options).Update(
                 media,
                 workspace,

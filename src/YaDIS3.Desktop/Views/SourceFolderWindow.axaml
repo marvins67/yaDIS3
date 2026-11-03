@@ -1,0 +1,67 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:vm="using:YaDIS3.Desktop.ViewModels"
+  x:Class="YaDIS3.Desktop.Views.SourceFolderWindow"
+  x:DataType="vm:SourceFolderViewModel"
+  Title="Ajouter un dossier"
+  Width="500"
+  Height="220"
+  CanResize="False"
+  ShowInTaskbar="False"
+  WindowStartupLocation="CenterOwner"
+  FontSize="12"
+>
+  <Grid
+    Margin="12"
+    RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto"
+    RowSpacing="6"
+  >
+    <TextBlock Text="Type :" />
+    <ComboBox
+      Grid.Row="1"
+      Width="145"
+      ItemsSource="{Binding Types}"
+      SelectedIndex="{Binding Type, Mode=TwoWay}"
+    />
+    <TextBlock Grid.Row="2" Text="Dossier :" />
+    <Grid Grid.Row="3" ColumnDefinitions="*,6,28">
+      <TextBox Text="{Binding Path, Mode=TwoWay}" />
+      <Button Grid.Column="2" Content="…" Click="Browse" />
+    </Grid>
+    <Grid
+      Grid.Row="4"
+      ColumnDefinitions="90,*"
+      IsVisible="{Binding !BasicMode}"
+    >
+      <TextBlock
+        Text="Chemin Dune :"
+        VerticalAlignment="Center"
+      />
+      <TextBox
+        Grid.Column="1"
+        Text="{Binding DunePath, Mode=TwoWay}"
+      />
+    </Grid>
+    <StackPanel
+      Grid.Row="6"
+      Orientation="Horizontal"
+      Spacing="6"
+      HorizontalAlignment="Right"
+    >
+      <Button
+        Content="OK"
+        Click="Accept"
+        Width="75"
+        IsEnabled="{Binding CanAccept}"
+        IsDefault="True"
+      />
+      <Button
+        Content="Annuler"
+        Click="Cancel"
+        Width="75"
+        IsCancel="True"
+      />
+    </StackPanel>
+  </Grid>
+</Window>

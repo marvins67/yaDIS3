@@ -1,0 +1,691 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:vm="using:YaDIS3.Desktop.ViewModels"
+  xmlns:core="using:YaDIS3.Core"
+  xmlns:render="using:YaDIS3.Rendering"
+  x:Class="YaDIS3.Desktop.Views.ConfigurationWindow"
+  x:DataType="vm:ConfigurationViewModel"
+  Title="Configuration"
+  Width="574"
+  Height="542"
+  CanResize="False"
+  ShowInTaskbar="False"
+  WindowStartupLocation="CenterOwner"
+  FontFamily="Segoe UI, Arial"
+  FontSize="12"
+>
+  <Window.Styles>
+    <Style Selector="TabItem">
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="Padding" Value="7,3" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border
+            BorderBrush="#D0D0D0"
+            BorderThickness="1"
+            Background="#F4F4F4"
+            Padding="{TemplateBinding Padding}"
+          >
+            <ContentPresenter
+              Content="{TemplateBinding Header}"
+              ContentTemplate="{TemplateBinding HeaderTemplate}"
+            />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="GroupBox">
+      <Setter Property="BorderBrush" Value="#D0D0D0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid RowDefinitions="12,*">
+            <Border
+              Grid.RowSpan="2"
+              Margin="0,6,0,0"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+            />
+            <Border
+              Background="#F0F0F0"
+              HorizontalAlignment="Left"
+              Margin="10,0,0,0"
+              Padding="2,0"
+            >
+              <ContentPresenter
+                Content="{TemplateBinding Header}"
+                ContentTemplate="{TemplateBinding HeaderTemplate}"
+                FontSize="12"
+              />
+            </Border>
+            <ContentPresenter
+              Grid.Row="1"
+              Margin="{TemplateBinding Padding}"
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+            />
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="TextBox, ComboBox, NumericUpDown">
+      <Setter Property="MinHeight" Value="23" />
+      <Setter Property="Height" Value="23" />
+      <Setter Property="Padding" Value="3,1" />
+    </Style>
+    <Style Selector="CheckBox, RadioButton">
+      <Setter Property="MinHeight" Value="19" />
+      <Setter Property="Height" Value="19" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid ColumnDefinitions="13,6,*">
+            <Border
+              Name="CheckBoxBorder"
+              Width="13"
+              Height="13"
+              VerticalAlignment="Center"
+              Background="White"
+              BorderBrush="#888888"
+              BorderThickness="1"
+              CornerRadius="2"
+            >
+              <Path
+                Name="CheckMark"
+                Data="M 1,5 L 4,8 L 10,1"
+                Stroke="White"
+                StrokeThickness="1.5"
+                IsVisible="False"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+              />
+            </Border>
+            <ContentPresenter
+              Grid.Column="2"
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+              VerticalAlignment="Center"
+            />
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Border#CheckBoxBorder">
+      <Setter Property="Background" Value="#0078D4" />
+      <Setter Property="BorderBrush" Value="#0078D4" />
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Path#CheckMark">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="CheckBox:focus-visible /template/ Border#CheckBoxBorder">
+      <Setter Property="BorderBrush" Value="#0078D4" />
+    </Style>
+    <Style Selector="RadioButton">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid ColumnDefinitions="13,6,*">
+            <Border
+              Width="13"
+              Height="13"
+              VerticalAlignment="Center"
+              Background="White"
+              BorderBrush="#888888"
+              BorderThickness="1"
+              CornerRadius="7"
+            >
+              <Ellipse
+                Name="RadioMark"
+                Width="7"
+                Height="7"
+                Fill="#0078D4"
+                IsVisible="False"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+              />
+            </Border>
+            <ContentPresenter
+              Grid.Column="2"
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+              VerticalAlignment="Center"
+            />
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="RadioButton:checked /template/ Ellipse#RadioMark">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="MinHeight" Value="23" />
+      <Setter Property="Padding" Value="6,2" />
+    </Style>
+  </Window.Styles>
+  <Grid Margin="12" RowDefinitions="*,13,23">
+    <TabControl
+      x:Name="ConfigurationTabs"
+      Padding="0"
+      IsEnabled="{Binding !IsBusy}"
+    >
+      <TabItem Header="Général">
+        <Canvas Background="White">
+          <TextBlock
+            Text="Langue du rendu :"
+            Canvas.Left="6"
+            Canvas.Top="12"
+          />
+          <ComboBox
+            x:Name="ConfigurationLanguage"
+            Canvas.Left="6"
+            Canvas.Top="31"
+            Width="124"
+            ItemsSource="{Binding Languages}"
+            SelectedItem="{Binding Language, Mode=TwoWay}"
+          />
+          <TextBlock
+            Text="Mode :"
+            Canvas.Left="144"
+            Canvas.Top="12"
+          />
+          <ComboBox
+            Canvas.Left="144"
+            Canvas.Top="31"
+            Width="124"
+            ItemsSource="{Binding Modes}"
+            SelectedIndex="0"
+          />
+          <CheckBox
+            x:Name="BasicModeChoice"
+            Canvas.Left="286"
+            Canvas.Top="33"
+            Content="Mode basique"
+            IsChecked="{Binding BasicMode, Mode=TwoWay}"
+          />
+          <TextBlock
+            Text="Espace de travail :"
+            Canvas.Left="6"
+            Canvas.Top="68"
+          />
+          <TextBox
+            Canvas.Left="6"
+            Canvas.Top="87"
+            Width="496"
+            IsReadOnly="True"
+            Text="{Binding WorkspacePath}"
+          />
+          <Button
+            Canvas.Left="508"
+            Canvas.Top="86"
+            Width="23"
+            Height="23"
+            Content="…"
+            Click="ChooseWorkspace"
+          />
+          <Canvas IsVisible="{Binding NormalMode}">
+            <TextBlock
+              Text="Emplacement de l’interface Dune :"
+              Canvas.Left="6"
+              Canvas.Top="116"
+            />
+            <TextBox
+              Canvas.Left="6"
+              Canvas.Top="135"
+              Width="496"
+              IsReadOnly="True"
+              Text="{Binding Destination}"
+            />
+            <Button
+              Canvas.Left="508"
+              Canvas.Top="134"
+              Width="23"
+              Height="23"
+              Content="…"
+              Click="ChooseDestination"
+            />
+            <CheckBox
+              Canvas.Left="7"
+              Canvas.Top="171"
+              Content="Ajouter les nouveaux films à une sélection"
+              IsChecked="{Binding AutoSelect, Mode=TwoWay}"
+            />
+            <ComboBox
+              Canvas.Left="373"
+              Canvas.Top="169"
+              Width="158"
+              IsVisible="{Binding AutoSelect}"
+              ItemsSource="{Binding SelectionNames}"
+              SelectedItem="{Binding AutoSelectName, Mode=TwoWay}"
+            />
+            <CheckBox
+              Canvas.Left="7"
+              Canvas.Top="203"
+              Content="Ignorer les articles pour le tri des films"
+              IsChecked="{Binding IgnoreArticles, Mode=TwoWay}"
+            />
+            <TextBox
+              Canvas.Left="373"
+              Canvas.Top="201"
+              Width="158"
+              IsVisible="{Binding IgnoreArticles}"
+              Text="{Binding Articles, Mode=TwoWay}"
+            />
+          </Canvas>
+          <StackPanel
+            Canvas.Left="6"
+            Canvas.Top="{Binding DatabaseTop}"
+            Spacing="6"
+          >
+            <TextBlock Text="Données des films : TMDb" />
+            <Button
+              Content="Configuration TVDB…"
+              Click="ChooseTvdb"
+              HorizontalAlignment="Left"
+            />
+            <TextBlock
+              Text="{Binding TvdbPath}"
+              MaxWidth="515"
+              TextTrimming="CharacterEllipsis"
+            />
+            <Button
+              Content="Correspondances de chemins…"
+              Click="EditMappings"
+              IsVisible="{Binding NormalMode}"
+              HorizontalAlignment="Left"
+            />
+          </StackPanel>
+        </Canvas>
+      </TabItem>
+      <TabItem Header="Dossiers">
+        <Grid Margin="6" ColumnDefinitions="426,8,*">
+          <Border
+            BorderBrush="#D0D0D0"
+            BorderThickness="1"
+            Padding="6,12,6,6"
+          >
+            <Grid RowDefinitions="Auto,*">
+              <Grid ColumnDefinitions="*,*" Margin="0,0,0,4">
+                <TextBlock Text="Dossier" />
+                <TextBlock
+                  Grid.Column="1"
+                  Text="Chemin Dune"
+                  IsVisible="{Binding NormalMode}"
+                />
+              </Grid>
+              <ListBox
+                x:Name="SourceFolders"
+                Grid.Row="1"
+                ItemsSource="{Binding Folders}"
+                SelectedItem="{Binding SelectedFolder, Mode=TwoWay}"
+                DoubleTapped="EditFolder"
+              >
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SourceFolderViewModel">
+                    <Grid
+                      ColumnDefinitions="*,*"
+                      RowDefinitions="Auto,Auto"
+                      Margin="0,2"
+                    >
+                      <TextBlock
+                        Grid.ColumnSpan="2"
+                        Text="{Binding TypeLabel}"
+                        Foreground="#777777"
+                        FontSize="10"
+                      />
+                      <TextBlock
+                        Grid.Row="1"
+                        Text="{Binding Path}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip.Tip="{Binding Path}"
+                      />
+                      <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Text="{Binding DunePath}"
+                        IsVisible="{Binding !BasicMode}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip.Tip="{Binding DunePath}"
+                      />
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Grid>
+          </Border>
+          <StackPanel
+            Grid.Column="2"
+            Spacing="6"
+            Margin="0,10,0,0"
+          >
+            <Button
+              Content="Ajouter"
+              Click="AddFolder"
+              HorizontalAlignment="Stretch"
+            />
+            <Button
+              Content="Éditer"
+              Click="EditFolder"
+              IsEnabled="{Binding HasFolder}"
+              HorizontalAlignment="Stretch"
+            />
+            <Button
+              Content="Supprimer"
+              Command="{Binding RemoveFolderCommand}"
+              IsEnabled="{Binding HasFolder}"
+              HorizontalAlignment="Stretch"
+            />
+          </StackPanel>
+        </Grid>
+      </TabItem>
+      <TabItem Header="Interface">
+        <ScrollViewer
+          HorizontalScrollBarVisibility="Disabled"
+          VerticalScrollBarVisibility="Auto"
+          Margin="6,9,6,6"
+        >
+          <StackPanel
+            Width="440"
+            HorizontalAlignment="Left"
+            Spacing="6"
+          >
+            <GroupBox Header="Thème" Height="126">
+              <Grid
+                ColumnDefinitions="271,10,*"
+                RowDefinitions="Auto,*"
+              >
+                <ComboBox
+                  x:Name="ConfigurationTemplate"
+                  ItemsSource="{Binding Templates}"
+                  SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
+                  HorizontalAlignment="Stretch"
+                >
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="render:DuneTemplate">
+                      <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock
+                  Grid.Row="1"
+                  Text="{Binding TemplateDescription}"
+                  Margin="0,8,0,0"
+                />
+                <Image
+                  Grid.Column="2"
+                  Grid.RowSpan="2"
+                  Source="{Binding TemplatePreview}"
+                  Stretch="Uniform"
+                  DoubleTapped="EnlargePreview"
+                />
+              </Grid>
+            </GroupBox>
+            <GroupBox Header="Options" Height="100">
+              <StackPanel Spacing="5">
+                <CheckBox
+                  Content="Utiliser des boîtiers pour les films"
+                  IsChecked="{Binding UseCases, Mode=TwoWay}"
+                />
+                <CheckBox
+                  Content="Afficher le cadre de sélection"
+                  IsChecked="{Binding SelectionBox, Mode=TwoWay}"
+                />
+                <CheckBox
+                  Content="Afficher la barre de défilement"
+                  IsChecked="{Binding Scrollbar, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </GroupBox>
+            <GroupBox Header="Format des synopsis" Height="48">
+              <StackPanel Orientation="Horizontal" Spacing="16">
+                <RadioButton
+                  Content="AAI"
+                  GroupName="BackgroundFormat"
+                  IsChecked="{Binding AaiBackgrounds, Mode=TwoWay}"
+                />
+                <RadioButton
+                  Content="JPG"
+                  GroupName="BackgroundFormat"
+                  IsChecked="{Binding JpegBackgrounds, Mode=TwoWay}"
+                />
+                <StackPanel
+                  Orientation="Horizontal"
+                  Spacing="5"
+                  IsVisible="{Binding JpegBackgrounds}"
+                >
+                  <TextBlock
+                    Text="Qualité (%) :"
+                    VerticalAlignment="Center"
+                  />
+                  <NumericUpDown
+                    Width="58"
+                    Minimum="1"
+                    Maximum="100"
+                    ShowButtonSpinner="False"
+                    Value="{Binding JpegQuality, Mode=TwoWay}"
+                  />
+                </StackPanel>
+              </StackPanel>
+            </GroupBox>
+            <GroupBox
+              Header="Sélections"
+              Height="90"
+              IsVisible="{Binding NormalMode}"
+            >
+              <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Selections}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ConfigurationChoice">
+                      <CheckBox
+                        Content="{Binding Name}"
+                        IsChecked="{Binding Enabled, Mode=TwoWay}"
+                      />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </GroupBox>
+            <GroupBox
+              Header="Ajouts récents"
+              Height="86"
+              IsVisible="{Binding NormalMode}"
+            >
+              <Grid
+                RowDefinitions="Auto,Auto"
+                ColumnDefinitions="Auto,*,Auto"
+                RowSpacing="6"
+                ColumnSpacing="8"
+              >
+                <CheckBox
+                  Content="Activer"
+                  IsChecked="{Binding RecentEnabled, Mode=TwoWay}"
+                />
+                <StackPanel
+                  Grid.Column="1"
+                  Grid.ColumnSpan="2"
+                  Orientation="Horizontal"
+                  Spacing="5"
+                  IsEnabled="{Binding RecentEnabled}"
+                >
+                  <TextBlock
+                    Text="Période :"
+                    VerticalAlignment="Center"
+                  />
+                  <NumericUpDown
+                    Width="58"
+                    Minimum="0"
+                    Maximum="99999"
+                    ShowButtonSpinner="False"
+                    Value="{Binding LastDays, Mode=TwoWay}"
+                  />
+                  <TextBlock
+                    Text="derniers jours"
+                    VerticalAlignment="Center"
+                  />
+                </StackPanel>
+                <TextBlock
+                  Grid.Row="1"
+                  Text="Tri :"
+                  VerticalAlignment="Center"
+                  IsEnabled="{Binding RecentEnabled}"
+                />
+                <ComboBox
+                  Grid.Row="1"
+                  Grid.Column="1"
+                  Width="150"
+                  ItemsSource="{Binding RecentSorts}"
+                  SelectedIndex="{Binding RecentSortIndex, Mode=TwoWay}"
+                  IsEnabled="{Binding RecentEnabled}"
+                />
+              </Grid>
+            </GroupBox>
+            <GroupBox
+              Header="Catégories"
+              Height="90"
+              IsVisible="{Binding NormalMode}"
+            >
+              <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Categories}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel ItemWidth="130" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ConfigurationChoice">
+                      <CheckBox
+                        Content="{Binding Name}"
+                        IsChecked="{Binding Enabled, Mode=TwoWay}"
+                      />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </GroupBox>
+            <GroupBox
+              Header="Raccourcis du menu principal"
+              Height="185"
+              IsVisible="{Binding NormalMode}"
+            >
+              <Grid ColumnDefinitions="158,9,*">
+                <ListBox
+                  x:Name="ShortcutList"
+                  ItemsSource="{Binding Shortcuts}"
+                  SelectionMode="Multiple"
+                  KeyDown="ShortcutKeyDown"
+                >
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="core:DuneShortcut">
+                      <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+                <GroupBox
+                  Grid.Column="2"
+                  Header="Nouveau raccourci"
+                >
+                  <StackPanel Spacing="4">
+                    <Grid
+                      ColumnDefinitions="58,*"
+                      ColumnSpacing="4"
+                    >
+                      <TextBlock
+                        Text="Type :"
+                        VerticalAlignment="Center"
+                      />
+                      <ComboBox
+                        Grid.Column="1"
+                        ItemsSource="{Binding ShortcutTypes}"
+                        SelectedIndex="{Binding ShortcutType, Mode=TwoWay}"
+                        HorizontalAlignment="Stretch"
+                      />
+                    </Grid>
+                    <StackPanel IsVisible="{Binding IsSelectionShortcut}">
+                      <TextBlock Text="Sélection :" />
+                      <ComboBox
+                        ItemsSource="{Binding SelectionNames}"
+                        SelectedItem="{Binding ShortcutSelection, Mode=TwoWay}"
+                        HorizontalAlignment="Stretch"
+                      />
+                    </StackPanel>
+                    <StackPanel IsVisible="{Binding IsGenreShortcut}">
+                      <TextBlock Text="Genre :" />
+                      <ComboBox
+                        ItemsSource="{Binding Genres}"
+                        SelectedItem="{Binding ShortcutGenre, Mode=TwoWay}"
+                        HorizontalAlignment="Stretch"
+                      />
+                    </StackPanel>
+                    <Grid
+                      RowDefinitions="23,23"
+                      ColumnDefinitions="58,*"
+                      ColumnSpacing="4"
+                      RowSpacing="4"
+                      IsVisible="{Binding IsFolderShortcut}"
+                    >
+                      <TextBlock
+                        Text="Nom :"
+                        VerticalAlignment="Center"
+                      />
+                      <TextBox
+                        Grid.Column="1"
+                        Text="{Binding ShortcutName, Mode=TwoWay}"
+                      />
+                      <TextBlock
+                        Grid.Row="1"
+                        Text="Chemin :"
+                        VerticalAlignment="Center"
+                      />
+                      <TextBox
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Text="{Binding ShortcutPath, Mode=TwoWay}"
+                      />
+                    </Grid>
+                    <Button
+                      Content="Ajouter"
+                      Command="{Binding AddShortcutCommand}"
+                      IsEnabled="{Binding CanAddShortcut}"
+                      HorizontalAlignment="Right"
+                    />
+                  </StackPanel>
+                </GroupBox>
+              </Grid>
+            </GroupBox>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+    <Grid Grid.Row="2" ColumnDefinitions="*,75,6,75">
+      <TextBlock
+        Text="{Binding Message}"
+        Foreground="#9A2525"
+        TextTrimming="CharacterEllipsis"
+        VerticalAlignment="Center"
+        ToolTip.Tip="{Binding Message}"
+      />
+      <Button
+        x:Name="AcceptConfiguration"
+        Grid.Column="1"
+        Content="OK"
+        Width="75"
+        Click="Accept"
+        IsEnabled="{Binding !IsBusy}"
+        IsDefault="True"
+      />
+      <Button
+        Grid.Column="3"
+        Content="Annuler"
+        Width="75"
+        Click="Cancel"
+        IsEnabled="{Binding !IsBusy}"
+        IsCancel="True"
+      />
+    </Grid>
+  </Grid>
+</Window>

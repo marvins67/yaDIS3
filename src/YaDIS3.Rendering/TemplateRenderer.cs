@@ -12,7 +12,9 @@ namespace YaDIS3.Rendering;
 public sealed record RenderOptions(
     string Language = "fr",
     bool AaiBackgrounds = false,
-    bool UseCases = false
+    bool UseCases = false,
+    int JpegQuality = 95,
+    bool BasicMode = false
 );
 
 /// <summary>
@@ -469,7 +471,7 @@ public sealed partial class TemplateRenderer : IDisposable
                     common,
                     Path.Combine(directory, "background")
                 );
-                SaveJpeg(common, preview);
+                SaveJpeg(common, preview, _options.JpegQuality);
                 return new(directory, preview, episodePreviews);
             }
 
@@ -488,7 +490,7 @@ public sealed partial class TemplateRenderer : IDisposable
                     season,
                     Path.Combine(directory, "background")
                 );
-                SaveJpeg(season, preview);
+                SaveJpeg(season, preview, _options.JpegQuality);
             }
 
             using SKBitmap episodeBackground = common.Copy();
@@ -659,7 +661,11 @@ public sealed partial class TemplateRenderer : IDisposable
                         output,
                         "preview.jpg"
                     );
-                    SaveJpeg(full, episodePreview);
+                    SaveJpeg(
+                        full,
+                        episodePreview,
+                        _options.JpegQuality
+                    );
                     episodePreviews[key] = episodePreview;
                 }
             }
@@ -1617,6 +1623,36 @@ public sealed partial class TemplateRenderer : IDisposable
         );
     }
 
+    /// <summary>Produit le fond brut du dossier parent en mode basique.</summary>
+    internal void RenderBasicBackground(
+        string directory,
+        string kind
+    )
+    {
+        using SKBitmap image = ReadImage(
+                _template.Asset(
+                    _template.Node(kind).Attr("background"),
+                    true
+                ),
+                true
+            )!
+            .Copy();
+        SaveBackground(
+            image,
+            Path.Combine(directory, "background")
+        );
+        string obsolete = Path.Combine(
+            directory,
+            _options.AaiBackgrounds
+                ? "background.jpg"
+                : "background.aai"
+        );
+        if (File.Exists(obsolete))
+        {
+            File.Delete(obsolete);
+        }
+    }
+
     /// <summary>Conserve l'icône d'application utilisée à la racine de yaDIS2.</summary>
     public void SaveApplicationIcon(string path)
     {
@@ -1683,19 +1719,23 @@ public sealed partial class TemplateRenderer : IDisposable
         }
         else
         {
-            SaveJpeg(image, path + ".jpg");
+            SaveJpeg(image, path + ".jpg", _options.JpegQuality);
         }
     }
 
     /// <summary>
-    /// Writes a bitmap as a JPEG preview at quality 95.
+    /// Enregistre un JPEG avec la qualité choisie, 95 par défaut.
     /// </summary>
-    public static void SaveJpeg(SKBitmap image, string path)
+    public static void SaveJpeg(
+        SKBitmap image,
+        string path,
+        int quality = 95
+    )
     {
         using SKImage encoded = SKImage.FromBitmap(image);
         using SKData data = encoded.Encode(
             SKEncodedImageFormat.Jpeg,
-            95
+            Math.Clamp(quality, 1, 100)
         );
         using FileStream file = File.Create(path);
         data.SaveTo(file);

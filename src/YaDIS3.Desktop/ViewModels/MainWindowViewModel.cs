@@ -421,8 +421,15 @@ public sealed partial class MainWindowViewModel
         Cards.Clear();
         VisibleCards.Clear();
         LoadDunePreferences();
+        ConfigurationSnapshot snapshot =
+            new DuneConfigurationStore().Load(loaded.Directory);
         foreach (MediaCard card in loaded.Cards)
         {
+            if (!IsConfiguredSource(card, snapshot))
+            {
+                card.Dispose();
+                continue;
+            }
             Cards.Add(card);
             card.PropertyChanged += CardChanged;
         }
@@ -516,6 +523,7 @@ public sealed partial class MainWindowViewModel
             card,
             OperationToken
         );
+        RememberManualSource(directory);
         Cards.Add(card);
         card.PropertyChanged += CardChanged;
         MediaFilterIndex = 2;

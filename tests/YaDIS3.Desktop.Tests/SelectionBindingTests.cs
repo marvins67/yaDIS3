@@ -160,28 +160,55 @@ public sealed class SelectionBindingTests
         Button configure = window.FindControl<Button>(
             "ConfigureButton"
         )!;
-        Flyout flyout = (Flyout)configure.Flyout!;
-        Button settings = ((StackPanel)flyout.Content!)
-            .Children.OfType<Button>()
-            .Single(button =>
-                button.Content?.ToString()
-                == "Templates et export Dune…"
-            );
-        TabItem tab = window.FindControl<TabItem>(
-            "DuneSettingsTab"
-        )!;
-        object? original = tab.Content;
-        settings.RaiseEvent(
+        configure.RaiseEvent(
             new RoutedEventArgs(Button.ClickEvent)
         );
         Dispatcher.UIThread.RunJobs();
-        Window dialog = Assert.Single(window.OwnedWindows);
-        Assert.Same(model, dialog.DataContext);
-        Assert.Same(original, dialog.Content);
-        Assert.False(tab.IsVisible);
+        ConfigurationWindow dialog =
+            Assert.IsType<ConfigurationWindow>(
+                Assert.Single(window.OwnedWindows)
+            );
+        ConfigurationViewModel draft =
+            Assert.IsType<ConfigurationViewModel>(
+                dialog.DataContext
+            );
+        Assert.Equal(574, dialog.Width);
+        Assert.Equal(542, dialog.Height);
+        Assert.False(dialog.CanResize);
+        TabControl tabs = dialog.FindControl<TabControl>(
+            "ConfigurationTabs"
+        )!;
+        string[] names = ["Général", "Dossiers", "Interface"];
+        Assert.Equal(
+            names,
+            tabs.Items.OfType<TabItem>()
+                .Select(tab => tab.Header?.ToString())
+        );
+        foreach (TabItem tab in tabs.Items.OfType<TabItem>())
+        {
+            tabs.SelectedItem = tab;
+            Dispatcher.UIThread.RunJobs();
+        }
+        draft.BasicMode = true;
+        Assert.True(model.CanExport);
         dialog.Close();
         Dispatcher.UIThread.RunJobs();
-        Assert.Same(original, tab.Content);
+        Assert.True(model.CanExport);
+        Assert.False(model.IsBusy);
+        configure.RaiseEvent(
+            new RoutedEventArgs(Button.ClickEvent)
+        );
+        Dispatcher.UIThread.RunJobs();
+        dialog = Assert.IsType<ConfigurationWindow>(
+            Assert.Single(window.OwnedWindows)
+        );
+        Assert.False(
+            (
+                (ConfigurationViewModel)dialog.DataContext!
+            ).BasicMode
+        );
+        dialog.Close();
+        Dispatcher.UIThread.RunJobs();
     }
 
     private static void VerifyEpisodeEditors(
