@@ -14,6 +14,17 @@
   FontFamily="Segoe UI, Arial"
   FontSize="12"
 >
+  <Window.Resources>
+    <ControlTheme
+      x:Key="StateMenuItemTheme"
+      TargetType="MenuItem"
+      BasedOn="{StaticResource {x:Type MenuItem}}"
+      x:DataType="vm:LibraryFilterItem"
+    >
+      <Setter Property="Header" Value="{Binding Label}" />
+      <Setter Property="Command" Value="{Binding SelectCommand}" />
+    </ControlTheme>
+  </Window.Resources>
   <Window.Styles>
     <Style Selector="Button.toolbar, SplitButton.toolbar">
       <Setter Property="Height" Value="38" />
@@ -178,49 +189,102 @@
               />
             </StackPanel>
           </Button>
-          <Grid Width="145">
-            <ComboBox
-              x:Name="MediaFilterChoice"
-              Classes="toolbarFilter"
-              ItemsSource="{Binding MediaFilters}"
-              SelectedIndex="{Binding MediaFilterIndex, Mode=TwoWay}"
-              HorizontalAlignment="Stretch"
-            />
-            <Image
-              Source="avares://yaDIS3.Desktop/Assets/Icons/film.png"
-              Width="24"
-              Height="24"
-              Margin="6,0,0,0"
-              HorizontalAlignment="Left"
-              IsHitTestVisible="False"
-              IsVisible="{Binding !IsSeriesFilter}"
-            />
-            <Image
-              Source="avares://yaDIS3.Desktop/Assets/Icons/television.png"
-              Width="24"
-              Height="24"
-              Margin="6,0,0,0"
-              HorizontalAlignment="Left"
-              IsHitTestVisible="False"
-              IsVisible="{Binding IsSeriesFilter}"
-            />
-          </Grid>
-          <Grid Width="145">
-            <ComboBox
-              Classes="toolbarFilter"
-              ItemsSource="{Binding StateFilters}"
-              SelectedIndex="{Binding StateFilterIndex, Mode=TwoWay}"
-              HorizontalAlignment="Stretch"
-            />
-            <Image
-              Source="avares://yaDIS3.Desktop/Assets/Icons/tag_green.png"
-              Width="24"
-              Height="24"
-              Margin="6,0,0,0"
-              HorizontalAlignment="Left"
-              IsHitTestVisible="False"
-            />
-          </Grid>
+          <SplitButton
+            x:Name="StateFilterButton"
+            Classes="toolbar"
+            MinWidth="145"
+            Command="{Binding CycleStateFilterCommand}"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/tag_green.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="{Binding StateFilterLabel}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+            <SplitButton.Flyout>
+              <MenuFlyout>
+                <MenuItem
+                  Header="{Binding StateFilters[0].Label}"
+                  Command="{Binding StateFilters[0].SelectCommand}"
+                />
+                <MenuItem
+                  Header="{Binding StateFilters[1].Label}"
+                  Command="{Binding StateFilters[1].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/accept_green.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Header="{Binding StateFilters[2].Label}"
+                  Command="{Binding StateFilters[2].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/accept_blue.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Header="{Binding StateFilters[3].Label}"
+                  Command="{Binding StateFilters[3].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/question_orange.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Header="{Binding StateFilters[4].Label}"
+                  Command="{Binding StateFilters[4].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/stop_round.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem
+                  x:Name="SagaFilterItems"
+                  Header="Sagas"
+                  ItemsSource="{Binding SagaFilters}"
+                  IsVisible="{Binding ShowSagaFilters}"
+                  ItemContainerTheme="{StaticResource StateMenuItemTheme}"
+                />
+                <MenuItem
+                  x:Name="SelectionFilterItems"
+                  Header="Sélections"
+                  ItemsSource="{Binding SelectionFilters}"
+                  IsVisible="{Binding ShowSelectionFilters}"
+                  ItemContainerTheme="{StaticResource StateMenuItemTheme}"
+                />
+                <MenuItem
+                  x:Name="GenreFilterItems"
+                  Header="Genres"
+                  ItemsSource="{Binding GenreFilters}"
+                  IsVisible="{Binding ShowGenreFilters}"
+                  ItemContainerTheme="{StaticResource StateMenuItemTheme}"
+                />
+              </MenuFlyout>
+            </SplitButton.Flyout>
+          </SplitButton>
           <CheckBox
             Content="Inverser le filtre"
             IsChecked="{Binding InvertStateFilter, Mode=TwoWay}"
@@ -336,8 +400,7 @@
                     Converter="{StaticResource LibraryStateConverter}"
                     ConverterParameter="image"
                   >
-                    <Binding Path="FilePath" />
-                    <Binding Path="IsDirty" />
+                    <Binding Path="ProcessingState" />
                   </MultiBinding>
                 </Image.Source>
               </Image>

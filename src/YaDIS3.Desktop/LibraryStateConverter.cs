@@ -3,12 +3,12 @@ using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using YaDIS3.Core;
 
 namespace YaDIS3.Desktop;
 
 /// <summary>
-/// Affiche l'état d'édition d'une fiche et la présence de son
-/// aperçu.
+/// Affiche l'icône du statut XML de yaDIS2.
 /// </summary>
 public sealed class LibraryStateConverter : IMultiValueConverter
 {
@@ -26,36 +26,44 @@ public sealed class LibraryStateConverter : IMultiValueConverter
         CultureInfo culture
     )
     {
-        bool edited = values.Count > 1 && values[1] is true;
-        bool hasPreview =
+        MediaProcessingState state =
             values.Count > 0
-            && values[0] is string file
-            && File.Exists(
-                Path.Combine(
-                    Path.GetDirectoryName(file)!,
-                    "preview.jpg"
-                )
-            );
-        if (parameter is "image")
+            && values[0] is MediaProcessingState value
+                ? value
+                : MediaProcessingState.Unknown;
+        return parameter switch
         {
-            string name =
-                edited ? "edit"
-                : hasPreview ? "accept_green"
-                : "question_orange";
-            return StateImage(name);
-        }
-
-        if (parameter is "color")
-        {
-            return edited ? Brushes.DarkGoldenrod
-                : hasPreview ? Brushes.SeaGreen
-                : Brushes.Peru;
-        }
-
-        return edited ? "*"
-            : hasPreview ? "✓"
-            : "?";
+            "image" => StateImage(IconName(state)),
+            "color" => StateColor(state),
+            _ => state switch
+            {
+                MediaProcessingState.Checked
+                or MediaProcessingState.Unchecked => "✓",
+                MediaProcessingState.Missing => "?",
+                _ => "!",
+            },
+        };
     }
+
+    private static string IconName(MediaProcessingState state) =>
+        state switch
+        {
+            MediaProcessingState.Checked => "accept_green",
+            MediaProcessingState.Unchecked => "accept_blue",
+            MediaProcessingState.Missing => "question_orange",
+            _ => "stop_round",
+        };
+
+    private static IBrush StateColor(
+        MediaProcessingState state
+    ) =>
+        state switch
+        {
+            MediaProcessingState.Checked => Brushes.SeaGreen,
+            MediaProcessingState.Unchecked => Brushes.SteelBlue,
+            MediaProcessingState.Missing => Brushes.Peru,
+            _ => Brushes.Firebrick,
+        };
 
     private Bitmap StateImage(string name)
     {

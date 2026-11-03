@@ -63,6 +63,7 @@ public sealed class SelectionBindingTests
         {
             Dispatcher.UIThread.RunJobs();
             VerifyMainLayout(window);
+            VerifyStateMenu(window, model, workspace.Cards[0]);
             VerifySettingsDialog(window, model);
             TextBox title = window.FindControl<TextBox>(
                 "TitleEditor"
@@ -149,6 +150,54 @@ public sealed class SelectionBindingTests
         Assert.True(library.Bounds.Height > 300);
         window.Width = 1075;
         window.Height = 797;
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void VerifyStateMenu(
+        MainWindow window,
+        MainWindowViewModel model,
+        MediaCard card
+    )
+    {
+        model.Cards.Add(card);
+        model.MediaFilterIndex = 0;
+        SplitButton button = window.FindControl<SplitButton>(
+            "StateFilterButton"
+        )!;
+        MenuFlyout menu = Assert.IsType<MenuFlyout>(
+            button.Flyout
+        );
+        menu.ShowAt(button);
+        Dispatcher.UIThread.RunJobs();
+        MenuItem[] entries = menu
+            .Items.OfType<MenuItem>()
+            .Take(5)
+            .ToArray();
+        Assert.Equal(
+            model.StateFilters.Select(item => item.Label),
+            entries.Select(item => item.Header)
+        );
+        Assert.All(
+            entries,
+            item => Assert.NotNull(item.Command)
+        );
+        Assert.All(
+            entries.Skip(1),
+            item => Assert.IsType<Image>(item.Icon)
+        );
+        MenuItem genres = Assert.IsType<MenuItem>(menu.Items[8]);
+        Assert.True(genres.IsVisible);
+        genres.IsSubMenuOpen = true;
+        Dispatcher.UIThread.RunJobs();
+        MenuItem genre = Assert.IsType<MenuItem>(
+            genres.ContainerFromIndex(0)
+        );
+        Assert.Equal("Drame", genre.Header);
+        Assert.NotNull(genre.Command);
+        genres.IsSubMenuOpen = false;
+        menu.Hide();
+        model.Cards.Clear();
+        model.StateFilters[0].SelectCommand.Execute(null);
         Dispatcher.UIThread.RunJobs();
     }
 
@@ -282,7 +331,11 @@ public sealed class SelectionBindingTests
     {
         string path = Path.Combine(directory, "data", name);
         Directory.CreateDirectory(path);
-        XElement info = new("info", new XElement("title", name));
+        XElement info = new(
+            "info",
+            new XElement("title", name),
+            new XElement("genre", "Drame")
+        );
         if (series)
         {
             info.Add(

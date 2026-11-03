@@ -104,6 +104,20 @@ public sealed class MediaCard
     public bool IsDirty => _revision != _savedRevision;
 
     /// <summary>
+    /// Statut historique, indépendant de l'aperçu et des
+    /// modifications non enregistrées.
+    /// </summary>
+    public MediaProcessingState ProcessingState =>
+        int.TryParse(
+            Header.Element("status")?.Value,
+            NumberStyles.Integer,
+            CultureInfo.InvariantCulture,
+            out int status
+        ) && Enum.IsDefined(typeof(MediaProcessingState), status)
+            ? (MediaProcessingState)status
+            : MediaProcessingState.Unknown;
+
+    /// <summary>
     /// Titre de la fiche ou, à défaut, nom du dossier d'origine.
     /// </summary>
     public string DisplayName =>

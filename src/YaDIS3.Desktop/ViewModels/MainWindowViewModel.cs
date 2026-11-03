@@ -399,6 +399,10 @@ public sealed partial class MainWindowViewModel
         _sourceScanner = sourceScanner;
         _logger = logger;
         _configurationLogger = configurationLogger;
+        StateFilters = CreateStateFilters();
+        CycleStateFilterCommand = new UiCommand(
+            CycleStateFilterAsync
+        );
         InitializeDune();
         SaveCommand = new UiCommand(() =>
             RunAsync(SaveAllAsync)
@@ -433,6 +437,7 @@ public sealed partial class MainWindowViewModel
         try
         {
             await action();
+            ReloadFilterGroups();
         }
         catch (OperationCanceledException)
         {

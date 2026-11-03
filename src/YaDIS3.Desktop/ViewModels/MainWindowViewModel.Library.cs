@@ -10,7 +10,11 @@ public sealed partial class MainWindowViewModel
 {
     private int _mediaFilterIndex;
 
-    private int _stateFilterIndex;
+    private LegacyLibraryFilter _stateFilter = new();
+
+    private XDocument _filterGroups = new(
+        new XElement("groups")
+    );
 
     private bool _invertStateFilter;
 
@@ -21,12 +25,6 @@ public sealed partial class MainWindowViewModel
     ["Films et séries", "Films", "Séries TV"];
 
     /// <summary>
-    /// États de traitement et d'édition proposés par le filtre.
-    /// </summary>
-    public IReadOnlyList<string> StateFilters { get; } =
-    ["Tous les états", "Avec aperçu", "Sans aperçu", "Modifiés"];
-
-    /// <summary>
     /// Catégorie de médias sélectionnée.
     /// </summary>
     public int MediaFilterIndex
@@ -35,6 +33,15 @@ public sealed partial class MainWindowViewModel
         set
         {
             _mediaFilterIndex = value;
+            if (
+                value == 2
+                && _stateFilter.Kind
+                    > LibraryFilterKind.Unprocessed
+            )
+            {
+                SelectStateFilter(StateFilters[0]);
+            }
+            RefreshStateMenu();
             RefreshFilter();
             Notify();
             Notify(nameof(IsSeriesFilter));
@@ -46,20 +53,6 @@ public sealed partial class MainWindowViewModel
     /// les séries.
     /// </summary>
     public bool IsSeriesFilter => MediaFilterIndex == 2;
-
-    /// <summary>
-    /// État de traitement ou d'édition sélectionné.
-    /// </summary>
-    public int StateFilterIndex
-    {
-        get => _stateFilterIndex;
-        set
-        {
-            _stateFilterIndex = value;
-            RefreshFilter();
-            Notify();
-        }
-    }
 
     /// <summary>
     /// Inverse le filtre de l'état sélectionné.
@@ -142,29 +135,13 @@ public sealed partial class MainWindowViewModel
 
     private bool MatchesLibraryFilters(MediaCard card)
     {
-        bool matchesCategory = MediaFilterIndex switch
-        {
-            1 => !card.IsSeries,
-            2 => card.IsSeries,
-            _ => true,
-        };
-        bool hasPreview = File.Exists(
-            Path.Combine(card.DataDirectory, "preview.jpg")
-        );
-        bool matchesState = StateFilterIndex switch
-        {
-            1 => hasPreview,
-            2 => !hasPreview,
-            3 => card.IsDirty,
-            _ => true,
-        };
-        if (InvertStateFilter && StateFilterIndex != 0)
-        {
-            matchesState = !matchesState;
-        }
-
-        return matchesCategory
-            && matchesState
+        return MatchesMediaCategory(card)
+            && (
+                _stateFilter with
+                {
+                    Inverted = InvertStateFilter,
+                }
+            ).Matches(card, _filterGroups)
             && card.DisplayName.Contains(
                 Filter,
                 StringComparison.CurrentCultureIgnoreCase

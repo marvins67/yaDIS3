@@ -43,6 +43,7 @@ public sealed partial class MainWindowViewModel
             card.PropertyChanged += CardChanged;
         }
 
+        ReloadFilterGroups();
         RefreshFilter();
         SelectedCard = VisibleCards.FirstOrDefault();
         Status =
@@ -61,10 +62,8 @@ public sealed partial class MainWindowViewModel
         Notify(nameof(HasChanges));
         Notify(nameof(ActorsText));
         Notify(nameof(GenresText));
-        if (StateFilterIndex == 3 && !IsBusy)
-        {
-            RefreshFilter();
-        }
+        // Comme RefreshMediaList(false) dans yaDIS2, actualiser
+        // le statut ne doit pas retirer la fiche pendant la saisie.
     }
 
     private void RefreshFilter()
@@ -137,7 +136,8 @@ public sealed partial class MainWindowViewModel
         Cards.Add(card);
         card.PropertyChanged += CardChanged;
         MediaFilterIndex = 2;
-        StateFilterIndex = 0;
+        RefreshStateMenu();
+        SelectStateFilter(StateFilters[0]);
         InvertStateFilter = false;
         Filter = "";
         SelectedCard = card;
