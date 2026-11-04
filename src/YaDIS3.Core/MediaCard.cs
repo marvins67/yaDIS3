@@ -43,6 +43,9 @@ public sealed partial class MediaCard
     private XElement Header =>
         Root.Name == "item" ? Root : Root.Element("item")!;
 
+    /// <summary>Présence de métadonnées éditables.</summary>
+    public bool HasInformation => Info is not null;
+
     private XElement? Info =>
         Root.Element("info") ?? Header.Element("info");
 

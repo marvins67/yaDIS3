@@ -5,7 +5,7 @@ namespace YaDIS3.Desktop.ViewModels;
 
 public sealed partial class MainWindowViewModel
 {
-    private string _stateFilterLabel = "Tous les états";
+    private string _stateFilterLabel = "Tous";
 
     /// <summary>Libellé du filtre actif.</summary>
     public string StateFilterLabel => _stateFilterLabel;
@@ -58,7 +58,7 @@ public sealed partial class MainWindowViewModel
 
     private LibraryFilterItem[] CreateStateFilters() =>
         [
-            StateItem("Tous les états", LibraryFilterKind.All),
+            StateItem("Tous", LibraryFilterKind.All),
             StateItem("Vérifiés", LibraryFilterKind.Checked),
             StateItem(
                 "Non vérifiés",

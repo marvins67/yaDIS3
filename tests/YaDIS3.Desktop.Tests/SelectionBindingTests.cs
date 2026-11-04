@@ -14,6 +14,13 @@ namespace YaDIS3.Desktop.Tests;
 
 public sealed class SelectionBindingTests
 {
+    private static readonly string[] s_movieTabs =
+    [
+        "Film",
+        "Média",
+        "Jaquette",
+        "Fanart",
+    ];
     private static readonly string[] s_seriesTabs =
     [
         "Série TV",
@@ -64,6 +71,7 @@ public sealed class SelectionBindingTests
         try
         {
             Dispatcher.UIThread.RunJobs();
+            VerifyFirstLaunch(window, model);
             VerifyMainLayout(window);
             VerifyStateMenu(window, model, workspace.Cards[0]);
             VerifySettingsDialog(window, model);
@@ -95,7 +103,12 @@ public sealed class SelectionBindingTests
                 !card.IsSeries
             );
             Dispatcher.UIThread.RunJobs();
-            Assert.Equal("Film", title.Text);
+            Assert.Equal(
+                "Film",
+                window
+                    .FindControl<TextBox>("MovieTitleEditor")!
+                    .Text
+            );
             Assert.Null(model.SelectedEpisode);
             model.SelectedCard = series;
             Dispatcher.UIThread.RunJobs();
@@ -111,6 +124,45 @@ public sealed class SelectionBindingTests
         }
     }
 
+    private static void VerifyFirstLaunch(
+        MainWindow window,
+        MainWindowViewModel model
+    )
+    {
+        Assert.Equal("Films", model.MediaFilterLabel);
+        Assert.Equal("Tous", model.StateFilterLabel);
+        Assert.Equal("", model.VisibleCountLabel);
+        Assert.Equal("", model.Status);
+        Assert.False(model.CanExport);
+        Assert.False(
+            window.FindControl<Button>("ExportButton")!.IsEnabled
+        );
+        Assert.False(
+            window
+                .FindControl<TabControl>("EditorTabs")!
+                .IsEnabled
+        );
+        Assert.True(
+            window.FindControl<Image>("EmptyPreview")!.IsVisible
+        );
+        Assert.Equal(
+            s_movieTabs,
+            window
+                .FindControl<TabControl>("EditorTabs")!
+                .Items.OfType<TabItem>()
+                .Where(tab => tab.IsVisible)
+                .Select(tab => tab.Header?.ToString())
+        );
+        model.ToggleMediaFilterCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal("Séries TV", model.MediaFilterLabel);
+        Assert.False(
+            window.FindControl<TabItem>("MediaTab")!.IsVisible
+        );
+        model.SelectMoviesCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+    }
+
     private static void VerifyMainLayout(MainWindow window)
     {
         ListBox library = window.FindControl<ListBox>(
@@ -121,7 +173,7 @@ public sealed class SelectionBindingTests
         )!;
         Assert.Equal(254, library.Bounds.Width);
         Assert.Equal(
-            51,
+            49,
             library.TranslatePoint(default, window)!.Value.Y
         );
         Assert.Equal(
@@ -241,10 +293,10 @@ public sealed class SelectionBindingTests
             Dispatcher.UIThread.RunJobs();
         }
         draft.BasicMode = true;
-        Assert.True(model.CanExport);
+        Assert.False(model.CanExport);
         dialog.Close();
         Dispatcher.UIThread.RunJobs();
-        Assert.True(model.CanExport);
+        Assert.False(model.CanExport);
         Assert.False(model.IsBusy);
         configure.RaiseEvent(
             new RoutedEventArgs(Button.ClickEvent)

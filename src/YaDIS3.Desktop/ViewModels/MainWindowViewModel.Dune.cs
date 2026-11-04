@@ -108,6 +108,7 @@ public sealed partial class MainWindowViewModel
         {
             _exportParentPath = value;
             Notify();
+            Notify(nameof(CanExport));
         }
     }
 

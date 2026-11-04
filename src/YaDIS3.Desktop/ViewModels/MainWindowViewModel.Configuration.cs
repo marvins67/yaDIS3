@@ -12,7 +12,8 @@ public sealed partial class MainWindowViewModel
     /// En mode basique, Traiter écrit directement auprès des
     /// vidéos.
     /// </summary>
-    public bool CanExport => !_configuration.BasicMode;
+    public bool CanExport => !_configuration.BasicMode
+        && !string.IsNullOrEmpty(ExportParentPath);
 
     /// <summary>
     /// Prépare une copie indépendante pour la fenêtre de

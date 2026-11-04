@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using System.Xml.Linq;
 using YaDIS3.Core;
 
@@ -8,7 +9,7 @@ namespace YaDIS3.Desktop.ViewModels;
 /// </summary>
 public sealed partial class MainWindowViewModel
 {
-    private int _mediaFilterIndex;
+    private int _mediaFilterIndex = 1;
 
     private LegacyLibraryFilter _stateFilter = new();
 
@@ -45,6 +46,9 @@ public sealed partial class MainWindowViewModel
             RefreshFilter();
             Notify();
             Notify(nameof(IsSeriesFilter));
+            Notify(nameof(MediaFilterLabel));
+            Notify(nameof(IsSeries));
+            Notify(nameof(MediaTabTitle));
         }
     }
 
@@ -97,41 +101,59 @@ public sealed partial class MainWindowViewModel
     /// Nombre de fiches visibles et chargées.
     /// </summary>
     public string VisibleCountLabel =>
-        $"{VisibleCards.Count} / {Cards.Count} fiche(s)";
+        VisibleCards.Count == 0
+            ? ""
+            : $"{VisibleCards.Count} "
+                + (IsSeriesFilter ? "Séries TV" : "Films");
 
     /// <summary>
     /// Noms des acteurs conservés dans les métadonnées
     /// sélectionnées.
     /// </summary>
-    public string ActorsText => ReadNames("actors", "actor");
+    public string ActorsText => SelectedCard?.Actors ?? "";
 
     /// <summary>
     /// Genres conservés dans les métadonnées sélectionnées.
     /// </summary>
-    public string GenresText => ReadNames("genres", "genre");
+    public string GenresText => SelectedCard?.Genres ?? "";
 
-    private string ReadNames(string container, string element)
+    /// <summary>Libellé du sélecteur de type historique.</summary>
+    public string MediaFilterLabel =>
+        IsSeriesFilter ? "Séries TV" : "Films";
+
+    /// <summary>Alterner films et séries par le clic principal.</summary>
+    public ICommand ToggleMediaFilterCommand { get; }
+
+    /// <summary>Choisir explicitement les films.</summary>
+    public ICommand SelectMoviesCommand { get; }
+
+    /// <summary>Choisir explicitement les séries.</summary>
+    public ICommand SelectSeriesCommand { get; }
+
+    private Task SelectMediaAsync(int index)
     {
-        XElement? root = SelectedCard?.Snapshot().Document.Root;
-        XElement? info =
-            root?.Element("info")
-            ?? root?.Element("item")?.Element("info");
-        XElement? group = info?.Element(container);
-        if (group is null)
-        {
-            return "";
-        }
-
-        string[] names = group
-            .Elements(element)
-            .Select(item =>
-                item.Element("name")?.Value ?? item.Value
-            )
-            .ToArray();
-        return names.Length > 0
-            ? string.Join(", ", names)
-            : group.Value.Replace('|', ',');
+        MediaFilterIndex = index;
+        return Task.CompletedTask;
     }
+
+    /// <summary>Le traitement exclut les sources manquantes.</summary>
+    public bool CanProcessSelection =>
+        SelectedCard is { } card
+        && card.ProcessingState != MediaProcessingState.Missing;
+
+    /// <summary>Désactive et vide l'éditeur sans fiche traitée.</summary>
+    public MediaCard? EditableCard =>
+        SelectedCard is { } card
+        && card.ProcessingState
+            is MediaProcessingState.Checked
+                or MediaProcessingState.Unchecked
+        && card.HasInformation
+            ? card
+            : null;
+
+    /// <summary>Activation des onglets comme EnableEdit/DisableEdit.</summary>
+    public bool CanEditSelection =>
+        EditableCard is not null && !IsBusy;
 
     private bool MatchesLibraryFilters(MediaCard card)
     {

@@ -70,7 +70,7 @@ public sealed partial class MainWindowViewModel
         SelectedCard = VisibleCards.FirstOrDefault();
         Status =
             loaded.Warnings.Count == 0
-                ? "Bibliothèque ouverte."
+                ? ""
                 : string.Join(" · ", loaded.Warnings);
         NotifyAll();
         _configuration = _configuration with
@@ -126,6 +126,8 @@ public sealed partial class MainWindowViewModel
         Notify(nameof(HasChanges));
         Notify(nameof(ActorsText));
         Notify(nameof(GenresText));
+        Notify(nameof(EditableCard));
+        Notify(nameof(CanEditSelection));
         // Comme RefreshMediaList(false) dans yaDIS2, actualiser
         // le statut ne doit pas retirer la fiche pendant la saisie.
     }

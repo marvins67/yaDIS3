@@ -7,12 +7,13 @@
   x:Class="YaDIS3.Desktop.Views.MainWindow"
   x:DataType="vm:MainWindowViewModel"
   Title="yaDIS3"
-  Width="1075"
-  Height="797"
-  MinWidth="943"
+  Width="1007"
+  Height="693"
+  MinWidth="927"
   MinHeight="693"
   FontFamily="Segoe UI, Arial"
   FontSize="12"
+  Icon="avares://yaDIS3.Desktop/Assets/Icons/yadis.ico"
 >
   <Window.Resources>
     <ControlTheme
@@ -22,13 +23,16 @@
       x:DataType="vm:LibraryFilterItem"
     >
       <Setter Property="Header" Value="{Binding Label}" />
-      <Setter Property="Command" Value="{Binding SelectCommand}" />
+      <Setter
+        Property="Command"
+        Value="{Binding SelectCommand}"
+      />
     </ControlTheme>
   </Window.Resources>
   <Window.Styles>
     <Style Selector="Button.toolbar, SplitButton.toolbar">
-      <Setter Property="Height" Value="38" />
-      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Height" Value="36" />
+      <Setter Property="MinHeight" Value="36" />
       <Setter Property="Padding" Value="6,3" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="BorderBrush" Value="#C6C6C6" />
@@ -42,13 +46,15 @@
         </LinearGradientBrush>
       </Setter>
     </Style>
-    <Style Selector="SplitButton.toolbar /template/ Button#PART_SecondaryButton">
+    <Style
+      Selector="SplitButton.toolbar /template/ Button#PART_SecondaryButton"
+    >
       <Setter Property="Width" Value="18" />
       <Setter Property="MinWidth" Value="18" />
       <Setter Property="Padding" Value="0" />
     </Style>
     <Style Selector="ComboBox.toolbarFilter">
-      <Setter Property="Height" Value="38" />
+      <Setter Property="Height" Value="36" />
       <Setter Property="Padding" Value="32,2,0,2" />
       <Setter Property="CornerRadius" Value="2" />
       <Setter Property="BorderBrush" Value="#C6C6C6" />
@@ -93,8 +99,41 @@
       <Setter Property="MinHeight" Value="23" />
       <Setter Property="Padding" Value="3,1" />
     </Style>
+    <Style
+      Selector="TextBox:disabled /template/ Border#PART_BorderElement"
+    >
+      <Setter Property="Background" Value="#F0F0F0" />
+      <Setter Property="BorderBrush" Value="#E5E5E5" />
+    </Style>
+    <Style Selector="TextBlock.fieldLabel:disabled">
+      <Setter Property="Foreground" Value="#A0A0A0" />
+    </Style>
+    <Style Selector="TextBox:disabled">
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+    <Style
+      Selector="Button.toolbar:disabled /template/ ContentPresenter#PART_ContentPresenter"
+    >
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style
+      Selector="SplitButton.toolbar:disabled /template/ Button /template/ ContentPresenter#PART_ContentPresenter"
+    >
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style
+      Selector="SplitButton.toolbar:disabled /template/ Button"
+    >
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style
+      Selector="CheckBox.legacyFilter /template/ Border#NormalRectangle"
+    >
+      <Setter Property="Width" Value="13" />
+      <Setter Property="Height" Value="13" />
+    </Style>
   </Window.Styles>
-  <Grid Margin="8,0,8,0" RowDefinitions="51,*,6,242,8,22">
+  <Grid Margin="8,0,8,0" RowDefinitions="49,*,6,242,6,22">
     <Grid
       x:Name="MainToolbar"
       ColumnDefinitions="*,Auto"
@@ -131,11 +170,11 @@
             Classes="toolbar"
             Width="98"
             Command="{Binding ProcessCommand}"
-            IsEnabled="{Binding HasCard}"
+            IsEnabled="{Binding CanProcessSelection}"
           >
             <StackPanel Orientation="Horizontal" Spacing="7">
               <Image
-                Source="avares://yaDIS3.Desktop/Assets/Icons/process.png"
+                Source="{Binding CanProcessSelection, Converter={StaticResource ToolbarIconConverter}, ConverterParameter=process}"
                 Width="24"
                 Height="24"
               />
@@ -172,10 +211,11 @@
             Width="90"
             Command="{Binding ExportCommand}"
             IsEnabled="{Binding CanExport}"
+            x:Name="ExportButton"
           >
             <StackPanel Orientation="Horizontal" Spacing="7">
               <Image
-                Source="avares://yaDIS3.Desktop/Assets/Icons/download_to_computer.png"
+                Source="{Binding CanExport, Converter={StaticResource ToolbarIconConverter}, ConverterParameter=download_to_computer}"
                 Width="24"
                 Height="24"
               />
@@ -204,9 +244,46 @@
             </StackPanel>
           </Button>
           <SplitButton
+            Classes="toolbar"
+            MinWidth="94"
+            Command="{Binding ToggleMediaFilterCommand}"
+            x:Name="MediaFilterButton"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/film.png"
+                Width="24"
+                Height="24"
+                IsVisible="{Binding !IsSeriesFilter}"
+              />
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/television.png"
+                Width="24"
+                Height="24"
+                IsVisible="{Binding IsSeriesFilter}"
+              />
+              <TextBlock
+                Text="{Binding MediaFilterLabel}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+            <SplitButton.Flyout>
+              <MenuFlyout>
+                <MenuItem
+                  Header="Films"
+                  Command="{Binding SelectMoviesCommand}"
+                />
+                <MenuItem
+                  Header="Séries TV"
+                  Command="{Binding SelectSeriesCommand}"
+                />
+              </MenuFlyout>
+            </SplitButton.Flyout>
+          </SplitButton>
+          <SplitButton
             x:Name="StateFilterButton"
             Classes="toolbar"
-            MinWidth="145"
+            MinWidth="89"
             Command="{Binding CycleStateFilterCommand}"
           >
             <StackPanel Orientation="Horizontal" Spacing="7">
@@ -302,8 +379,10 @@
           <CheckBox
             Content="Inverser le filtre"
             IsChecked="{Binding InvertStateFilter, Mode=TwoWay}"
-            Margin="3,0"
+            Margin="2,0,0,0"
             VerticalAlignment="Center"
+            Classes="legacyFilter"
+            Padding="0"
           />
         </StackPanel>
       </ScrollViewer>
@@ -311,6 +390,7 @@
         Grid.Column="1"
         Orientation="Horizontal"
         Spacing="6"
+        IsEnabled="{Binding !IsBusy}"
         Margin="6,0,0,0"
       >
         <Button
@@ -355,7 +435,9 @@
                   Command="{Binding SaveCommand}"
                   IsEnabled="{Binding HasChanges}"
                 />
-                <TextBlock Text="Rechercher dans la bibliothèque :" />
+                <TextBlock
+                  Text="Rechercher dans la bibliothèque :"
+                />
                 <TextBox
                   Text="{Binding Filter, Mode=TwoWay}"
                   PlaceholderText="Titre à rechercher…"
@@ -364,7 +446,8 @@
             </Flyout>
           </Button.Flyout>
         </Button>
-        <Button
+        <SplitButton
+          x:Name="AboutButton"
           Classes="toolbar"
           Width="54"
           Click="ShowAbout"
@@ -375,7 +458,15 @@
             Width="24"
             Height="24"
           />
-        </Button>
+          <SplitButton.Flyout>
+            <MenuFlyout>
+              <MenuItem
+                Header="À propos de yaDIS3"
+                Click="ShowAbout"
+              />
+            </MenuFlyout>
+          </SplitButton.Flyout>
+        </SplitButton>
       </StackPanel>
     </Grid>
     <Grid Grid.Row="1" ColumnDefinitions="254,8,*">
@@ -442,13 +533,24 @@
         BorderBrush="#777777"
         BorderThickness="1"
         Background="#B4B4B4"
-        Padding="8"
+        Padding="0"
       >
-        <Image
-          x:Name="DunePreview"
-          Source="{Binding RenderedPreview}"
-          Stretch="Uniform"
-        />
+        <Grid>
+          <Image
+            x:Name="DunePreview"
+            Source="{Binding RenderedPreview}"
+            Stretch="Uniform"
+          />
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/delete_image.png"
+            Width="64"
+            Height="64"
+            x:Name="EmptyPreview"
+            IsVisible="{Binding !HasRenderedPreview}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+          />
+        </Grid>
       </Border>
     </Grid>
     <GridSplitter
@@ -461,83 +563,480 @@
     <TabControl
       x:Name="EditorTabs"
       Grid.Row="3"
-      IsEnabled="{Binding !IsBusy}"
+      IsEnabled="{Binding CanEditSelection}"
       Background="#FAFAFA"
       Padding="0"
     >
       <TabItem Header="{Binding MediaTabTitle}">
-        <Grid
-          x:Name="InformationPanel"
-          Margin="8,3"
-          ColumnDefinitions="406,6,*"
-          IsEnabled="{Binding HasCard}"
-        >
-          <Grid RowDefinitions="39,42,42,42,*">
-            <Grid ColumnDefinitions="282,6,56,6,56">
-              <StackPanel>
-                <TextBlock Text="Titre :" Classes="fieldLabel" />
+        <Grid>
+          <Grid
+            x:Name="InformationPanel"
+            Margin="8,3"
+            ColumnDefinitions="406,6,*"
+            IsEnabled="{Binding HasCard}"
+            IsVisible="{Binding IsSeries}"
+          >
+            <Grid RowDefinitions="39,42,42,42,*">
+              <Grid ColumnDefinitions="282,6,56,6,56">
+                <StackPanel>
+                  <TextBlock
+                    Text="Titre :"
+                    Classes="fieldLabel"
+                  />
+                  <TextBox
+                    x:Name="TitleEditor"
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Title, Mode=TwoWay}"
+                  />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                  <TextBlock
+                    Text="Année :"
+                    Classes="fieldLabel"
+                  />
+                  <TextBox
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Year, Mode=TwoWay}"
+                  />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                  <TextBlock
+                    Text="Note :"
+                    Classes="fieldLabel"
+                  />
+                  <TextBox
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Rating, Mode=TwoWay}"
+                  />
+                </StackPanel>
+              </Grid>
+              <StackPanel Grid.Row="1">
+                <TextBlock
+                  Text="Acteurs :"
+                  Classes="fieldLabel"
+                />
                 <TextBox
-                  x:Name="TitleEditor"
                   Classes="legacyField"
-                  Text="{Binding SelectedCard?.Title, Mode=TwoWay}"
+                  Text="{Binding EditableCard?.Actors, Mode=TwoWay}"
                 />
               </StackPanel>
-              <StackPanel Grid.Column="2">
-                <TextBlock Text="Année :" Classes="fieldLabel" />
-                <TextBox
-                  Classes="legacyField"
-                  Text="{Binding SelectedCard?.Year, Mode=TwoWay}"
+              <StackPanel Grid.Row="2">
+                <TextBlock
+                  Text="Genres :"
+                  Classes="fieldLabel"
                 />
+                <Grid ColumnDefinitions="*,6,22">
+                  <TextBox
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Genres, Mode=TwoWay}"
+                  />
+                  <Button
+                    Grid.Column="2"
+                    Width="22"
+                    Height="23"
+                    MinHeight="23"
+                    Padding="1"
+                    ToolTip.Tip="Choisir les genres"
+                  >
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/accept_database.png"
+                      Width="16"
+                      Height="16"
+                    />
+                    <Button.Flyout>
+                      <Flyout
+                        Opening="PrepareGenres"
+                        Closed="ApplyGenres"
+                      >
+                        <ScrollViewer MaxHeight="360">
+                          <ItemsControl
+                            ItemsSource="{Binding GenreChoices}"
+                          >
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate
+                                x:DataType="vm:GenreChoice"
+                              >
+                                <CheckBox
+                                  Content="{Binding Name}"
+                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </ScrollViewer>
+                      </Flyout>
+                    </Button.Flyout>
+                  </Button>
+                </Grid>
               </StackPanel>
-              <StackPanel Grid.Column="4">
-                <TextBlock Text="Note :" Classes="fieldLabel" />
+              <StackPanel Grid.Row="3">
+                <TextBlock
+                  Text="Diffuseur :"
+                  Classes="fieldLabel"
+                />
                 <TextBox
                   Classes="legacyField"
-                  Text="{Binding SelectedCard?.Rating, Mode=TwoWay}"
+                  Text="{Binding EditableCard?.Network, Mode=TwoWay}"
                 />
               </StackPanel>
             </Grid>
-            <StackPanel Grid.Row="1">
-              <TextBlock Text="Acteurs :" Classes="fieldLabel" />
-              <TextBox
-                Classes="legacyField"
-                Text="{Binding ActorsText}"
-                IsReadOnly="True"
-              />
-            </StackPanel>
-            <StackPanel Grid.Row="2">
-              <TextBlock Text="Genres :" Classes="fieldLabel" />
-              <TextBox
-                Classes="legacyField"
-                Text="{Binding GenresText}"
-                IsReadOnly="True"
-              />
-            </StackPanel>
-            <StackPanel Grid.Row="3">
+            <Grid Grid.Column="2" RowDefinitions="Auto,149,*">
               <TextBlock
-                Text="Diffuseur :"
+                Text="Synopsis :"
                 Classes="fieldLabel"
               />
               <TextBox
+                Grid.Row="1"
+                Text="{Binding EditableCard?.Plot, Mode=TwoWay}"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                VerticalContentAlignment="Top"
+                ScrollViewer.VerticalScrollBarVisibility="Visible"
+              />
+            </Grid>
+          </Grid>
+          <Grid
+            Margin="8,3"
+            ColumnDefinitions="406,6,*"
+            RowDefinitions="42,42,42,42,42,*"
+            IsVisible="{Binding !IsSeries}"
+            x:Name="MovieInformationPanel"
+          >
+            <Grid ColumnDefinitions="200,6,200">
+              <StackPanel>
+                <TextBlock Text="Titre:" Classes="fieldLabel" />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Title, Mode=TwoWay}"
+                  x:Name="MovieTitleEditor"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock
+                  Text="Titre original:"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.OriginalTitle, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="200,6,200">
+              <StackPanel>
+                <TextBlock
+                  Text="Titre pour le tri:"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.SortTitle, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock
+                  Text="Réalisateurs:"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Directors, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </Grid>
+            <StackPanel Grid.Row="2">
+              <TextBlock Text="Genres:" Classes="fieldLabel" />
+              <Grid ColumnDefinitions="*,6,22">
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Genres, Mode=TwoWay}"
+                />
+                <Button
+                  Grid.Column="2"
+                  Width="22"
+                  Height="23"
+                  MinHeight="23"
+                  Padding="1"
+                  ToolTip.Tip="Choisir les genres"
+                >
+                  <Image
+                    Source="avares://yaDIS3.Desktop/Assets/Icons/accept_database.png"
+                    Width="16"
+                    Height="16"
+                  />
+                  <Button.Flyout>
+                    <Flyout
+                      Opening="PrepareGenres"
+                      Closed="ApplyGenres"
+                    >
+                      <ScrollViewer MaxHeight="360">
+                        <ItemsControl
+                          ItemsSource="{Binding GenreChoices}"
+                        >
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate
+                              x:DataType="vm:GenreChoice"
+                            >
+                              <CheckBox
+                                Content="{Binding Name}"
+                                IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </ScrollViewer>
+                    </Flyout>
+                  </Button.Flyout>
+                </Button>
+              </Grid>
+            </StackPanel>
+            <StackPanel Grid.Row="3">
+              <TextBlock Text="Studios:" Classes="fieldLabel" />
+              <TextBox
                 Classes="legacyField"
-                Text="{Binding SelectedCard?.Network, Mode=TwoWay}"
+                Text="{Binding EditableCard?.Studios, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <StackPanel Grid.Row="4">
+              <TextBlock Text="Accroche:" Classes="fieldLabel" />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.Tagline, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <Grid
+              Grid.Column="2"
+              ColumnDefinitions="56,6,56,6,56,6,88,8,88,*"
+            >
+              <StackPanel Grid.Column="0">
+                <TextBlock Text="Année:" Classes="fieldLabel" />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Year, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock Text="Durée:" Classes="fieldLabel" />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Runtime, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="4">
+                <TextBlock Text="Note:" Classes="fieldLabel" />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Rating, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="6">
+                <TextBlock Text="Pays:" Classes="fieldLabel" />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Countries, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="8">
+                <TextBlock
+                  Text="Classification:"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Certification, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </Grid>
+            <StackPanel Grid.Column="2" Grid.Row="1">
+              <TextBlock Text="Acteurs:" Classes="fieldLabel" />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.Actors, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <StackPanel
+              Grid.Column="2"
+              Grid.Row="2"
+              Grid.RowSpan="3"
+            >
+              <TextBlock Text="Synopsis:" Classes="fieldLabel" />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.Plot, Mode=TwoWay}"
+                Height="107"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                VerticalContentAlignment="Top"
+                ScrollViewer.VerticalScrollBarVisibility="Visible"
               />
             </StackPanel>
           </Grid>
-          <Grid Grid.Column="2" RowDefinitions="Auto,149,*">
-            <TextBlock Text="Synopsis :" Classes="fieldLabel" />
-            <TextBox
-              Grid.Row="1"
-              Text="{Binding SelectedCard?.Plot, Mode=TwoWay}"
-              AcceptsReturn="True"
-              TextWrapping="Wrap"
-              VerticalContentAlignment="Top"
-              ScrollViewer.VerticalScrollBarVisibility="Auto"
-            />
-          </Grid>
         </Grid>
       </TabItem>
-      <TabItem Header="Affiche" IsVisible="{Binding !IsSeries}">
+      <TabItem
+        Header="Média"
+        IsVisible="{Binding !IsSeries}"
+        x:Name="MediaTab"
+      >
+        <StackPanel
+          Margin="8"
+          Orientation="Horizontal"
+          Spacing="12"
+        >
+          <StackPanel Width="220">
+            <TextBlock Text="Vidéo" />
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="Codec:"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.VideoCodec, Mode=TwoWay}"
+                ItemsSource="{Binding VideoCodecChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="Résolution:"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.Resolution, Mode=TwoWay}"
+                ItemsSource="{Binding ResolutionChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="Images/s:"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.FrameRate, Mode=TwoWay}"
+                ItemsSource="{Binding FrameRateChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="Ratio:"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.AspectRatio, Mode=TwoWay}"
+                ItemsSource="{Binding AspectRatioChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="Format:"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                SelectedItem="{Binding EditableCard?.ContainerFormat, Mode=TwoWay}"
+                ItemsSource="{Binding ContainerFormatChoices}"
+              />
+            </Grid>
+          </StackPanel>
+          <StackPanel Width="220">
+            <TextBlock Text="Audio" />
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="Codec:"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.AudioCodec, Mode=TwoWay}"
+                ItemsSource="{Binding AudioCodecChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="Canaux:"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.AudioChannels, Mode=TwoWay}"
+                ItemsSource="{Binding AudioChannelsChoices}"
+              />
+            </Grid>
+            <StackPanel>
+              <TextBlock Text="Langues:" Classes="fieldLabel" />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.AudioLanguages, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <TextBlock Text="Sous-titres" Margin="0,12,0,0" />
+            <StackPanel>
+              <TextBlock Text="Langues:" Classes="fieldLabel" />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.SubtitleLanguages, Mode=TwoWay}"
+              />
+            </StackPanel>
+          </StackPanel>
+          <Grid
+            ColumnDefinitions="94,100"
+            Height="36"
+            IsVisible="{Binding UseCases}"
+          >
+            <TextBlock
+              Text="Boîtier:"
+              VerticalAlignment="Center"
+              HorizontalAlignment="Right"
+              Margin="0,0,6,0"
+            />
+            <ComboBox
+              Grid.Column="1"
+              MinHeight="23"
+              Height="23"
+              SelectedItem="{Binding EditableCard?.CaseType, Mode=TwoWay}"
+              ItemsSource="{Binding CaseTypeChoices}"
+            />
+          </Grid>
+        </StackPanel>
+      </TabItem>
+      <TabItem Header="Jaquette" IsVisible="{Binding !IsSeries}">
         <Grid RowDefinitions="Auto,*" Margin="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
             <Button
@@ -672,7 +1171,9 @@
                 Classes="fieldLabel"
               />
               <Grid ColumnDefinitions="*,65" ColumnSpacing="6">
-                <TextBox Text="{Binding SelectedEpisode?.Aired, Mode=TwoWay}" />
+                <TextBox
+                  Text="{Binding SelectedEpisode?.Aired, Mode=TwoWay}"
+                />
                 <TextBox
                   Grid.Column="1"
                   Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}"
@@ -683,7 +1184,9 @@
                 Text="Réalisation :"
                 Classes="fieldLabel"
               />
-              <TextBox Text="{Binding SelectedEpisode?.Director, Mode=TwoWay}" />
+              <TextBox
+                Text="{Binding SelectedEpisode?.Director, Mode=TwoWay}"
+              />
               <TextBlock
                 Text="{Binding EpisodePosition}"
                 Classes="muted"

@@ -81,20 +81,21 @@ public sealed class StateMenuTests : IDisposable
             Path.Combine(_directory, "user.config")
         );
         await model.OpenAsync(_directory);
+        model.MediaFilterIndex = 0;
         string[] labels =
         [
             "Vérifiés",
             "Non vérifiés",
             "Manquants",
             "Non traités",
-            "Tous les états",
+            "Tous",
         ];
         foreach (string label in labels)
         {
             model.CycleStateFilterCommand.Execute(null);
             Assert.Equal(label, model.StateFilterLabel);
             Assert.Equal(
-                label == "Tous les états" ? 4 : 1,
+                label == "Tous" ? 4 : 1,
                 model.VisibleCards.Count
             );
         }
@@ -109,6 +110,7 @@ public sealed class StateMenuTests : IDisposable
             Path.Combine(_directory, "user.config")
         );
         await model.OpenAsync(_directory);
+        model.MediaFilterIndex = 0;
         model.StateFilters[1].SelectCommand.Execute(null);
         model.InvertStateFilter = true;
         model.MediaFilterIndex = 1;
@@ -128,6 +130,7 @@ public sealed class StateMenuTests : IDisposable
             Path.Combine(_directory, "user.config")
         );
         await model.OpenAsync(_directory);
+        model.MediaFilterIndex = 0;
         model.StateFilters[1].SelectCommand.Execute(null);
         MediaCard card = Assert.Single(model.VisibleCards);
         card.Title = "Un nouveau titre";
@@ -147,6 +150,7 @@ public sealed class StateMenuTests : IDisposable
             Path.Combine(_directory, "user.config")
         );
         await model.OpenAsync(_directory);
+        model.MediaFilterIndex = 0;
         Assert.True(model.ShowSagaFilters);
         Assert.True(model.ShowSelectionFilters);
         model.SagaFilters[1].SelectCommand.Execute(null);
@@ -160,7 +164,7 @@ public sealed class StateMenuTests : IDisposable
             Assert.Single(model.VisibleCards).FolderName
         );
         model.CycleStateFilterCommand.Execute(null);
-        Assert.Equal("Tous les états", model.StateFilterLabel);
+        Assert.Equal("Tous", model.StateFilterLabel);
         Assert.Equal(4, model.VisibleCards.Count);
     }
 
@@ -171,12 +175,13 @@ public sealed class StateMenuTests : IDisposable
             Path.Combine(_directory, "user.config")
         );
         await model.OpenAsync(_directory);
+        model.MediaFilterIndex = 0;
         model
             .GenreFilters.Single(item => item.Label == "Drame")
             .SelectCommand.Execute(null);
         Assert.Single(model.VisibleCards);
         model.MediaFilterIndex = 2;
-        Assert.Equal("Tous les états", model.StateFilterLabel);
+        Assert.Equal("Tous", model.StateFilterLabel);
         Assert.False(model.ShowSagaFilters);
         Assert.False(model.ShowSelectionFilters);
         Assert.Equal(
@@ -196,12 +201,40 @@ public sealed class StateMenuTests : IDisposable
             Path.Combine(_directory, "user.config")
         );
         await model.OpenAsync(_directory);
+        model.MediaFilterIndex = 0;
         string other = Path.Combine(_directory, "other");
         Directory.CreateDirectory(Path.Combine(other, "data"));
         await model.OpenAsync(other);
         Assert.False(model.ShowSagaFilters);
         Assert.False(model.ShowSelectionFilters);
         Assert.False(model.ShowGenreFilters);
+    }
+
+    [Fact]
+    public async Task GenreChoices_Closing_AppliesCheckedMovieGenresOnly()
+    {
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        MediaCard card = model.Cards.Single(item =>
+            item.ProcessingState == MediaProcessingState.Checked
+        );
+        model.SelectedCard = card;
+        model.PrepareGenreChoices();
+        Assert.Equal("Animation", card.Genres);
+        Assert.Contains(
+            model.GenreChoices,
+            item => item.Name == "Science-fiction"
+        );
+        foreach (GenreChoice choice in model.GenreChoices)
+        {
+            choice.IsSelected = choice.Name == "Science-fiction";
+        }
+        Assert.Equal("Animation", card.Genres);
+        model.ApplyGenreChoices();
+        Assert.Equal("Science-fiction", card.Genres);
+        Assert.True(card.IsDirty);
     }
 
     private void AddCard(
@@ -218,7 +251,9 @@ public sealed class StateMenuTests : IDisposable
         Directory.CreateDirectory(source);
         if (series)
         {
-            Directory.CreateDirectory(Path.Combine(source, name));
+            Directory.CreateDirectory(
+                Path.Combine(source, name)
+            );
         }
         else
         {

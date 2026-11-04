@@ -2,11 +2,13 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <AssemblyName>yaDIS3.Desktop</AssemblyName>
+    <ApplicationIcon>Assets/Icons/yadis.ico</ApplicationIcon>
     <Version>2.5.0-alpha.4</Version>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets/Icons/*.png" />
+    <AvaloniaResource Include="Assets/Icons/*.ico" />
     <ProjectReference Include="../YaDIS3.Core/YaDIS3.Core.csproj" />
     <ProjectReference Include="../YaDIS3.Rendering/YaDIS3.Rendering.csproj" />
     <PackageReference Include="Microsoft.Extensions.Http" />

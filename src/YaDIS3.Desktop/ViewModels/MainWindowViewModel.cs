@@ -53,8 +53,7 @@ public sealed partial class MainWindowViewModel
 
     private string _credentials = "TVDB non configuré";
 
-    private string _status =
-        "Ouvrez une copie de votre workspace yaDIS3 pour commencer.";
+    private string _status = "";
 
     private bool _busy;
 
@@ -138,7 +137,8 @@ public sealed partial class MainWindowViewModel
     /// <summary>
     /// Indique si la fiche représente une série.
     /// </summary>
-    public bool IsSeries => SelectedCard?.IsSeries == true;
+    public bool IsSeries =>
+        SelectedCard?.IsSeries ?? IsSeriesFilter;
 
     /// <summary>
     /// Indique si un épisode est sélectionné.
@@ -190,6 +190,7 @@ public sealed partial class MainWindowViewModel
         {
             _busy = value;
             Notify();
+            Notify(nameof(CanEditSelection));
         }
     }
 
@@ -407,6 +408,15 @@ public sealed partial class MainWindowViewModel
         _sourceScanner = sourceScanner;
         _logger = logger;
         _configurationLogger = configurationLogger;
+        ToggleMediaFilterCommand = new UiCommand(() =>
+            SelectMediaAsync(IsSeriesFilter ? 1 : 2)
+        );
+        SelectMoviesCommand = new UiCommand(() =>
+            SelectMediaAsync(1)
+        );
+        SelectSeriesCommand = new UiCommand(() =>
+            SelectMediaAsync(2)
+        );
         StateFilters = CreateStateFilters();
         CycleStateFilterCommand = new UiCommand(
             CycleStateFilterAsync

@@ -30,6 +30,16 @@ public sealed partial class MainWindow : Window
             (DataContext as IDisposable)?.Dispose();
     }
 
+    private void PrepareGenres(
+        object? sender,
+        EventArgs eventArgs
+    ) => Model.PrepareGenreChoices();
+
+    private void ApplyGenres(
+        object? sender,
+        EventArgs eventArgs
+    ) => Model.ApplyGenreChoices();
+
     private async void ShowConfiguration(
         object? sender,
         RoutedEventArgs eventArgs
