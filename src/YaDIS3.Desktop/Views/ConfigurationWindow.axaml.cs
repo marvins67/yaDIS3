@@ -71,65 +71,6 @@ public sealed partial class ConfigurationWindow : Window
             : null;
     }
 
-    private async void ChooseWorkspace(
-        object? sender,
-        RoutedEventArgs args
-    )
-    {
-        if (
-            await PickFolder(Model.Texts.GetString("80")) is
-            { } path
-        )
-        {
-            Model.ChooseWorkspace(path);
-        }
-    }
-
-    private async void ChooseDestination(
-        object? sender,
-        RoutedEventArgs args
-    )
-    {
-        if (
-            await PickFolder(Model.Texts.GetString("82")) is
-            { } path
-        )
-        {
-            Model.ChooseDestination(path);
-        }
-    }
-
-    private async void ChooseTvdb(
-        object? sender,
-        RoutedEventArgs args
-    )
-    {
-        IReadOnlyList<IStorageFile> files =
-            await StorageProvider.OpenFilePickerAsync(
-                new()
-                {
-                    Title = "Configuration TVDB v4",
-                    AllowMultiple = false,
-                    FileTypeFilter =
-                    [
-                        new FilePickerFileType(
-                            Model.Texts.GetString("354")
-                        )
-                        {
-                            Patterns = ["*.json"],
-                        },
-                    ],
-                }
-            );
-        if (
-            files.Count > 0
-            && files[0].TryGetLocalPath() is { } path
-        )
-        {
-            Model.TvdbPath = path;
-        }
-    }
-
     private async void AddFolder(
         object? sender,
         RoutedEventArgs args

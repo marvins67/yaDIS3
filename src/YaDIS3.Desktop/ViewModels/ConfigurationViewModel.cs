@@ -20,6 +20,8 @@ public sealed partial class ConfigurationViewModel
 {
     private DuneConfiguration _settings;
     private readonly IApplicationRestart _restart;
+    private readonly IExportFileSystem _files;
+    private IReadOnlyList<string> _selectionNames = [];
 
     /// <summary>Langue active, conservée jusqu'au redémarrage.</summary>
     public LegacyLanguageCatalog Texts { get; }
@@ -62,10 +64,12 @@ public sealed partial class ConfigurationViewModel
         DuneConfigurationStore? configurationStore = null,
         LegacyDunePathResolver? dunePaths = null,
         LegacyLanguageCatalog? texts = null,
-        IApplicationRestart? restart = null
+        IApplicationRestart? restart = null,
+        IExportFileSystem? fileSystem = null
     )
     {
         Texts = texts ?? LegacyLanguageCatalog.Load();
+        _files = fileSystem ?? new ExportFileSystem();
         RecentSorts =
         [
             Texts.GetString("165"),
@@ -259,7 +263,7 @@ public sealed partial class ConfigurationViewModel
     /// Noms des sélections pour les listes déroulantes.
     /// </summary>
     public IReadOnlyList<string> SelectionNames =>
-        Selections.Select(value => value.Name).ToArray();
+        _selectionNames;
 
     /// <summary>
     /// Illustration fournie avec le thème, si présente.
@@ -397,6 +401,10 @@ public sealed partial class ConfigurationViewModel
                 )
             );
         }
+        _selectionNames = Selections
+            .Select(value => value.Name)
+            .Order(StringComparer.CurrentCulture)
+            .ToArray();
     }
 
     private void LoadCategories()
@@ -430,37 +438,55 @@ public sealed partial class ConfigurationViewModel
     /// Préserve les documents existants si le premier dossier
     /// choisi est déjà un workspace.
     /// </summary>
-    public void ChooseWorkspace(string path) =>
-        ChoosePath(() =>
-        {
-            string target = ConfigurationFolderChoice.Resolve(
-                path,
-                "workspace"
-            );
-            if (!_hasWorkspace)
+    public bool ChooseWorkspace(string path) =>
+        ChoosePath(
+            path,
+            "workspace",
+            target =>
             {
-                LoadDraft(_configurationStore.Load(target));
+                if (!_hasWorkspace)
+                {
+                    LoadDraft(_configurationStore.Load(target));
+                }
+                WorkspacePath = target;
             }
-            WorkspacePath = target;
-        });
-
-    /// <summary>
-    /// Applique la proposition du sélecteur à la copie de
-    /// travail.
-    /// </summary>
-    public void ChooseDestination(string path) =>
-        ChoosePath(() =>
-            Destination = ConfigurationFolderChoice.Resolve(
-                path,
-                "yaDIS"
-            )
         );
 
-    private void ChoosePath(Action choice)
+    /// <summary>
+    /// Propose la destination et signale la création du
+    /// sous-dossier historique yaDIS.
+    /// </summary>
+    public bool ChooseDestination(string path) =>
+        ChoosePath(
+            path,
+            "yaDIS",
+            target => Destination = target
+        );
+
+    private bool ChoosePath(
+        string path,
+        string suffix,
+        Action<string> assign
+    )
     {
         try
         {
-            choice();
+            string target = ConfigurationFolderChoice.Resolve(
+                path,
+                suffix,
+                _files
+            );
+            bool created =
+                target
+                != Path.TrimEndingDirectorySeparator(
+                    Path.GetFullPath(path)
+                );
+            if (created)
+            {
+                _files.CreateDirectory(target);
+            }
+            assign(target);
+            return created;
         }
         catch (Exception exception)
             when (exception
@@ -472,6 +498,7 @@ public sealed partial class ConfigurationViewModel
             )
         {
             Report("choix du dossier", exception);
+            return false;
         }
     }
 

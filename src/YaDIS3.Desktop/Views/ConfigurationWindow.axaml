@@ -17,8 +17,8 @@
 >
   <Window.Styles>
     <Style Selector="TabItem">
-      <Setter Property="MinHeight" Value="24" />
-      <Setter Property="Padding" Value="7,3" />
+      <Setter Property="MinHeight" Value="22" />
+      <Setter Property="Padding" Value="7,2" />
       <Setter Property="Template">
         <ControlTemplate>
           <Border
@@ -172,20 +172,37 @@
     <Style Selector="Button">
       <Setter Property="MinHeight" Value="23" />
       <Setter Property="Padding" Value="6,2" />
+      <Setter Property="Background" Value="#FAFAFA" />
+      <Setter Property="BorderBrush" Value="#CCCCCC" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+    </Style>
+    <Style Selector="Button.folderBrowse">
+      <Setter Property="Padding" Value="2" />
+      <Setter Property="ContentTemplate">
+        <DataTemplate>
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png"
+            Width="16"
+            Height="16"
+          />
+        </DataTemplate>
+      </Setter>
+      <Setter Property="Content" Value="folder" />
     </Style>
   </Window.Styles>
   <Grid Margin="12" RowDefinitions="*,13,23">
     <TabControl
       x:Name="ConfigurationTabs"
-      Padding="0"
+      Padding="4,0,4,4"
       IsEnabled="{Binding !IsBusy}"
     >
       <TabItem Header="{DynamicResource Text.70}">
-        <Canvas Background="White">
+        <Canvas x:Name="GeneralPanel" Background="#F8F8F8">
           <TextBlock
             Text="{DynamicResource Text.55.Colon}"
-            Canvas.Left="6"
-            Canvas.Top="12"
+            Canvas.Left="4"
+            Canvas.Top="14"
           />
           <ComboBox
             x:Name="ConfigurationLanguage"
@@ -198,8 +215,8 @@
           />
           <TextBlock
             Text="{DynamicResource Text.65.Colon}"
-            Canvas.Left="144"
-            Canvas.Top="12"
+            Canvas.Left="142"
+            Canvas.Top="14"
           />
           <ComboBox
             Canvas.Left="144"
@@ -210,17 +227,19 @@
           />
           <CheckBox
             x:Name="BasicModeChoice"
-            Canvas.Left="286"
-            Canvas.Top="33"
+            Canvas.Left="282"
+            Canvas.Top="34"
             Content="{DynamicResource Text.66}"
             IsChecked="{Binding BasicMode, Mode=TwoWay}"
           />
           <TextBlock
             Text="{DynamicResource Text.80.Colon}"
-            Canvas.Left="6"
-            Canvas.Top="68"
+            Canvas.Left="4"
+            Canvas.Top="70"
           />
           <TextBox
+            x:Name="WorkspaceChoice"
+            GotFocus="WorkspaceFocused"
             Canvas.Left="6"
             Canvas.Top="87"
             Width="496"
@@ -228,20 +247,26 @@
             Text="{Binding WorkspacePath}"
           />
           <Button
+            x:Name="WorkspaceBrowse"
+            Classes="folderBrowse"
             Canvas.Left="508"
             Canvas.Top="86"
             Width="23"
             Height="23"
-            Content="…"
             Click="ChooseWorkspace"
           />
-          <Canvas IsVisible="{Binding NormalMode}">
+          <Canvas
+            x:Name="NormalGeneralOptions"
+            IsVisible="{Binding NormalMode}"
+          >
             <TextBlock
               Text="{DynamicResource Text.82.Colon}"
-              Canvas.Left="6"
-              Canvas.Top="116"
+              Canvas.Left="4"
+              Canvas.Top="118"
             />
             <TextBox
+              x:Name="DestinationChoice"
+              GotFocus="DestinationFocused"
               Canvas.Left="6"
               Canvas.Top="135"
               Width="496"
@@ -249,20 +274,23 @@
               Text="{Binding Destination}"
             />
             <Button
+              x:Name="DestinationBrowse"
+              Classes="folderBrowse"
               Canvas.Left="508"
               Canvas.Top="134"
               Width="23"
               Height="23"
-              Content="…"
               Click="ChooseDestination"
             />
             <CheckBox
+              x:Name="AutoSelectChoice"
               Canvas.Left="7"
               Canvas.Top="171"
               Content="{DynamicResource Text.195}"
               IsChecked="{Binding AutoSelect, Mode=TwoWay}"
             />
             <ComboBox
+              x:Name="AutoSelectionChoice"
               Canvas.Left="373"
               Canvas.Top="169"
               Width="158"
@@ -271,12 +299,14 @@
               SelectedItem="{Binding AutoSelectName, Mode=TwoWay}"
             />
             <CheckBox
+              x:Name="IgnoreArticlesChoice"
               Canvas.Left="7"
               Canvas.Top="203"
               Content="{DynamicResource Text.194}"
               IsChecked="{Binding IgnoreArticles, Mode=TwoWay}"
             />
             <TextBox
+              x:Name="ArticlesChoice"
               Canvas.Left="373"
               Canvas.Top="201"
               Width="158"
@@ -284,23 +314,21 @@
               Text="{Binding Articles, Mode=TwoWay}"
             />
           </Canvas>
-          <StackPanel
-            Canvas.Left="6"
-            Canvas.Top="{Binding DatabaseTop}"
-            Spacing="6"
-          >
-            <TextBlock Text="{DynamicResource Text.178}" />
-            <Button
-              Content="{DynamicResource Text.307.Ellipsis}"
-              Click="ChooseTvdb"
-              HorizontalAlignment="Left"
-            />
+          <Canvas Canvas.Top="{Binding DatabaseTop}">
             <TextBlock
-              Text="{Binding TvdbPath}"
-              MaxWidth="515"
-              TextTrimming="CharacterEllipsis"
+              Canvas.Left="4"
+              Text="{DynamicResource Text.178.Colon}"
             />
-          </StackPanel>
+            <ComboBox
+              x:Name="MovieDatabaseChoice"
+              Canvas.Left="7"
+              Canvas.Top="16"
+              Width="128"
+              SelectedIndex="0"
+            >
+              <ComboBoxItem Content="TMDb" />
+            </ComboBox>
+          </Canvas>
         </Canvas>
       </TabItem>
       <TabItem Header="{DynamicResource Text.84}">

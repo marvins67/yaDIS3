@@ -367,6 +367,7 @@ public sealed class SelectionBindingTests
             tabs.Items.OfType<TabItem>()
                 .Select(tab => tab.Header?.ToString())
         );
+        VerifyGeneralControls(dialog, draft);
         foreach (TabItem tab in tabs.Items.OfType<TabItem>())
         {
             tabs.SelectedItem = tab;
@@ -392,6 +393,65 @@ public sealed class SelectionBindingTests
         );
         dialog.Close();
         Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void VerifyGeneralControls(
+        ConfigurationWindow dialog,
+        ConfigurationViewModel draft
+    )
+    {
+        ComboBox database = dialog.FindControl<ComboBox>(
+            "MovieDatabaseChoice"
+        )!;
+        Assert.Equal(
+            "TMDb",
+            Assert
+                .IsType<ComboBoxItem>(
+                    Assert.Single(database.Items)
+                )
+                .Content
+        );
+        Assert.Equal(0, database.SelectedIndex);
+        CheckBox auto = dialog.FindControl<CheckBox>(
+            "AutoSelectChoice"
+        )!;
+        ComboBox selection = dialog.FindControl<ComboBox>(
+            "AutoSelectionChoice"
+        )!;
+        CheckBox ignore = dialog.FindControl<CheckBox>(
+            "IgnoreArticlesChoice"
+        )!;
+        TextBox articles = dialog.FindControl<TextBox>(
+            "ArticlesChoice"
+        )!;
+        auto.IsChecked = true;
+        ignore.IsChecked = true;
+        articles.Text = "le, la, les";
+        Assert.True(draft.AutoSelect);
+        Assert.True(draft.IgnoreArticles);
+        Assert.True(selection.IsVisible);
+        Assert.True(articles.IsVisible);
+        Assert.Equal(
+            "le,la,les",
+            draft.Snapshot().Settings.Articles
+        );
+        draft.BasicMode = true;
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(
+            dialog
+                .FindControl<Canvas>("NormalGeneralOptions")!
+                .IsVisible
+        );
+        Assert.Equal(118, draft.DatabaseTop);
+        Assert.True(database.IsVisible);
+        Assert.True(draft.AutoSelect);
+        Assert.True(draft.IgnoreArticles);
+        draft.BasicMode = false;
+        auto.IsChecked = false;
+        ignore.IsChecked = false;
+        Assert.False(selection.IsVisible);
+        Assert.False(articles.IsVisible);
+        Assert.Equal(231, draft.DatabaseTop);
     }
 
     private static void VerifyEpisodeEditors(
