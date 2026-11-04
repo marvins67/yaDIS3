@@ -191,12 +191,12 @@ internal sealed partial class LegacyDuneCatalogWriter
         file.Set("system_files", "*.aai,*.jpg");
         string directory = Output(root, relative);
         int index = 0;
+        // ProcessForm numérote les films dans l’ordre XML de la saga.
         foreach (MediaContext member in members)
         {
             AddMovie(
                 file,
                 index,
-                // ProcessForm numérote les films dans l’ordre XML de la saga.
                 index.ToString(
                     "00",
                     CultureInfo.InvariantCulture

@@ -121,12 +121,12 @@ internal sealed partial class LegacyDuneCatalogWriter
             );
         }
 
+        // Sous Windows, yaDIS2 ajoute L et l au même dossier.
         foreach (
             IGrouping<string, MediaContext> group in movies
                 .Where(movie =>
                     movie.Info.ValueAt("sort_title").Length > 0
                 )
-                // Sous Windows, yaDIS2 ajoute L et l au même dossier.
                 .GroupBy(
                     movie =>
                         LegacyExportPaths.Alphabet(
