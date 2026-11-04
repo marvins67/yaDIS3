@@ -1,0 +1,15 @@
+<!-- Valeurs caractérisées depuis MainModule.CreateMovieXML,
+GetMovieCertification et SortMovieActors de yaDIS2 (6a985ea).
+Le catalogue d'images reste hors de ce premier correctif. -->
+<info>
+  <source>0</source><id>42</id><imdb>tt0000042</imdb>
+  <url>https://example.org/movie</url><trailer></trailer>
+  <title>Le Film</title><original_title>The Movie</original_title><sort_title>Film</sort_title>
+  <tagline>Accroche</tagline><plot>Résumé</plot><year>2023</year><runtime>120</runtime>
+  <certification>TOUS PUBLICS</certification><rating>8.5</rating>
+  <genres><genre>Drame</genre><genre>Comédie</genre></genres>
+  <studios><studio>Studio B</studio><studio>Studio A</studio></studios>
+  <countries><country>FR</country><country>GB</country></countries>
+  <actors><actor>Premier</actor><actor>Deuxième</actor><actor>Troisième</actor></actors>
+  <directors><director>Réalisateur B</director><director>Réalisateur A</director></directors>
+</info>

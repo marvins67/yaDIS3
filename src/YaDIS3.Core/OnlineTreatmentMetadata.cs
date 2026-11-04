@@ -67,7 +67,7 @@ public sealed class OnlineTreatmentMetadata(
             return null;
         }
         using JsonDocument movie = await GetMovieJsonAsync(
-            $"movie/{id}?language={language}&append_to_response=credits",
+            $"movie/{id}?language={language}&append_to_response=credits,release_dates",
             cancellationToken
         );
         return CreateMovieInfo(movie.RootElement);
@@ -166,19 +166,24 @@ public sealed class OnlineTreatmentMetadata(
         );
     }
 
-    private static XElement CreateMovieInfo(JsonElement movie)
+    private XElement CreateMovieInfo(JsonElement movie)
     {
         string date = Value(movie, "release_date");
         return new XElement(
             "info",
+            new XElement("source", "0"),
             new XElement("id", Value(movie, "id")),
             new XElement("imdb", Value(movie, "imdb_id")),
-            new XElement("source", "0"),
+            new XElement("url", Value(movie, "homepage")),
+            new XElement("trailer", ""),
             new XElement("title", Value(movie, "title")),
             new XElement(
                 "original_title",
                 Value(movie, "original_title")
             ),
+            // Le traitement applique ensuite LegacySortTitle avec
+            // les préférences courantes, comme RemoveArticle.
+            new XElement("sort_title", ""),
             new XElement("tagline", Value(movie, "tagline")),
             new XElement("plot", Value(movie, "overview")),
             new XElement(
@@ -186,20 +191,32 @@ public sealed class OnlineTreatmentMetadata(
                 date.Length >= 4 ? date[..4] : ""
             ),
             new XElement("runtime", Value(movie, "runtime")),
+            new XElement(
+                "certification",
+                MovieCertification(movie)
+            ),
             new XElement("rating", Value(movie, "vote_average")),
             new XElement(
                 "genres",
                 Names(movie.GetProperty("genres"), "genre")
             ),
             new XElement(
-                "actors",
+                "studios",
                 Names(
-                    movie
-                        .GetProperty("credits")
-                        .GetProperty("cast"),
-                    "actor"
+                    movie.GetProperty("production_companies"),
+                    "studio"
                 )
             ),
+            new XElement(
+                "countries",
+                movie.GetProperty("production_countries")
+                    .EnumerateArray()
+                    .Select(country => new XElement(
+                        "country",
+                        Value(country, "iso_3166_1")
+                    ))
+            ),
+            MovieCredits(movie.GetProperty("credits")),
             new XElement(
                 "images",
                 new XElement(
@@ -212,6 +229,65 @@ public sealed class OnlineTreatmentMetadata(
                 )
             )
         );
+    }
+
+    private static IEnumerable<XElement> MovieCredits(
+        JsonElement credits
+    )
+    {
+        yield return new XElement(
+            "actors",
+            credits.GetProperty("cast")
+                .EnumerateArray()
+                .OrderBy(actor =>
+                    actor.GetProperty("order").GetInt32()
+                )
+                .Select(actor => new XElement(
+                    "actor",
+                    Value(actor, "name")
+                ))
+        );
+        yield return new XElement(
+            "directors",
+            credits.GetProperty("crew")
+                .EnumerateArray()
+                .Where(member =>
+                    Value(member, "job") == "Director"
+                )
+                .Select(member => new XElement(
+                    "director",
+                    Value(member, "name")
+                ))
+        );
+    }
+
+    private string MovieCertification(JsonElement movie)
+    {
+        // L'API actuelle fournit plusieurs sorties par pays ;
+        // conserver la première classification renseignée du pays
+        // historique, sans repli automatique sur les États-Unis.
+        JsonElement countries = movie
+            .GetProperty("release_dates")
+            .GetProperty("results");
+        foreach (JsonElement country in countries.EnumerateArray())
+        {
+            if (!string.Equals(
+                Value(country, "iso_3166_1"),
+                language,
+                StringComparison.OrdinalIgnoreCase
+            ))
+            {
+                continue;
+            }
+            return country.GetProperty("release_dates")
+                .EnumerateArray()
+                .Select(release => Value(release, "certification"))
+                .FirstOrDefault(value =>
+                    !string.IsNullOrEmpty(value)
+                )
+                ?.ToUpperInvariant() ?? "";
+        }
+        return "";
     }
 
     private static IEnumerable<XElement> Names(
