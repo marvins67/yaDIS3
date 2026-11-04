@@ -540,6 +540,9 @@ public sealed partial class MediaCard
             Put(info, "sort_title", series.Name);
             Put(info, "plot", series.Overview);
             Put(info, "network", series.Network);
+            Put(info, "rating", series.Rating);
+            ReplaceSeriesNames(info, "genres", "genre", series.Genres);
+            ReplaceSeriesNames(info, "actors", "actor", series.Actors);
             Put(
                 info,
                 "year",
@@ -571,6 +574,8 @@ public sealed partial class MediaCard
                 Put(episode.Node, "title", match.Name);
                 Put(episode.Node, "plot", match.Overview);
                 Put(episode.Node, "aired", match.Aired);
+                Put(episode.Node, "rating", match.Rating);
+                Put(episode.Node, "director", match.Director);
                 if (
                     episode.Node.Attribute("manual_image")
                     is null

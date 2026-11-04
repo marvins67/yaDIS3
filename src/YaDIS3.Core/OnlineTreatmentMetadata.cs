@@ -55,6 +55,12 @@ public sealed class OnlineTreatmentMetadata(
             id,
             card.Order,
             TvdbLanguage,
+            Directory.Exists(card.TreatmentSource)
+                ? EpisodeScanner.Detect(card.TreatmentSource)
+                    .Select(episode => (episode.Season, episode.Number))
+                    .ToHashSet()
+                : card.Episodes.Select(episode =>
+                    (episode.Season, episode.Number)).ToHashSet(),
             cancellationToken
         );
     }

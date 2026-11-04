@@ -319,10 +319,17 @@ public sealed partial class TvdbClient(
     /// Charge la série et tous ses épisodes dans l'ordre
     /// demandé.
     /// </summary>
+    public Task<SeriesDetails> SeriesAsync(
+        long id, string order, string language = "fra",
+        CancellationToken cancellationToken = default
+    ) => SeriesAsync(id, order, language, null, cancellationToken);
+
+    /// <summary>Charge les détails des seuls épisodes demandés.</summary>
     public async Task<SeriesDetails> SeriesAsync(
         long id,
         string order,
-        string language = "fra",
+        string language,
+        IReadOnlySet<(int Season, int Number)>? requestedEpisodes,
         CancellationToken cancellationToken = default
     )
     {
@@ -404,6 +411,14 @@ public sealed partial class TvdbClient(
                             ReadText(episode, "aired"),
                             ReadText(episode, "image")
                         )
+                        {
+                            Director = requestedEpisodes is null
+                                || requestedEpisodes.Contains((
+                                    ReadNumber(episode, "seasonNumber"),
+                                    ReadNumber(episode, "number")))
+                                ? await EpisodeDirectorsAsync(episode, cancellationToken)
+                                : "",
+                        }
                     );
                 }
 
@@ -434,6 +449,10 @@ public sealed partial class TvdbClient(
                         episodes
                     )
                     {
+                        // score désigne la popularité TVDB, pas
+                        // la note du public ; Rating reste vide.
+                        Genres = ReadNames(series, "genres"),
+                        Actors = ReadPeople(series, "actor", "guest"),
                         Artwork = ReadSeriesArtwork(
                             series,
                             language

@@ -71,6 +71,16 @@ public sealed partial class MediaCard
             || mode == TreatmentMode.ReloadInformation
         )
         {
+            if (mode == TreatmentMode.ReloadInformation)
+            {
+                UpdateForTreatment(() =>
+                {
+                    foreach (Episode episode in Episodes.Where(item => !item.IsManual))
+                    {
+                        episode.Node.Element("mediainfo")?.Remove();
+                    }
+                });
+            }
             ApplyTvdb(series, Order);
             UpdateForTreatment(() =>
             {
@@ -92,6 +102,17 @@ public sealed partial class MediaCard
             return;
         }
         UpdateForTreatment(() => CompleteEpisodes(series));
+    }
+
+    private static void ReplaceSeriesNames(
+        XElement info, string container, string element,
+        IReadOnlyList<string> names
+    )
+    {
+        info.Element(container)?.Remove();
+        info.Elements(element).Remove();
+        info.Add(new XElement(container, names.Select(name =>
+            new XElement(element, name))));
     }
 
     private void CompleteEpisodes(SeriesDetails series)
@@ -119,6 +140,8 @@ public sealed partial class MediaCard
             Put(episode.Node, "title", match.Name);
             Put(episode.Node, "plot", match.Overview);
             Put(episode.Node, "aired", match.Aired);
+            Put(episode.Node, "rating", match.Rating);
+            Put(episode.Node, "director", match.Director);
             if (episode.Node.Attribute("manual_image") is null)
             {
                 Put(

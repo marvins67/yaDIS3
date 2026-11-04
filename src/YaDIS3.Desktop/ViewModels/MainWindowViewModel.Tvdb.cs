@@ -110,7 +110,10 @@ public sealed partial class MainWindowViewModel
         SeriesDetails result = await api.SeriesAsync(
             match.Id,
             order.Code,
-            cancellationToken: OperationToken
+            "fra",
+            card.Episodes.Select(episode =>
+                (episode.Season, episode.Number)).ToHashSet(),
+            OperationToken
         );
         card.ApplyTvdb(result, order.Code);
         Notify(nameof(SelectedCard));
