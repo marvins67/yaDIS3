@@ -7,7 +7,8 @@ namespace YaDIS3.Core;
 /// indépendamment de l'interface graphique.
 /// </summary>
 public sealed class DuneConfigurationService(
-    IExportFileSystem? fileSystem = null
+    IExportFileSystem? fileSystem = null,
+    DuneConfigurationStore? configurationStore = null
 )
 {
     private readonly IExportFileSystem _files =
@@ -38,9 +39,19 @@ public sealed class DuneConfigurationService(
         _files.CreateDirectory(
             Path.Combine(destination, "data")
         );
-        DuneConfigurationStore store = new(_files);
+        DuneConfigurationStore store =
+            configurationStore ?? new(_files);
         ConfigurationSnapshot previous = store.Load(destination);
-        store.Save(destination, snapshot);
+        store.Save(
+            destination,
+            snapshot with
+            {
+                Settings = snapshot.Settings with
+                {
+                    Workspace = destination,
+                },
+            }
+        );
         RefreshSources(
             store,
             destination,

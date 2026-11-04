@@ -57,7 +57,6 @@ public sealed partial class MainWindowViewModel
             Language = TemplateLanguage,
             Aai = AaiBackgrounds,
             Cases = UseCases,
-            Mappings = PathMappings,
             Destination = ExportParentPath,
         };
 
@@ -135,26 +134,12 @@ public sealed partial class MainWindowViewModel
         ConfigurationSnapshot snapshot
     )
     {
-        if (
-            !_configuration.SourceFoldersConfigured
-            && snapshot.Folders.Count == 0
-        )
-        {
-            return true;
-        }
         MediaContext media = new(card);
         string parent =
             media.Header.Element("path")?.Value ?? "";
-        string source = Path.Combine(
-            parent,
-            media.Header.Element("filename")?.Value ?? ""
+        bool included = snapshot.Folders.Any(folder =>
+            folder.Path == parent
         );
-        bool included =
-            snapshot.Folders.Any(folder => folder.Path == parent)
-            || _configuration.ManualSeriesDirectories.Contains(
-                source,
-                StringComparer.Ordinal
-            );
         bool knownType =
             media.Header.Element("type")?.Value is "0" or "1";
         string? folderFlag = media
@@ -173,17 +158,32 @@ public sealed partial class MainWindowViewModel
 
     private void RememberManualSource(string directory)
     {
-        _configuration = _configuration with
+        if (_workspace is null)
         {
-            ManualSeriesDirectories = _configuration
-                .ManualSeriesDirectories.Append(
-                    Path.TrimEndingDirectorySeparator(
-                        Path.GetFullPath(directory)
-                    )
-                )
-                .Distinct(StringComparer.Ordinal)
-                .ToArray(),
-        };
-        SaveDunePreferences();
+            return;
+        }
+        ConfigurationSnapshot snapshot =
+            _configurationStore.Load(_workspace.Directory);
+        string parent = Path.GetDirectoryName(
+            Path.GetFullPath(directory)
+        )!;
+        if (
+            !snapshot.Folders.Any(folder =>
+                folder.Path == parent
+            )
+        )
+        {
+            _configurationStore.Save(
+                _workspace.Directory,
+                snapshot with
+                {
+                    Folders =
+                    [
+                        .. snapshot.Folders,
+                        new(parent, 1, ""),
+                    ],
+                }
+            );
+        }
     }
 }

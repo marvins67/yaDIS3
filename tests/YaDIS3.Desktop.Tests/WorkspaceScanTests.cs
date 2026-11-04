@@ -20,7 +20,9 @@ public sealed class WorkspaceScanTests : IDisposable
             Path.Combine(source, "Nouveau.mkv"),
             []
         );
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_root, "user.config")
+        );
         await model.OpenAsync(Path.Combine(_root, "data"));
         MediaCard card = Assert.Single(model.Cards);
         Assert.Equal("Nouveau.mkv", card.FolderName);
@@ -36,7 +38,9 @@ public sealed class WorkspaceScanTests : IDisposable
         string source = CreateWorkspace();
         string video = Path.Combine(source, "Film.mkv");
         File.WriteAllBytes(video, []);
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_root, "user.config")
+        );
         await model.OpenAsync(_root);
         string xml = Assert.Single(model.Cards).FilePath;
         XDocument document = XDocument.Load(xml);
@@ -70,13 +74,12 @@ public sealed class WorkspaceScanTests : IDisposable
     public async Task RestoreWorkspaceAsync_Redemarrage_DecouvreLesAjouts()
     {
         string source = CreateWorkspace();
-        LastWorkspaceStore store = new(
-            Path.Combine(_root, "settings"),
-            new ExportFileSystem()
-        );
-        using (MainWindowViewModel previous = new())
+        using (
+            MainWindowViewModel previous = new(
+                Path.Combine(_root, "user.config")
+            )
+        )
         {
-            await previous.RestoreWorkspaceAsync(store);
             await previous.OpenAsync(_root);
             Assert.Empty(previous.Cards);
         }
@@ -84,8 +87,10 @@ public sealed class WorkspaceScanTests : IDisposable
             Path.Combine(source, "Ajout depuis le Dune.mkv"),
             []
         );
-        using MainWindowViewModel current = new();
-        await current.RestoreWorkspaceAsync(store);
+        using MainWindowViewModel current = new(
+            Path.Combine(_root, "user.config")
+        );
+        await current.RestoreWorkspaceAsync();
         Assert.Equal(
             "Ajout depuis le Dune.mkv",
             Assert.Single(current.Cards).FolderName

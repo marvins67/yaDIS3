@@ -6,27 +6,26 @@ namespace YaDIS3.Desktop.ViewModels;
 
 public sealed partial class MainWindowViewModel
 {
-    private LastWorkspaceStore? _lastWorkspace;
-
-    /// <summary>Rouvre et compare les sources du dernier workspace.</summary>
-    public Task RestoreWorkspaceAsync(LastWorkspaceStore store)
-    {
-        ArgumentNullException.ThrowIfNull(store);
-        _lastWorkspace = store;
-        return RunAsync(async () =>
+    /// <summary>Charge Workspace selon les préférences de yaDIS2.</summary>
+    public Task RestoreWorkspaceAsync() =>
+        RunAsync(async () =>
         {
-            if (
-                !HasWorkspace
-                && store.Load() is { Length: > 0 } path
+            DuneConfiguration settings =
+                _configurationStore.LoadSettings();
+            string workspace = string.IsNullOrEmpty(
+                settings.Workspace
             )
-            {
-                await OpenAsync(
-                    path,
-                    cancellationToken: OperationToken
-                );
-            }
+                ? Path.Combine(
+                    Environment.CurrentDirectory,
+                    "workspace"
+                )
+                : settings.Workspace;
+            await OpenAsync(
+                workspace,
+                create: true,
+                cancellationToken: OperationToken
+            );
         });
-    }
 
     /// <summary>
     /// Ouvre un workspace et actualise la sélection des fiches
@@ -74,7 +73,14 @@ public sealed partial class MainWindowViewModel
                 ? "Bibliothèque ouverte."
                 : string.Join(" · ", loaded.Warnings);
         NotifyAll();
-        _lastWorkspace?.Save(loaded.Directory);
+        _configuration = _configuration with
+        {
+            Workspace = loaded.Directory,
+        };
+        _configurationStore.SaveSettings(
+            loaded.Directory,
+            _configuration
+        );
     }
 
     private Workspace ScanAndOpen(

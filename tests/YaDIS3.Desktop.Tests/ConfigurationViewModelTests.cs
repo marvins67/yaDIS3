@@ -83,17 +83,12 @@ public sealed class ConfigurationViewModelTests
                 return Task.CompletedTask;
             }
         );
-        draft.Mappings = "/Volumes/Films => smb://nas/Films";
         draft.JpegQuality = 78;
         draft.LastDays = 30;
         draft.RecentSortIndex = 1;
         draft.Categories[2].Enabled = false;
         Assert.True(await draft.ApplyAsync());
-        Assert.Equal(
-            "/Volumes/Films => smb://nas/Films",
-            saved!.Settings.Mappings
-        );
-        Assert.Equal(78, saved.Settings.JpegQuality);
+        Assert.Equal(78, saved!.Settings.JpegQuality);
         Assert.Equal(30, saved.Settings.LastDays);
         Assert.True(saved.Settings.SortRecentByDate);
         Assert.Equal('0', saved.Settings.Categories[3]);
@@ -178,7 +173,12 @@ public sealed class ConfigurationViewModelTests
         );
         try
         {
-            new DuneConfigurationStore().Save(
+            new DuneConfigurationStore(
+                userConfigurationPath: Path.Combine(
+                    directory,
+                    "user.config"
+                )
+            ).Save(
                 directory,
                 Snapshot() with
                 {
@@ -190,7 +190,13 @@ public sealed class ConfigurationViewModelTests
                 "",
                 [],
                 [],
-                (_, _, _) => Task.CompletedTask
+                (_, _, _) => Task.CompletedTask,
+                configurationStore: new DuneConfigurationStore(
+                    userConfigurationPath: Path.Combine(
+                        directory,
+                        "user.config"
+                    )
+                )
             );
             draft.ChooseWorkspace(directory);
             Assert.Equal(77, draft.JpegQuality);
@@ -230,7 +236,9 @@ public sealed class ConfigurationViewModelTests
         );
         try
         {
-            using MainWindowViewModel main = new();
+            using MainWindowViewModel main = new(
+                Path.Combine(root, "user.config")
+            );
             await main.OpenAsync(
                 Path.Combine(root, "workspace"),
                 create: true
@@ -249,9 +257,12 @@ public sealed class ConfigurationViewModelTests
                 Assert.Single(main.Cards).DisplayName
             );
             ConfigurationSnapshot stored =
-                new DuneConfigurationStore().Load(
-                    main.WorkspacePath
-                );
+                new DuneConfigurationStore(
+                    userConfigurationPath: Path.Combine(
+                        root,
+                        "user.config"
+                    )
+                ).Load(main.WorkspacePath);
             Assert.True(stored.Settings.BasicMode);
             Assert.Equal(77, stored.Settings.JpegQuality);
             Assert.Equal(
@@ -274,7 +285,7 @@ public sealed class ConfigurationViewModelTests
                 + Guid.NewGuid().ToString("N")
         );
         string workspace = Path.Combine(root, "workspace");
-        string videos = Path.Combine(root, "Série manuelle");
+        string videos = Path.Combine(root, "videos", "Série manuelle");
         Directory.CreateDirectory(videos);
         File.WriteAllBytes(
             Path.Combine(videos, "S01E01.mkv"),
@@ -282,12 +293,16 @@ public sealed class ConfigurationViewModelTests
         );
         try
         {
-            using MainWindowViewModel main = new();
-            await main.OpenAsync(workspace, create: true);
-            new DuneConfigurationStore().SaveSettings(
-                workspace,
-                new() { SourceFoldersConfigured = true }
+            using MainWindowViewModel main = new(
+                Path.Combine(root, "user.config")
             );
+            await main.OpenAsync(workspace, create: true);
+            new DuneConfigurationStore(
+                userConfigurationPath: Path.Combine(
+                    root,
+                    "user.config"
+                )
+            ).SaveSettings(workspace, new());
             await main.OpenAsync(workspace);
             await main.AddManualSeriesAsync(videos);
             await main.OpenAsync(workspace);

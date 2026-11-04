@@ -12,6 +12,12 @@ internal sealed class ExportFixture : IDisposable
             "yadis3-characterization-"
                 + Guid.NewGuid().ToString("N")
         );
+    public string UserConfigPath =>
+        Path.Combine(Root, "user", "user.config");
+
+    public DuneConfigurationStore ConfigurationStore() =>
+        new(userConfigurationPath: UserConfigPath);
+
     public string Destination => Path.Combine(Root, "export");
     public const string MovieName = "L’été d’Adèle [1080p].mkv";
     public const string SeriesName = "SPY×FAMILY";

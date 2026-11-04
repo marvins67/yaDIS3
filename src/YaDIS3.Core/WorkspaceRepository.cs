@@ -134,9 +134,47 @@ public sealed class WorkspaceRepository
     /// </summary>
     public void Create(string path)
     {
-        Directory.CreateDirectory(
-            Path.Combine(Path.GetFullPath(path), "data")
+        path = Path.GetFullPath(path);
+        foreach (
+            string directory in new[]
+            {
+                "data",
+                "cache",
+                "interface",
+            }
+        )
+        {
+            Directory.CreateDirectory(
+                Path.Combine(path, directory)
+            );
+        }
+        CreateDocument(
+            path,
+            "folders.xml",
+            new XElement("folders")
         );
+        CreateDocument(
+            path,
+            "groups.xml",
+            new XElement(
+                "groups",
+                new XElement("sagas"),
+                new XElement("selections")
+            )
+        );
+    }
+
+    private static void CreateDocument(
+        string path,
+        string name,
+        XElement root
+    )
+    {
+        string file = Path.Combine(path, name);
+        if (!File.Exists(file))
+        {
+            new XDocument(root).Save(file);
+        }
     }
 
     /// <summary>

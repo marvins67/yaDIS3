@@ -879,7 +879,8 @@
               Classes="muted"
             />
             <TextBox
-              Text="{Binding PathMappings, Mode=TwoWay}"
+              Text="{Binding PathMappings, Mode=OneWay}"
+              IsReadOnly="True"
               AcceptsReturn="True"
               TextWrapping="Wrap"
               MinHeight="84"

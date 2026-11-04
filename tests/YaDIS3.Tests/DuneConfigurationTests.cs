@@ -34,21 +34,23 @@ public sealed class DuneConfigurationTests
     {
         using ExportFixture fixture = new();
         const string Original =
-            "{\"Template\":\"Origins\",\"Language\":\"en\",\"Aai\":false,\"Cases\":true,\"Mappings\":\"/Films => smb://nas/Films\",\"Destination\":\"/Volumes/Dune/yaDIS\"}";
-        string path = Path.Combine(
-            fixture.Root,
-            DuneConfigurationStore.FileName
-        );
+            "<configuration><userSettings><yaDIS.My.MySettings><setting name='Language' serializeAs='String'><value>en</value></setting><setting name='UseCase' serializeAs='String'><value>True</value></setting></yaDIS.My.MySettings></userSettings></configuration>";
+        string path = fixture.UserConfigPath;
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, Original, Encoding.UTF8);
-        ConfigurationSnapshot snapshot =
-            new DuneConfigurationStore().Load(fixture.Root);
+        ConfigurationSnapshot snapshot = fixture
+            .ConfigurationStore()
+            .Load(fixture.Root);
         Assert.Equal(Original, File.ReadAllText(path));
         Assert.True(snapshot.Settings.Cases);
         Assert.Equal("en", snapshot.Settings.Language);
-        Assert.Equal(95, snapshot.Settings.JpegQuality);
+        Assert.Equal(90, snapshot.Settings.JpegQuality);
         Assert.Equal(60, snapshot.Settings.LastDays);
         Assert.False(snapshot.Settings.BasicMode);
-        Assert.Equal("1111111111", snapshot.Settings.Categories);
+        Assert.Equal(
+            "11111111111",
+            snapshot.Settings.Categories
+        );
         Assert.Empty(snapshot.Folders);
         Assert.False(
             File.Exists(
@@ -61,7 +63,8 @@ public sealed class DuneConfigurationTests
     public void Save_Documents_ReproduitLesSchemasEtPreserveSelectionsEtSagas()
     {
         using ExportFixture fixture = new();
-        DuneConfigurationStore store = new();
+        DuneConfigurationStore store =
+            fixture.ConfigurationStore();
         ConfigurationSnapshot expected = Snapshot() with
         {
             Settings = new()
@@ -125,13 +128,12 @@ public sealed class DuneConfigurationTests
     )
     {
         using ExportFixture fixture = new();
-        new DuneConfigurationStore().Save(
-            fixture.Root,
-            Snapshot()
-        );
+        fixture
+            .ConfigurationStore()
+            .Save(fixture.Root, Snapshot());
         string[] names =
         [
-            DuneConfigurationStore.FileName,
+            fixture.UserConfigPath,
             "folders.xml",
             "groups.xml",
             "shortcuts.xml",
@@ -144,7 +146,8 @@ public sealed class DuneConfigurationTests
                 )
         );
         DuneConfigurationStore store = new(
-            new ConfigurationFileSystem(failedWrite)
+            new ConfigurationFileSystem(failedWrite),
+            fixture.UserConfigPath
         );
         Assert.Throws<IOException>(() =>
             store.Save(
@@ -167,15 +170,15 @@ public sealed class DuneConfigurationTests
     }
 
     [Fact]
-    public void Save_ExtensionsInconnues_ConserveJsonEtXml()
+    public void Save_ExtensionsInconnues_ConserveUserConfigEtXml()
     {
         using ExportFixture fixture = new();
+        Directory.CreateDirectory(
+            Path.GetDirectoryName(fixture.UserConfigPath)!
+        );
         File.WriteAllText(
-            Path.Combine(
-                fixture.Root,
-                DuneConfigurationStore.FileName
-            ),
-            "{\"UseRemote\":true,\"FutureOption\":{\"value\":42}}",
+            fixture.UserConfigPath,
+            "<configuration><userSettings><yaDIS.My.MySettings><setting name='UseRemote' serializeAs='String'><value>True</value></setting><setting name='FutureOption' serializeAs='Xml'><value><extension value='42'/></value></setting></yaDIS.My.MySettings></userSettings></configuration>",
             Encoding.UTF8
         );
         File.WriteAllText(
@@ -183,7 +186,8 @@ public sealed class DuneConfigurationTests
             "<folders><folder extra='oui'><path>/Films</path><type>0</type><dunepath>smb://nas/Films</dunepath><inconnu>conserver</inconnu></folder></folders>",
             Encoding.UTF8
         );
-        DuneConfigurationStore store = new();
+        DuneConfigurationStore store =
+            fixture.ConfigurationStore();
         ConfigurationSnapshot snapshot = store.Load(
             fixture.Root
         );
@@ -201,17 +205,23 @@ public sealed class DuneConfigurationTests
             }
         );
         ConfigurationSnapshot actual = store.Load(fixture.Root);
-        Assert.True(
-            actual
-                .Settings.AdditionalSettings!["UseRemote"]
-                .GetBoolean()
+        XDocument user = XDocument.Load(fixture.UserConfigPath);
+        Assert.Equal(
+            "True",
+            user.Descendants("setting")
+                .Single(node =>
+                    (string?)node.Attribute("name")
+                    == "UseRemote"
+                )
+                .Element("value")!
+                .Value
         );
         Assert.Equal(
-            42,
-            actual
-                .Settings.AdditionalSettings["FutureOption"]
-                .GetProperty("value")
-                .GetInt32()
+            "42",
+            (string?)
+                user.Descendants("extension")
+                    .Single()
+                    .Attribute("value")
         );
         Assert.Equal(
             "oui",
@@ -231,18 +241,15 @@ public sealed class DuneConfigurationTests
     public void SaveSettings_Echec_RestaureLesOctetsOriginaux()
     {
         using ExportFixture fixture = new();
-        new DuneConfigurationStore().SaveSettings(
-            fixture.Root,
-            new()
-        );
-        string path = Path.Combine(
-            fixture.Root,
-            DuneConfigurationStore.FileName
-        );
+        fixture
+            .ConfigurationStore()
+            .SaveSettings(fixture.Root, new());
+        string path = fixture.UserConfigPath;
         byte[] expected = File.ReadAllBytes(path);
         Assert.Throws<IOException>(() =>
             new DuneConfigurationStore(
-                new ConfigurationFileSystem(1)
+                new ConfigurationFileSystem(1),
+                fixture.UserConfigPath
             ).SaveSettings(
                 fixture.Root,
                 new() { JpegQuality = 15 }
@@ -256,29 +263,25 @@ public sealed class DuneConfigurationTests
     {
         using ExportFixture fixture = new();
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new DuneConfigurationStore().Save(
-                fixture.Root,
-                Snapshot() with
-                {
-                    Settings = new() { JpegQuality = 0 },
-                }
-            )
-        );
-        Assert.False(
-            File.Exists(
-                Path.Combine(
+            fixture
+                .ConfigurationStore()
+                .Save(
                     fixture.Root,
-                    DuneConfigurationStore.FileName
+                    Snapshot() with
+                    {
+                        Settings = new() { JpegQuality = 0 },
+                    }
                 )
-            )
         );
+        Assert.False(File.Exists(fixture.UserConfigPath));
     }
 
     [Fact]
     public void Apply_FicheInvalide_RestaureLesPreferencesEtIdentifieLeFichier()
     {
         using ExportFixture fixture = new();
-        DuneConfigurationStore store = new();
+        DuneConfigurationStore store =
+            fixture.ConfigurationStore();
         ConfigurationSnapshot initial = store.Load(fixture.Root);
         store.Save(fixture.Root, initial);
         string data = Path.Combine(
@@ -290,7 +293,9 @@ public sealed class DuneConfigurationTests
         File.WriteAllText(data, "<data />", Encoding.UTF8);
         InvalidDataException error =
             Assert.Throws<InvalidDataException>(() =>
-                new DuneConfigurationService().Apply(
+                new DuneConfigurationService(
+                    configurationStore: store
+                ).Apply(
                     fixture.Root,
                     fixture.Root,
                     initial with
@@ -305,7 +310,7 @@ public sealed class DuneConfigurationTests
             StringComparison.Ordinal
         );
         Assert.Equal(
-            95,
+            90,
             store.Load(fixture.Root).Settings.JpegQuality
         );
     }
@@ -339,10 +344,9 @@ public sealed class DuneConfigurationTests
     public void Add_SelectionAutomatique_ConserveOrdreEtEviteLesDoublons()
     {
         using ExportFixture fixture = new();
-        new DuneConfigurationStore().Save(
-            fixture.Root,
-            Snapshot()
-        );
+        fixture
+            .ConfigurationStore()
+            .Save(fixture.Root, Snapshot());
         LegacyAutoSelection service = new();
         service.Add(
             fixture.Root,
@@ -361,7 +365,8 @@ public sealed class DuneConfigurationTests
         ];
         Assert.Equal(
             expected,
-            new DuneConfigurationStore()
+            fixture
+                .ConfigurationStore()
                 .Load(fixture.Root)
                 .Groups.Descendants("movie")
                 .Select(node => node.Value)

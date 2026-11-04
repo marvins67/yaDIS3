@@ -12,7 +12,9 @@ internal static class DesktopServices
 {
     internal const string TvdbClientName = "TVDB";
 
-    internal static ServiceProvider CreateProvider()
+    internal static ServiceProvider CreateProvider(
+        string? userConfigurationPath = null
+    )
     {
         ServiceCollection services = new();
         services.AddHttpClient(
@@ -29,7 +31,12 @@ internal static class DesktopServices
             IExportFileSystem,
             ExportFileSystem
         >();
-        services.AddSingleton<DuneConfigurationStore>();
+        services.AddSingleton(
+            provider => new DuneConfigurationStore(
+                provider.GetRequiredService<IExportFileSystem>(),
+                userConfigurationPath
+            )
+        );
         services.AddSingleton<DuneConfigurationService>();
         services.AddSingleton<SourceFolderScanner>();
         services.AddSingleton<MainWindowViewModel>();

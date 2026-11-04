@@ -228,17 +228,19 @@ public sealed class BasicDuneConfigurationTests
             .Root.Element("info")!
             .SetElementValue("title", "Le Château");
         document.Save(path);
-        new DuneConfigurationStore().Save(
-            fixture.Root,
-            new(
-                new(),
-                [],
-                XDocument.Parse(
-                    "<groups><selections><selection enabled='yes'><name>Famille</name></selection></selections></groups>"
-                ),
-                []
-            )
-        );
+        fixture
+            .ConfigurationStore()
+            .Save(
+                fixture.Root,
+                new(
+                    new(),
+                    [],
+                    XDocument.Parse(
+                        "<groups><selections><selection enabled='yes'><name>Famille</name></selection></selections></groups>"
+                    ),
+                    []
+                )
+            );
         using WorkspaceRepository repository = new();
         MediaCard card = repository
             .Open(fixture.Root)
@@ -260,7 +262,8 @@ public sealed class BasicDuneConfigurationTests
         );
         Assert.Equal(
             added ? 1 : 0,
-            new DuneConfigurationStore()
+            fixture
+                .ConfigurationStore()
                 .Load(fixture.Root)
                 .Groups.Descendants("movie")
                 .Count()

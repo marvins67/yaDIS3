@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -10,32 +9,30 @@ namespace YaDIS3.Core;
 /// yaDIS2.
 /// </summary>
 public sealed class DuneConfigurationStore(
-    IExportFileSystem? fileSystem = null
+    IExportFileSystem? fileSystem = null,
+    string? userConfigurationPath = null
 )
 {
-    /// <summary>
-    /// Nom conservé pour les workspaces déjà utilisés dans
-    /// yaDIS3.
-    /// </summary>
-    public const string FileName = "yadis3-modern-export.json";
     private readonly IExportFileSystem _files =
         fileSystem ?? new ExportFileSystem();
-    private static readonly JsonSerializerOptions s_json = new()
-    {
-        WriteIndented = true,
-    };
+    private readonly UserConfigurationStore _user = new(
+        userConfigurationPath
+            ?? UserConfigurationLocation.Resolve(),
+        fileSystem ?? new ExportFileSystem()
+    );
+
+    /// <summary>Emplacement du fichier user.config utilisé.</summary>
+    public string UserConfigurationPath => _user.FilePath;
+
+    /// <summary>Charge les préférences globales de yaDIS2.</summary>
+    public DuneConfiguration LoadSettings() => _user.Load();
 
     /// <summary>
     /// Charge une copie sans créer ni modifier de fichier.
     /// </summary>
     public ConfigurationSnapshot Load(string workspace)
     {
-        string path = Path.Combine(workspace, FileName);
-        DuneConfiguration settings = _files.FileExists(path)
-            ? JsonSerializer.Deserialize<DuneConfiguration>(
-                _files.ReadText(path)
-            ) ?? new()
-            : new();
+        DuneConfiguration settings = _user.Load();
         return new(
             settings,
             ReadFolders(workspace),
@@ -117,14 +114,14 @@ public sealed class DuneConfigurationStore(
             snapshot.Settings.LastDays
         );
         if (
-            snapshot.Settings.Categories.Length != 10
+            snapshot.Settings.Categories.Length is not (10 or 11)
             || snapshot.Settings.Categories.Any(value =>
                 value is not ('0' or '1')
             )
         )
         {
             throw new InvalidDataException(
-                "Les dix catégories Dune doivent être définies."
+                "Les catégories Dune doivent être définies."
             );
         }
         foreach (MediaSourceFolder folder in snapshot.Folders)
@@ -152,7 +149,14 @@ public sealed class DuneConfigurationStore(
     {
         Validate(snapshot);
         _files.CreateDirectory(workspace);
-        WriteDocuments(workspace, Documents(snapshot));
+        Dictionary<string, byte[]> documents = Documents(
+            workspace,
+            snapshot
+        );
+        documents[_user.FilePath] = _user.Serialize(
+            snapshot.Settings
+        );
+        WriteDocuments(documents);
     }
 
     /// <summary>
@@ -164,31 +168,19 @@ public sealed class DuneConfigurationStore(
         DuneConfiguration settings
     )
     {
-        string path = Path.Combine(workspace, FileName);
-        string temporary =
-            path + ".tmp-" + Guid.NewGuid().ToString("N");
-        try
-        {
-            _files.WriteBytes(
-                temporary,
-                JsonSerializer.SerializeToUtf8Bytes(
-                    settings,
-                    s_json
-                )
-            );
-            _files.MoveFile(temporary, path, true);
-        }
-        finally
-        {
-            if (_files.FileExists(temporary))
+        ArgumentException.ThrowIfNullOrWhiteSpace(workspace);
+        Validate(
+            new(settings, [], new(new XElement("groups")), [])
+        );
+        WriteDocuments(
+            new()
             {
-                _files.DeleteFile(temporary);
+                [_user.FilePath] = _user.Serialize(settings),
             }
-        }
+        );
     }
 
     private void WriteDocuments(
-        string workspace,
         Dictionary<string, byte[]> documents
     )
     {
@@ -196,12 +188,8 @@ public sealed class DuneConfigurationStore(
             documents.Keys.ToDictionary(
                 name => name,
                 name =>
-                    _files.FileExists(
-                        Path.Combine(workspace, name)
-                    )
-                        ? _files.ReadBytes(
-                            Path.Combine(workspace, name)
-                        )
+                    _files.FileExists(name)
+                        ? _files.ReadBytes(name)
                         : null
             );
         List<string> written = [];
@@ -209,11 +197,30 @@ public sealed class DuneConfigurationStore(
         {
             foreach ((string name, byte[] content) in documents)
             {
-                written.Add(name);
-                _files.WriteBytes(
-                    Path.Combine(workspace, name),
-                    content
-                );
+                string temporary =
+                    name
+                    + ".tmp-"
+                    + Guid.NewGuid().ToString("N");
+                try
+                {
+                    _files.CreateDirectory(
+                        Path.GetDirectoryName(name)!
+                    );
+                    _files.WriteBytes(temporary, content);
+                    written.Add(name);
+                    _files.MoveFile(
+                        temporary,
+                        name,
+                        overwrite: true
+                    );
+                }
+                finally
+                {
+                    if (_files.FileExists(temporary))
+                    {
+                        _files.DeleteFile(temporary);
+                    }
+                }
             }
         }
         catch (Exception failure)
@@ -222,13 +229,12 @@ public sealed class DuneConfigurationStore(
                         or UnauthorizedAccessException
             )
         {
-            Rollback(workspace, originals, written, failure);
+            Rollback(originals, written, failure);
             throw;
         }
     }
 
     private void Rollback(
-        string workspace,
         Dictionary<string, byte[]?> originals,
         List<string> written,
         Exception failure
@@ -239,7 +245,7 @@ public sealed class DuneConfigurationStore(
         {
             try
             {
-                string path = Path.Combine(workspace, name);
+                string path = name;
                 if (originals[name] is { } bytes)
                 {
                     _files.WriteBytes(path, bytes);
@@ -265,15 +271,12 @@ public sealed class DuneConfigurationStore(
     }
 
     private static Dictionary<string, byte[]> Documents(
+        string workspace,
         ConfigurationSnapshot snapshot
     ) =>
         new()
         {
-            [FileName] = JsonSerializer.SerializeToUtf8Bytes(
-                snapshot.Settings,
-                s_json
-            ),
-            ["folders.xml"] = XmlBytes(
+            [Path.Combine(workspace, "folders.xml")] = XmlBytes(
                 new(
                     new XElement(
                         "folders",
@@ -281,30 +284,33 @@ public sealed class DuneConfigurationStore(
                     )
                 )
             ),
-            ["groups.xml"] = XmlBytes(snapshot.Groups),
-            ["shortcuts.xml"] = XmlBytes(
-                new(
-                    new XElement(
-                        "shortcuts",
-                        snapshot.Shortcuts.Select(
-                            shortcut => new XElement(
-                                "shortcut",
-                                new XAttribute(
-                                    "type",
-                                    shortcut.Type
-                                ),
-                                shortcut.Type == 2
-                                    ? new XAttribute(
-                                        "path",
-                                        shortcut.Path
-                                    )
-                                    : null,
-                                shortcut.Name
+            [Path.Combine(workspace, "groups.xml")] = XmlBytes(
+                snapshot.Groups
+            ),
+            [Path.Combine(workspace, "shortcuts.xml")] =
+                XmlBytes(
+                    new(
+                        new XElement(
+                            "shortcuts",
+                            snapshot.Shortcuts.Select(
+                                shortcut => new XElement(
+                                    "shortcut",
+                                    new XAttribute(
+                                        "type",
+                                        shortcut.Type
+                                    ),
+                                    shortcut.Type == 2
+                                        ? new XAttribute(
+                                            "path",
+                                            shortcut.Path
+                                        )
+                                        : null,
+                                    shortcut.Name
+                                )
                             )
                         )
                     )
-                )
-            ),
+                ),
         };
 
     private static XElement FolderElement(

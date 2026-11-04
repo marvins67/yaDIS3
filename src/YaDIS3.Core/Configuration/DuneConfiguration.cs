@@ -1,6 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
 namespace YaDIS3.Core;
 
 /// <summary>
@@ -9,15 +6,8 @@ namespace YaDIS3.Core;
 /// </summary>
 public sealed record DuneConfiguration
 {
-    /// <summary>
-    /// Options inconnues préservées lors de la sauvegarde.
-    /// </summary>
-    [JsonExtensionData]
-    public Dictionary<
-        string,
-        JsonElement
-    >? AdditionalSettings
-    { get; init; }
+    /// <summary>Workspace sélectionné dans user.config.</summary>
+    public string Workspace { get; init; } = "";
 
     /// <summary>
     /// Thème sélectionné.
@@ -45,11 +35,6 @@ public sealed record DuneConfiguration
     public bool Cases { get; init; }
 
     /// <summary>
-    /// Correspondances entre chemins locaux et chemins Dune.
-    /// </summary>
-    public string Mappings { get; init; } = "";
-
-    /// <summary>
     /// Destination de l'interface centrale.
     /// </summary>
     public string Destination { get; init; } = "";
@@ -60,15 +45,15 @@ public sealed record DuneConfiguration
     public bool BasicMode { get; init; }
 
     /// <summary>
-    /// Qualité JPEG de 1 à 100 ; 95 conserve le portage
-    /// existant.
+    /// Qualité JPEG de 1 à 100 ; 90 reprend la valeur
+    /// par défaut de yaDIS2.
     /// </summary>
-    public int JpegQuality { get; init; } = 95;
+    public int JpegQuality { get; init; } = 90;
 
     /// <summary>
     /// Ajouts récents puis catégories 03 à 11.
     /// </summary>
-    public string Categories { get; init; } = "1111111111";
+    public string Categories { get; init; } = "11111111111";
 
     /// <summary>
     /// Période des ajouts récents.
@@ -99,7 +84,7 @@ public sealed record DuneConfiguration
     /// Liste d'articles séparés par des virgules.
     /// </summary>
     public string Articles { get; init; } =
-        "le,la,les,l',un,une,des,the,a,an";
+        "the,a,an,la,le,les,l',un,une,des";
 
     /// <summary>
     /// Ajout automatique des nouveaux films traités.
@@ -116,17 +101,4 @@ public sealed record DuneConfiguration
     /// secrets.
     /// </summary>
     public string TvdbPath { get; init; } = "";
-
-    /// <summary>
-    /// Active le filtrage par les racines explicitement
-    /// configurées.
-    /// </summary>
-    public bool SourceFoldersConfigured { get; init; }
-
-    /// <summary>
-    /// Fiches ajoutées explicitement hors des racines
-    /// surveillées.
-    /// </summary>
-    public IReadOnlyList<string> ManualSeriesDirectories { get; init; } =
-    [];
 }

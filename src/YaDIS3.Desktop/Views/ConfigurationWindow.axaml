@@ -293,12 +293,6 @@
               MaxWidth="515"
               TextTrimming="CharacterEllipsis"
             />
-            <Button
-              Content="Correspondances de chemins…"
-              Click="EditMappings"
-              IsVisible="{Binding NormalMode}"
-              HorizontalAlignment="Left"
-            />
           </StackPanel>
         </Canvas>
       </TabItem>

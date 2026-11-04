@@ -32,7 +32,6 @@ public sealed partial class ConfigurationViewModel
     private string _workspace;
     private string _message = "";
     private bool _busy;
-    private bool _foldersChanged;
     private DuneTemplate? _template;
     private Bitmap? _preview;
     private SourceFolderViewModel? _folder;
@@ -67,8 +66,6 @@ public sealed partial class ConfigurationViewModel
         Templates = templates;
         LoadDraft(snapshot);
         LoadGenres(genres);
-        Folders.CollectionChanged += (_, _) =>
-            _foldersChanged = true;
         RemoveFolderCommand = new UiCommand(() =>
         {
             RemoveFolder();
@@ -311,7 +308,6 @@ public sealed partial class ConfigurationViewModel
                 value.Name == _settings.Template
             )
             ?? (Templates.Count > 0 ? Templates[0] : null);
-        _foldersChanged = false;
         Notify(null);
     }
 
@@ -452,16 +448,17 @@ public sealed partial class ConfigurationViewModel
         new(
             _settings with
             {
-                SourceFoldersConfigured =
-                    _settings.SourceFoldersConfigured
-                    || _foldersChanged
-                    || Folders.Count > 0,
                 Categories =
                     (RecentEnabled ? "1" : "0")
                     + string.Concat(
                         Categories.Select(value =>
                             value.Enabled ? "1" : "0"
                         )
+                    )
+                    + (
+                        _settings.Categories.Length > 10
+                            ? _settings.Categories[10..]
+                            : ""
                     ),
                 Articles = Articles.Replace(
                     " ",

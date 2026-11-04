@@ -73,7 +73,13 @@ public sealed class HttpClientFactoryTests
             repository,
             new ImageImporter(new SkiaJpegEncoder()),
             factory,
-            new DuneConfigurationStore(),
+            new DuneConfigurationStore(
+                userConfigurationPath: Path.Combine(
+                    Path.GetTempPath(),
+                    Guid.NewGuid().ToString(),
+                    "user.config"
+                )
+            ),
             new DuneConfigurationService(),
             new SourceFolderScanner(),
             NullLogger<MainWindowViewModel>.Instance,

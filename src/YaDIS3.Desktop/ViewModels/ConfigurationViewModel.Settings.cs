@@ -195,19 +195,6 @@ public sealed partial class ConfigurationViewModel
     }
 
     /// <summary>
-    /// Correspondances de chemins déjà disponibles dans yaDIS3.
-    /// </summary>
-    public string Mappings
-    {
-        get => _settings.Mappings;
-        set
-        {
-            _settings = _settings with { Mappings = value };
-            Notify();
-        }
-    }
-
-    /// <summary>
     /// Position historique des options de base selon le mode.
     /// </summary>
     public double DatabaseTop => BasicMode ? 118 : 231;

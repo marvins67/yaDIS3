@@ -347,6 +347,14 @@ public sealed partial class MainWindowViewModel
     public MainWindowViewModel()
         : this(DesktopServices.CreateProvider()) { }
 
+    /// <summary>Utilise un fichier utilisateur explicitement choisi.</summary>
+    public MainWindowViewModel(string userConfigurationPath)
+        : this(
+            DesktopServices.CreateProvider(userConfigurationPath)
+        )
+    {
+    }
+
     private MainWindowViewModel(ServiceProvider services)
         : this(
             services.GetRequiredService<IWorkspaceRepository>(),

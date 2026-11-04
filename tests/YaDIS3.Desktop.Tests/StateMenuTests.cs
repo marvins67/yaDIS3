@@ -51,12 +51,35 @@ public sealed class StateMenuTests : IDisposable
             )
         );
         groups.Save(Path.Combine(_directory, "groups.xml"));
+        string[] folderNames = ["Films", "Series"];
+        new XDocument(
+            new XElement(
+                "folders",
+                folderNames.Select(
+                    (name, type) =>
+                        new XElement(
+                            "folder",
+                            new XElement(
+                                "path",
+                                Path.Combine(_directory, name)
+                            ),
+                            new XElement("type", type),
+                            new XElement(
+                                "dunepath",
+                                "smb://nas/" + name
+                            )
+                        )
+                )
+            )
+        ).Save(Path.Combine(_directory, "folders.xml"));
     }
 
     [Fact]
     public async Task CycleStateFilterCommand_Clic_ParcourtLesEtats()
     {
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
         await model.OpenAsync(_directory);
         string[] labels =
         [
@@ -82,7 +105,9 @@ public sealed class StateMenuTests : IDisposable
     [Fact]
     public async Task StateFilters_TypeEtRecherche_CumuleLesPredicats()
     {
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
         await model.OpenAsync(_directory);
         model.StateFilters[1].SelectCommand.Execute(null);
         model.InvertStateFilter = true;
@@ -99,7 +124,9 @@ public sealed class StateMenuTests : IDisposable
     [Fact]
     public async Task StateFilters_Edition_ConserveLaFichePendantLaSaisie()
     {
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
         await model.OpenAsync(_directory);
         model.StateFilters[1].SelectCommand.Execute(null);
         MediaCard card = Assert.Single(model.VisibleCards);
@@ -116,7 +143,9 @@ public sealed class StateMenuTests : IDisposable
     [Fact]
     public async Task GroupFilters_ChoixEtClicPrincipal_ReprendYaDis2()
     {
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
         await model.OpenAsync(_directory);
         Assert.True(model.ShowSagaFilters);
         Assert.True(model.ShowSelectionFilters);
@@ -138,7 +167,9 @@ public sealed class StateMenuTests : IDisposable
     [Fact]
     public async Task GenreFilters_ChangementDeType_ReinitialiseLeGroupe()
     {
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
         await model.OpenAsync(_directory);
         model
             .GenreFilters.Single(item => item.Label == "Drame")
@@ -161,7 +192,9 @@ public sealed class StateMenuTests : IDisposable
     [Fact]
     public async Task OpenAsync_SecondWorkspace_NeConservePasLesGroupes()
     {
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
         await model.OpenAsync(_directory);
         string other = Path.Combine(_directory, "other");
         Directory.CreateDirectory(Path.Combine(other, "data"));
@@ -178,6 +211,19 @@ public sealed class StateMenuTests : IDisposable
         string genre
     )
     {
+        string source = Path.Combine(
+            _directory,
+            series ? "Series" : "Films"
+        );
+        Directory.CreateDirectory(source);
+        if (series)
+        {
+            Directory.CreateDirectory(Path.Combine(source, name));
+        }
+        else
+        {
+            File.WriteAllBytes(Path.Combine(source, name), []);
+        }
         string directory = Path.Combine(
             _directory,
             "data",
@@ -190,6 +236,16 @@ public sealed class StateMenuTests : IDisposable
                 new XElement(
                     "item",
                     new XElement("filename", name),
+                    new XElement("path", source),
+                    new XElement(
+                        "folder",
+                        series ? "yes" : "no"
+                    ),
+                    new XElement(
+                        "dunepath",
+                        "smb://nas/"
+                            + (series ? "Series" : "Films")
+                    ),
                     new XElement("type", series ? "1" : "0"),
                     new XElement(
                         "status",

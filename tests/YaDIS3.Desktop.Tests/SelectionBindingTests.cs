@@ -56,7 +56,9 @@ public sealed class SelectionBindingTests
         AddCard(directory, "Film", false);
         using WorkspaceRepository repository = new();
         Workspace workspace = repository.Open(directory);
-        using MainWindowViewModel model = new();
+        using MainWindowViewModel model = new(
+            Path.Combine(directory, "user.config")
+        );
         MainWindow window = new() { DataContext = model };
         window.Show();
         try

@@ -240,7 +240,19 @@ public sealed partial class MainWindowViewModel
             : _configurationStore
                 .Load(_workspace.Directory)
                 .Settings;
-        PathMappings = _configuration.Mappings;
+        PathMappings = _workspace is null
+            ? ""
+            : string.Join(
+                Environment.NewLine,
+                _configurationStore
+                    .Load(_workspace.Directory)
+                    .Folders.Where(folder =>
+                        folder.DunePath.Length > 0
+                    )
+                    .Select(folder =>
+                        folder.Path + " => " + folder.DunePath
+                    )
+            );
         ExportParentPath = _configuration.Destination;
         TemplateLanguage = _configuration.Language;
         AaiBackgrounds = _configuration.Aai;
@@ -249,20 +261,13 @@ public sealed partial class MainWindowViewModel
             Templates.FirstOrDefault(value =>
                 value.Name == _configuration.Template
             ) ?? Templates.FirstOrDefault();
-        if (
-            File.Exists(
-                Path.Combine(
-                    _configuration.TemplatePath,
-                    "template.xml"
-                )
-            )
-        )
+        string tvdbSettings = Path.Combine(
+            AppContext.BaseDirectory,
+            "tvdb-v4.json"
+        );
+        if (File.Exists(tvdbSettings))
         {
-            LoadTemplate(_configuration.TemplatePath);
-        }
-        if (File.Exists(_configuration.TvdbPath))
-        {
-            ConfigureTvdb(_configuration.TvdbPath);
+            ConfigureTvdb(tvdbSettings);
         }
         Notify(nameof(CanExport));
     }
