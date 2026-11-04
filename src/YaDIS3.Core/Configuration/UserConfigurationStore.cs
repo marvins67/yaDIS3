@@ -81,10 +81,7 @@ public sealed class UserConfigurationStore(
                 ?? defaults.Destination,
             Template =
                 Value(section, "Template") ?? defaults.Template,
-            Language = Value(section, "Language")
-                is { Length: > 0 } language
-                ? language
-                : defaults.Language,
+            Language = Value(section, "Language") ?? "",
             Aai = Boolean(section, "UseAAI", defaults.Aai),
             Cases = Boolean(section, "UseCase", defaults.Cases),
             BasicMode = Boolean(

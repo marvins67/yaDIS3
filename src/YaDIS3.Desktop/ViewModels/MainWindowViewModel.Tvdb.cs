@@ -12,8 +12,8 @@ public sealed partial class MainWindowViewModel
     {
         _tvdb?.Dispose();
         _tvdb = new TvdbClient(_http, TvdbSettings.Load(file));
-        CredentialsLabel = "TVDB v4 configuré";
-        Status = "Configuration TVDB chargée.";
+        CredentialsLabel = Texts.GetString("343");
+        Status = Texts.GetString("344");
     }
 
     /// <summary>
@@ -42,8 +42,8 @@ public sealed partial class MainWindowViewModel
 
         Status =
             found.Count == 0
-                ? "Aucune série trouvée. Vous pouvez ajouter une série manuelle depuis son dossier."
-                : $"{found.Count} résultat(s) TVDB.";
+                ? Texts.GetString("345")
+                : Texts.Format("374", found.Count);
     }
 
     /// <summary>
@@ -90,17 +90,17 @@ public sealed partial class MainWindowViewModel
         TvdbClient api =
             _tvdb
             ?? throw new InvalidOperationException(
-                "TVDB non configuré."
+                Texts.GetString("346")
             );
         MediaCard card =
             SelectedCard
             ?? throw new InvalidOperationException(
-                "Sélectionnez une série."
+                Texts.GetString("347")
             );
         SeriesMatch match =
             SelectedMatch
             ?? throw new InvalidOperationException(
-                "Choisissez une série dans les résultats."
+                Texts.GetString("348")
             );
         EpisodeOrder order =
             SelectedOrder
@@ -114,7 +114,6 @@ public sealed partial class MainWindowViewModel
         );
         card.ApplyTvdb(result, order.Code);
         Notify(nameof(SelectedCard));
-        Status =
-            "Informations TVDB appliquées au brouillon. Cliquez sur Enregistrer.";
+        Status = Texts.GetString("349");
     }
 }

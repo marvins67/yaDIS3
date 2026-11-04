@@ -2,9 +2,11 @@
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:vm="using:YaDIS3.Desktop.ViewModels"
+  xmlns:core="using:YaDIS3.Core"
+  xmlns:render="using:YaDIS3.Rendering"
   x:Class="YaDIS3.Desktop.Views.SourceFolderWindow"
   x:DataType="vm:SourceFolderViewModel"
-  Title="Ajouter un dossier"
+  Title="{DynamicResource Text.86}"
   Width="500"
   Height="220"
   CanResize="False"
@@ -18,19 +20,19 @@
     RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto"
     RowSpacing="6"
   >
-    <TextBlock Text="Type :" />
+    <TextBlock Text="{DynamicResource Text.147.Colon}" />
     <ComboBox
       Grid.Row="1"
       Width="145"
       ItemsSource="{Binding Types}"
       SelectedIndex="{Binding Type, Mode=TwoWay}"
     />
-    <TextBlock Grid.Row="2" Text="Dossier :" />
+    <TextBlock
+      Grid.Row="2"
+      Text="{DynamicResource Text.53.Colon}"
+    />
     <Grid Grid.Row="3" ColumnDefinitions="*,6,28">
-      <TextBox
-        Text="{Binding Path}"
-        IsReadOnly="True"
-      />
+      <TextBox Text="{Binding Path}" IsReadOnly="True" />
       <Button Grid.Column="2" Content="…" Click="Browse" />
     </Grid>
     <Grid
@@ -39,7 +41,7 @@
       IsVisible="{Binding !BasicMode}"
     >
       <TextBlock
-        Text="Chemin Dune :"
+        Text="{DynamicResource Text.54.Colon}"
         VerticalAlignment="Center"
       />
       <ComboBox
@@ -57,14 +59,14 @@
       HorizontalAlignment="Right"
     >
       <Button
-        Content="OK"
+        Content="{DynamicResource Text.159}"
         Click="Accept"
         Width="75"
         IsEnabled="{Binding CanAccept}"
         IsDefault="True"
       />
       <Button
-        Content="Annuler"
+        Content="{DynamicResource Text.90}"
         Click="Cancel"
         Width="75"
         IsCancel="True"

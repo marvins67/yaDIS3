@@ -14,6 +14,9 @@ public sealed partial class MainWindow : Window
 {
     private bool _allowClose;
 
+    /// <summary>Application.Restart abandonne les brouillons de la fenêtre courante.</summary>
+    internal void PrepareForRestart() => _allowClose = true;
+
     private bool _prompting;
 
     private MainWindowViewModel Model =>
@@ -74,7 +77,7 @@ public sealed partial class MainWindow : Window
         {
             await ShowUtilityDialog(
                 "TvdbSearchTab",
-                "Changer de titre"
+                Model.Texts.GetString("62")
             );
         }
     }
@@ -134,7 +137,13 @@ public sealed partial class MainWindow : Window
     {
         var dialog = new Window
         {
-            Title = "À propos de yaDIS3",
+            Title = Model
+                .Texts.GetString("138")
+                .Replace(
+                    "yaDIS",
+                    "yaDIS3",
+                    StringComparison.Ordinal
+                ),
             Width = 460,
             Height = 240,
             CanResize = false,
@@ -143,7 +152,7 @@ public sealed partial class MainWindow : Window
         };
         var close = new Button
         {
-            Content = "Fermer",
+            Content = Model.Texts.GetString("34"),
             HorizontalAlignment = Avalonia
                 .Layout
                 .HorizontalAlignment
@@ -159,8 +168,7 @@ public sealed partial class MainWindow : Window
                 new TextBlock { Text = "yaDIS3", FontSize = 24 },
                 new TextBlock
                 {
-                    Text =
-                        "Bibliothèque multimédia pour Dune HD",
+                    Text = Model.Texts.GetString("355"),
                 },
                 new TextBlock
                 {
@@ -173,7 +181,7 @@ public sealed partial class MainWindow : Window
                 },
                 new TextBlock
                 {
-                    Text = "Avec l’assistance de ChatGPT.",
+                    Text = Model.Texts.GetString("356"),
                 },
                 close,
             },
@@ -229,7 +237,7 @@ public sealed partial class MainWindow : Window
         }
 
         string? path = await Folder(
-            "Ouvrir le workspace contenant data"
+            Model.Texts.GetString("357")
         );
         if (path is not null)
         {
@@ -253,7 +261,7 @@ public sealed partial class MainWindow : Window
         }
 
         string? path = await Folder(
-            "Choisir un dossier pour la bibliothèque"
+            Model.Texts.GetString("358")
         );
         if (path is not null)
         {
@@ -269,7 +277,7 @@ public sealed partial class MainWindow : Window
     )
     {
         string? path = await Folder(
-            "Dossier des vidéos de la série"
+            Model.Texts.GetString("359")
         );
         if (path is not null)
         {
@@ -285,7 +293,7 @@ public sealed partial class MainWindow : Window
     )
     {
         string? path = await Folder(
-            "Dossier des vidéos à analyser"
+            Model.Texts.GetString("360")
         );
         if (path is not null)
         {
@@ -299,7 +307,7 @@ public sealed partial class MainWindow : Window
     )
     {
         string? directory = await Folder(
-            "Dossier contenant template.xml"
+            Model.Texts.GetString("361")
         );
         if (directory is not null)
         {
@@ -317,7 +325,7 @@ public sealed partial class MainWindow : Window
     )
     {
         string? directory = await Folder(
-            "Dossier de l'export Dune"
+            Model.Texts.GetString("362")
         );
         if (directory is not null)
         {
@@ -334,12 +342,12 @@ public sealed partial class MainWindow : Window
             await StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions
                 {
-                    Title = "Votre tvdb-v4.json",
+                    Title = Model.Texts.GetString("363"),
                     AllowMultiple = false,
                     FileTypeFilter =
                     [
                         new FilePickerFileType(
-                            "Configuration JSON"
+                            Model.Texts.GetString("354")
                         )
                         {
                             Patterns = ["*.json"],
@@ -387,11 +395,13 @@ public sealed partial class MainWindow : Window
             await StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions
                 {
-                    Title = "Choisir une image",
+                    Title = Model.Texts.GetString("364"),
                     AllowMultiple = false,
                     FileTypeFilter =
                     [
-                        new FilePickerFileType("Images")
+                        new FilePickerFileType(
+                            Model.Texts.GetString("341")
+                        )
                         {
                             Patterns =
                             [
@@ -455,7 +465,7 @@ public sealed partial class MainWindow : Window
     {
         var dialog = new Window
         {
-            Title = "Modifications en cours",
+            Title = Model.Texts.GetString("365"),
 
             Width = 540,
 
@@ -475,8 +485,7 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(
             new TextBlock
             {
-                Text =
-                    "Enregistrer les fiches modifiées avant de continuer ?",
+                Text = Model.Texts.GetString("366"),
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             }
         );
@@ -489,9 +498,9 @@ public sealed partial class MainWindow : Window
         foreach (
             var (text, value) in new[]
             {
-                ("Enregistrer", "save"),
-                ("Ignorer", "discard"),
-                ("Annuler", "cancel"),
+                (Model.Texts.GetString("367"), "save"),
+                (Model.Texts.GetString("368"), "discard"),
+                (Model.Texts.GetString("90"), "cancel"),
             }
         )
         {
@@ -521,8 +530,7 @@ public sealed partial class MainWindow : Window
         if (model.IsBusy)
         {
             eventArgs.Cancel = true;
-            model.Status =
-                "Attendez la fin de l'opération avant de fermer.";
+            model.Status = Model.Texts.GetString("369");
             return;
         }
 

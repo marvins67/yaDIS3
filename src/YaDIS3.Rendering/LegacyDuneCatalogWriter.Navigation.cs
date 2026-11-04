@@ -168,21 +168,11 @@ internal sealed partial class LegacyDuneCatalogWriter
     {
         List<(string Directory, string Caption)> top =
         [
-            (
-                Output(root, "00"),
-                options.Language == "fr" ? "Films" : "Movies"
-            ),
+            (Output(root, "00"), _texts["63"]),
         ];
         if (fileSystem.DirectoryExists(Output(root, "01")))
         {
-            top.Add(
-                (
-                    Output(root, "01"),
-                    options.Language == "fr"
-                        ? "Séries TV"
-                        : "TV Shows"
-                )
-            );
+            top.Add((Output(root, "01"), _texts["64"]));
         }
 
         top.AddRange(
@@ -324,42 +314,10 @@ internal sealed partial class LegacyDuneCatalogWriter
             && _catalog.Categories[index] != '0';
     }
 
-    private string CategoryLabel(int index)
-    {
-        string[] french =
-        [
-            "Tous les films",
-            "Sélections",
-            "Ajouts récents",
-            "A-Z",
-            "Genres",
-            "Acteurs",
-            "Réalisateurs",
-            "Durées",
-            "Pays",
-            "Années",
-            "Notes",
-            "Formats",
+    private string CategoryLabel(int index) =>
+        _texts[
+            (40 + index).ToString(CultureInfo.InvariantCulture)
         ];
-        string[] english =
-        [
-            "All movies",
-            "Selections",
-            "Recently added",
-            "A-Z",
-            "Genres",
-            "Actors",
-            "Directors",
-            "Durations",
-            "Countries",
-            "Years",
-            "Ratings",
-            "Formats",
-        ];
-        return (options.Language == "fr" ? french : english)[
-            index
-        ];
-    }
 
     private static string IndexKind(string index)
     {

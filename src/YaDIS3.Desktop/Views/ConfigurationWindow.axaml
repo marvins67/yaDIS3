@@ -6,7 +6,7 @@
   xmlns:render="using:YaDIS3.Rendering"
   x:Class="YaDIS3.Desktop.Views.ConfigurationWindow"
   x:DataType="vm:ConfigurationViewModel"
-  Title="Configuration"
+  Title="{DynamicResource Text.10}"
   Width="574"
   Height="542"
   CanResize="False"
@@ -117,14 +117,18 @@
         </ControlTemplate>
       </Setter>
     </Style>
-    <Style Selector="CheckBox:checked /template/ Border#CheckBoxBorder">
+    <Style
+      Selector="CheckBox:checked /template/ Border#CheckBoxBorder"
+    >
       <Setter Property="Background" Value="#0078D4" />
       <Setter Property="BorderBrush" Value="#0078D4" />
     </Style>
     <Style Selector="CheckBox:checked /template/ Path#CheckMark">
       <Setter Property="IsVisible" Value="True" />
     </Style>
-    <Style Selector="CheckBox:focus-visible /template/ Border#CheckBoxBorder">
+    <Style
+      Selector="CheckBox:focus-visible /template/ Border#CheckBoxBorder"
+    >
       <Setter Property="BorderBrush" Value="#0078D4" />
     </Style>
     <Style Selector="RadioButton">
@@ -160,7 +164,9 @@
         </ControlTemplate>
       </Setter>
     </Style>
-    <Style Selector="RadioButton:checked /template/ Ellipse#RadioMark">
+    <Style
+      Selector="RadioButton:checked /template/ Ellipse#RadioMark"
+    >
       <Setter Property="IsVisible" Value="True" />
     </Style>
     <Style Selector="Button">
@@ -174,10 +180,10 @@
       Padding="0"
       IsEnabled="{Binding !IsBusy}"
     >
-      <TabItem Header="Général">
+      <TabItem Header="{DynamicResource Text.70}">
         <Canvas Background="White">
           <TextBlock
-            Text="Langue du rendu :"
+            Text="{DynamicResource Text.55.Colon}"
             Canvas.Left="6"
             Canvas.Top="12"
           />
@@ -187,10 +193,11 @@
             Canvas.Top="31"
             Width="124"
             ItemsSource="{Binding Languages}"
-            SelectedItem="{Binding Language, Mode=TwoWay}"
+            SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+            SelectionChanged="LanguageSelected"
           />
           <TextBlock
-            Text="Mode :"
+            Text="{DynamicResource Text.65.Colon}"
             Canvas.Left="144"
             Canvas.Top="12"
           />
@@ -205,11 +212,11 @@
             x:Name="BasicModeChoice"
             Canvas.Left="286"
             Canvas.Top="33"
-            Content="Mode basique"
+            Content="{DynamicResource Text.66}"
             IsChecked="{Binding BasicMode, Mode=TwoWay}"
           />
           <TextBlock
-            Text="Espace de travail :"
+            Text="{DynamicResource Text.80.Colon}"
             Canvas.Left="6"
             Canvas.Top="68"
           />
@@ -230,7 +237,7 @@
           />
           <Canvas IsVisible="{Binding NormalMode}">
             <TextBlock
-              Text="Emplacement de l’interface Dune :"
+              Text="{DynamicResource Text.82.Colon}"
               Canvas.Left="6"
               Canvas.Top="116"
             />
@@ -252,7 +259,7 @@
             <CheckBox
               Canvas.Left="7"
               Canvas.Top="171"
-              Content="Ajouter les nouveaux films à une sélection"
+              Content="{DynamicResource Text.195}"
               IsChecked="{Binding AutoSelect, Mode=TwoWay}"
             />
             <ComboBox
@@ -266,7 +273,7 @@
             <CheckBox
               Canvas.Left="7"
               Canvas.Top="203"
-              Content="Ignorer les articles pour le tri des films"
+              Content="{DynamicResource Text.194}"
               IsChecked="{Binding IgnoreArticles, Mode=TwoWay}"
             />
             <TextBox
@@ -282,9 +289,9 @@
             Canvas.Top="{Binding DatabaseTop}"
             Spacing="6"
           >
-            <TextBlock Text="Données des films : TMDb" />
+            <TextBlock Text="{DynamicResource Text.178}" />
             <Button
-              Content="Configuration TVDB…"
+              Content="{DynamicResource Text.307.Ellipsis}"
               Click="ChooseTvdb"
               HorizontalAlignment="Left"
             />
@@ -296,7 +303,7 @@
           </StackPanel>
         </Canvas>
       </TabItem>
-      <TabItem Header="Dossiers">
+      <TabItem Header="{DynamicResource Text.84}">
         <Grid Margin="6" ColumnDefinitions="426,8,*">
           <Border
             BorderBrush="#D0D0D0"
@@ -305,10 +312,10 @@
           >
             <Grid RowDefinitions="Auto,*">
               <Grid ColumnDefinitions="*,*" Margin="0,0,0,4">
-                <TextBlock Text="Dossier" />
+                <TextBlock Text="{DynamicResource Text.53}" />
                 <TextBlock
                   Grid.Column="1"
-                  Text="Chemin Dune"
+                  Text="{DynamicResource Text.54}"
                   IsVisible="{Binding NormalMode}"
                 />
               </Grid>
@@ -320,7 +327,9 @@
                 DoubleTapped="EditFolder"
               >
                 <ListBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:SourceFolderViewModel">
+                  <DataTemplate
+                    x:DataType="vm:SourceFolderViewModel"
+                  >
                     <Grid
                       ColumnDefinitions="*,*"
                       RowDefinitions="Auto,Auto"
@@ -358,18 +367,18 @@
             Margin="0,10,0,0"
           >
             <Button
-              Content="Ajouter"
+              Content="{DynamicResource Text.86}"
               Click="AddFolder"
               HorizontalAlignment="Stretch"
             />
             <Button
-              Content="Éditer"
+              Content="{DynamicResource Text.87}"
               Click="EditFolder"
               IsEnabled="{Binding HasFolder}"
               HorizontalAlignment="Stretch"
             />
             <Button
-              Content="Supprimer"
+              Content="{DynamicResource Text.61}"
               Command="{Binding RemoveFolderCommand}"
               IsEnabled="{Binding HasFolder}"
               HorizontalAlignment="Stretch"
@@ -377,7 +386,7 @@
           </StackPanel>
         </Grid>
       </TabItem>
-      <TabItem Header="Interface">
+      <TabItem Header="{DynamicResource Text.91}">
         <ScrollViewer
           HorizontalScrollBarVisibility="Disabled"
           VerticalScrollBarVisibility="Auto"
@@ -388,7 +397,10 @@
             HorizontalAlignment="Left"
             Spacing="6"
           >
-            <GroupBox Header="Thème" Height="126">
+            <GroupBox
+              Header="{DynamicResource Text.92}"
+              Height="126"
+            >
               <Grid
                 ColumnDefinitions="271,10,*"
                 RowDefinitions="Auto,*"
@@ -400,7 +412,9 @@
                   HorizontalAlignment="Stretch"
                 >
                   <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="render:DuneTemplate">
+                    <DataTemplate
+                      x:DataType="render:DuneTemplate"
+                    >
                       <TextBlock Text="{Binding Name}" />
                     </DataTemplate>
                   </ComboBox.ItemTemplate>
@@ -419,23 +433,29 @@
                 />
               </Grid>
             </GroupBox>
-            <GroupBox Header="Options" Height="100">
+            <GroupBox
+              Header="{DynamicResource Text.95}"
+              Height="100"
+            >
               <StackPanel Spacing="5">
                 <CheckBox
-                  Content="Utiliser des boîtiers pour les films"
+                  Content="{DynamicResource Text.99}"
                   IsChecked="{Binding UseCases, Mode=TwoWay}"
                 />
                 <CheckBox
-                  Content="Afficher le cadre de sélection"
+                  Content="{DynamicResource Text.118}"
                   IsChecked="{Binding SelectionBox, Mode=TwoWay}"
                 />
                 <CheckBox
-                  Content="Afficher la barre de défilement"
+                  Content="{DynamicResource Text.119}"
                   IsChecked="{Binding Scrollbar, Mode=TwoWay}"
                 />
               </StackPanel>
             </GroupBox>
-            <GroupBox Header="Format des synopsis" Height="48">
+            <GroupBox
+              Header="{DynamicResource Text.94}"
+              Height="48"
+            >
               <StackPanel Orientation="Horizontal" Spacing="16">
                 <RadioButton
                   Content="AAI"
@@ -453,7 +473,7 @@
                   IsVisible="{Binding JpegBackgrounds}"
                 >
                   <TextBlock
-                    Text="Qualité (%) :"
+                    Text="{DynamicResource Text.197.Percent}"
                     VerticalAlignment="Center"
                   />
                   <NumericUpDown
@@ -467,14 +487,16 @@
               </StackPanel>
             </GroupBox>
             <GroupBox
-              Header="Sélections"
+              Header="{DynamicResource Text.59}"
               Height="90"
               IsVisible="{Binding NormalMode}"
             >
               <ScrollViewer>
                 <ItemsControl ItemsSource="{Binding Selections}">
                   <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ConfigurationChoice">
+                    <DataTemplate
+                      x:DataType="vm:ConfigurationChoice"
+                    >
                       <CheckBox
                         Content="{Binding Name}"
                         IsChecked="{Binding Enabled, Mode=TwoWay}"
@@ -485,7 +507,7 @@
               </ScrollViewer>
             </GroupBox>
             <GroupBox
-              Header="Ajouts récents"
+              Header="{DynamicResource Text.42}"
               Height="86"
               IsVisible="{Binding NormalMode}"
             >
@@ -496,7 +518,7 @@
                 ColumnSpacing="8"
               >
                 <CheckBox
-                  Content="Activer"
+                  Content="{DynamicResource Text.149}"
                   IsChecked="{Binding RecentEnabled, Mode=TwoWay}"
                 />
                 <StackPanel
@@ -507,7 +529,7 @@
                   IsEnabled="{Binding RecentEnabled}"
                 >
                   <TextBlock
-                    Text="Période :"
+                    Text="{DynamicResource Text.176.Colon}"
                     VerticalAlignment="Center"
                   />
                   <NumericUpDown
@@ -518,13 +540,13 @@
                     Value="{Binding LastDays, Mode=TwoWay}"
                   />
                   <TextBlock
-                    Text="derniers jours"
+                    Text="{DynamicResource Text.98}"
                     VerticalAlignment="Center"
                   />
                 </StackPanel>
                 <TextBlock
                   Grid.Row="1"
-                  Text="Tri :"
+                  Text="{DynamicResource Text.161.Colon}"
                   VerticalAlignment="Center"
                   IsEnabled="{Binding RecentEnabled}"
                 />
@@ -539,7 +561,7 @@
               </Grid>
             </GroupBox>
             <GroupBox
-              Header="Catégories"
+              Header="{DynamicResource Text.170}"
               Height="90"
               IsVisible="{Binding NormalMode}"
             >
@@ -551,7 +573,9 @@
                     </ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ConfigurationChoice">
+                    <DataTemplate
+                      x:DataType="vm:ConfigurationChoice"
+                    >
                       <CheckBox
                         Content="{Binding Name}"
                         IsChecked="{Binding Enabled, Mode=TwoWay}"
@@ -562,7 +586,7 @@
               </ScrollViewer>
             </GroupBox>
             <GroupBox
-              Header="Raccourcis du menu principal"
+              Header="{DynamicResource Text.163}"
               Height="185"
               IsVisible="{Binding NormalMode}"
             >
@@ -581,7 +605,7 @@
                 </ListBox>
                 <GroupBox
                   Grid.Column="2"
-                  Header="Nouveau raccourci"
+                  Header="{DynamicResource Text.171}"
                 >
                   <StackPanel Spacing="4">
                     <Grid
@@ -589,7 +613,7 @@
                       ColumnSpacing="4"
                     >
                       <TextBlock
-                        Text="Type :"
+                        Text="{DynamicResource Text.147.Colon}"
                         VerticalAlignment="Center"
                       />
                       <ComboBox
@@ -599,16 +623,24 @@
                         HorizontalAlignment="Stretch"
                       />
                     </Grid>
-                    <StackPanel IsVisible="{Binding IsSelectionShortcut}">
-                      <TextBlock Text="Sélection :" />
+                    <StackPanel
+                      IsVisible="{Binding IsSelectionShortcut}"
+                    >
+                      <TextBlock
+                        Text="{DynamicResource Text.41.Colon}"
+                      />
                       <ComboBox
                         ItemsSource="{Binding SelectionNames}"
                         SelectedItem="{Binding ShortcutSelection, Mode=TwoWay}"
                         HorizontalAlignment="Stretch"
                       />
                     </StackPanel>
-                    <StackPanel IsVisible="{Binding IsGenreShortcut}">
-                      <TextBlock Text="Genre :" />
+                    <StackPanel
+                      IsVisible="{Binding IsGenreShortcut}"
+                    >
+                      <TextBlock
+                        Text="{DynamicResource Text.172.Colon}"
+                      />
                       <ComboBox
                         ItemsSource="{Binding Genres}"
                         SelectedItem="{Binding ShortcutGenre, Mode=TwoWay}"
@@ -623,7 +655,7 @@
                       IsVisible="{Binding IsFolderShortcut}"
                     >
                       <TextBlock
-                        Text="Nom :"
+                        Text="{DynamicResource Text.169.Colon}"
                         VerticalAlignment="Center"
                       />
                       <TextBox
@@ -632,7 +664,7 @@
                       />
                       <TextBlock
                         Grid.Row="1"
-                        Text="Chemin :"
+                        Text="{DynamicResource Text.54.Colon}"
                         VerticalAlignment="Center"
                       />
                       <TextBox
@@ -642,7 +674,7 @@
                       />
                     </Grid>
                     <Button
-                      Content="Ajouter"
+                      Content="{DynamicResource Text.86}"
                       Command="{Binding AddShortcutCommand}"
                       IsEnabled="{Binding CanAddShortcut}"
                       HorizontalAlignment="Right"
@@ -666,7 +698,7 @@
       <Button
         x:Name="AcceptConfiguration"
         Grid.Column="1"
-        Content="OK"
+        Content="{DynamicResource Text.159}"
         Width="75"
         Click="Accept"
         IsEnabled="{Binding !IsBusy}"
@@ -674,7 +706,7 @@
       />
       <Button
         Grid.Column="3"
-        Content="Annuler"
+        Content="{DynamicResource Text.90}"
         Width="75"
         Click="Cancel"
         IsEnabled="{Binding !IsBusy}"

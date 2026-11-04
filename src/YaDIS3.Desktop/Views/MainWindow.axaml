@@ -150,8 +150,9 @@
         >
           <Button
             x:Name="ConfigureButton"
+            ToolTip.Tip="{DynamicResource Text.132}"
             Classes="toolbar"
-            Width="104"
+            MinWidth="104"
             Click="ShowConfiguration"
           >
             <StackPanel Orientation="Horizontal" Spacing="7">
@@ -161,15 +162,16 @@
                 Height="24"
               />
               <TextBlock
-                Text="Configurer"
+                Text="{DynamicResource Text.10}"
                 VerticalAlignment="Center"
               />
             </StackPanel>
           </Button>
           <SplitButton
             Classes="toolbar"
-            Width="98"
+            MinWidth="98"
             Command="{Binding ProcessCommand}"
+            ToolTip.Tip="{DynamicResource Text.133}"
             IsEnabled="{Binding CanProcessSelection}"
           >
             <StackPanel Orientation="Horizontal" Spacing="7">
@@ -179,27 +181,27 @@
                 Height="24"
               />
               <TextBlock
-                Text="Traiter"
+                Text="{DynamicResource Text.11}"
                 VerticalAlignment="Center"
               />
             </StackPanel>
             <SplitButton.Flyout>
               <MenuFlyout>
                 <MenuItem
-                  Header="Changer de titre…"
+                  Header="{DynamicResource Text.62.Ellipsis}"
                   Click="ShowTvdbSearch"
                   IsEnabled="{Binding IsSeries}"
                 />
                 <MenuItem
-                  Header="Recharger les informations"
+                  Header="{DynamicResource Text.88}"
                   Command="{Binding ReloadInformationCommand}"
                 />
                 <MenuItem
-                  Header="Recharger les informations techniques"
+                  Header="{DynamicResource Text.205}"
                   Command="{Binding ReloadTechnicalCommand}"
                 />
                 <MenuItem
-                  Header="Traiter tous les épisodes"
+                  Header="{DynamicResource Text.184}"
                   Command="{Binding ProcessAllEpisodesCommand}"
                   IsVisible="{Binding IsSeries}"
                 />
@@ -208,8 +210,9 @@
           </SplitButton>
           <Button
             Classes="toolbar"
-            Width="90"
+            MinWidth="90"
             Command="{Binding ExportCommand}"
+            ToolTip.Tip="{DynamicResource Text.135}"
             IsEnabled="{Binding CanExport}"
             x:Name="ExportButton"
           >
@@ -220,15 +223,16 @@
                 Height="24"
               />
               <TextBlock
-                Text="Exporter"
+                Text="{DynamicResource Text.12}"
                 VerticalAlignment="Center"
               />
             </StackPanel>
           </Button>
           <Button
             Classes="toolbar"
-            Width="98"
+            MinWidth="98"
             Click="RefreshWorkspace"
+            ToolTip.Tip="{DynamicResource Text.137}"
             IsEnabled="{Binding HasWorkspace}"
           >
             <StackPanel Orientation="Horizontal" Spacing="7">
@@ -238,7 +242,7 @@
                 Height="24"
               />
               <TextBlock
-                Text="Rafraîchir"
+                Text="{DynamicResource Text.162}"
                 VerticalAlignment="Center"
               />
             </StackPanel>
@@ -248,6 +252,7 @@
             MinWidth="94"
             Command="{Binding ToggleMediaFilterCommand}"
             x:Name="MediaFilterButton"
+            ToolTip.Tip="{DynamicResource Text.130}"
           >
             <StackPanel Orientation="Horizontal" Spacing="7">
               <Image
@@ -270,11 +275,11 @@
             <SplitButton.Flyout>
               <MenuFlyout>
                 <MenuItem
-                  Header="Films"
+                  Header="{DynamicResource Text.63}"
                   Command="{Binding SelectMoviesCommand}"
                 />
                 <MenuItem
-                  Header="Séries TV"
+                  Header="{DynamicResource Text.64}"
                   Command="{Binding SelectSeriesCommand}"
                 />
               </MenuFlyout>
@@ -282,6 +287,7 @@
           </SplitButton>
           <SplitButton
             x:Name="StateFilterButton"
+            ToolTip.Tip="{DynamicResource Text.131}"
             Classes="toolbar"
             MinWidth="89"
             Command="{Binding CycleStateFilterCommand}"
@@ -354,21 +360,21 @@
                 <Separator />
                 <MenuItem
                   x:Name="SagaFilterItems"
-                  Header="Sagas"
+                  Header="{DynamicResource Text.185}"
                   ItemsSource="{Binding SagaFilters}"
                   IsVisible="{Binding ShowSagaFilters}"
                   ItemContainerTheme="{StaticResource StateMenuItemTheme}"
                 />
                 <MenuItem
                   x:Name="SelectionFilterItems"
-                  Header="Sélections"
+                  Header="{DynamicResource Text.59}"
                   ItemsSource="{Binding SelectionFilters}"
                   IsVisible="{Binding ShowSelectionFilters}"
                   ItemContainerTheme="{StaticResource StateMenuItemTheme}"
                 />
                 <MenuItem
                   x:Name="GenreFilterItems"
-                  Header="Genres"
+                  Header="{DynamicResource Text.44}"
                   ItemsSource="{Binding GenreFilters}"
                   IsVisible="{Binding ShowGenreFilters}"
                   ItemContainerTheme="{StaticResource StateMenuItemTheme}"
@@ -377,7 +383,7 @@
             </SplitButton.Flyout>
           </SplitButton>
           <CheckBox
-            Content="Inverser le filtre"
+            Content="{DynamicResource Text.33}"
             IsChecked="{Binding InvertStateFilter, Mode=TwoWay}"
             Margin="2,0,0,0"
             VerticalAlignment="Center"
@@ -396,7 +402,7 @@
         <Button
           Classes="toolbar"
           Width="54"
-          ToolTip.Tip="Outils"
+          ToolTip.Tip="{DynamicResource Text.136}"
         >
           <StackPanel Orientation="Horizontal" Spacing="7">
             <Image
@@ -414,33 +420,33 @@
             <Flyout>
               <StackPanel Spacing="6" Width="250">
                 <Button
-                  Content="Ouvrir une bibliothèque…"
+                  Content="{DynamicResource Text.304.Ellipsis}"
                   Click="OpenWorkspace"
                 />
                 <Button
-                  Content="Créer une bibliothèque…"
+                  Content="{DynamicResource Text.305.Ellipsis}"
                   Click="CreateWorkspace"
                 />
                 <Button
-                  Content="Ajouter une série manuelle…"
+                  Content="{DynamicResource Text.306.Ellipsis}"
                   Click="AddManualSeries"
                 />
                 <Button
-                  Content="Configuration TVDB…"
+                  Content="{DynamicResource Text.307.Ellipsis}"
                   Click="ConfigureTvdb"
                 />
                 <Separator />
                 <Button
-                  Content="Enregistrer les modifications"
+                  Content="{DynamicResource Text.308}"
                   Command="{Binding SaveCommand}"
                   IsEnabled="{Binding HasChanges}"
                 />
                 <TextBlock
-                  Text="Rechercher dans la bibliothèque :"
+                  Text="{DynamicResource Text.309.Colon}"
                 />
                 <TextBox
                   Text="{Binding Filter, Mode=TwoWay}"
-                  PlaceholderText="Titre à rechercher…"
+                  PlaceholderText="{DynamicResource Text.310.Ellipsis}"
                 />
               </StackPanel>
             </Flyout>
@@ -451,7 +457,7 @@
           Classes="toolbar"
           Width="54"
           Click="ShowAbout"
-          ToolTip.Tip="À propos de yaDIS3"
+          ToolTip.Tip="{DynamicResource Text.138.App}"
         >
           <Image
             Source="avares://yaDIS3.Desktop/Assets/Icons/info_big.png"
@@ -461,7 +467,7 @@
           <SplitButton.Flyout>
             <MenuFlyout>
               <MenuItem
-                Header="À propos de yaDIS3"
+                Header="{DynamicResource Text.138.App}"
                 Click="ShowAbout"
               />
             </MenuFlyout>
@@ -484,7 +490,7 @@
         <ListBox.ContextMenu>
           <ContextMenu>
             <MenuItem
-              Header="Changer de titre…"
+              Header="{DynamicResource Text.62.Ellipsis}"
               Click="ShowTvdbSearch"
               IsEnabled="{Binding IsSeries}"
             />
@@ -580,7 +586,7 @@
               <Grid ColumnDefinitions="282,6,56,6,56">
                 <StackPanel>
                   <TextBlock
-                    Text="Titre :"
+                    Text="{DynamicResource Text.22.Colon}"
                     Classes="fieldLabel"
                   />
                   <TextBox
@@ -591,7 +597,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                   <TextBlock
-                    Text="Année :"
+                    Text="{DynamicResource Text.24.Colon}"
                     Classes="fieldLabel"
                   />
                   <TextBox
@@ -601,7 +607,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="4">
                   <TextBlock
-                    Text="Note :"
+                    Text="{DynamicResource Text.26.Colon}"
                     Classes="fieldLabel"
                   />
                   <TextBox
@@ -612,7 +618,7 @@
               </Grid>
               <StackPanel Grid.Row="1">
                 <TextBlock
-                  Text="Acteurs :"
+                  Text="{DynamicResource Text.45.Colon}"
                   Classes="fieldLabel"
                 />
                 <TextBox
@@ -622,7 +628,7 @@
               </StackPanel>
               <StackPanel Grid.Row="2">
                 <TextBlock
-                  Text="Genres :"
+                  Text="{DynamicResource Text.44.Colon}"
                   Classes="fieldLabel"
                 />
                 <Grid ColumnDefinitions="*,6,22">
@@ -636,7 +642,7 @@
                     Height="23"
                     MinHeight="23"
                     Padding="1"
-                    ToolTip.Tip="Choisir les genres"
+                    ToolTip.Tip="{DynamicResource Text.311}"
                   >
                     <Image
                       Source="avares://yaDIS3.Desktop/Assets/Icons/accept_database.png"
@@ -671,7 +677,7 @@
               </StackPanel>
               <StackPanel Grid.Row="3">
                 <TextBlock
-                  Text="Diffuseur :"
+                  Text="{DynamicResource Text.29.Colon}"
                   Classes="fieldLabel"
                 />
                 <TextBox
@@ -682,7 +688,7 @@
             </Grid>
             <Grid Grid.Column="2" RowDefinitions="Auto,149,*">
               <TextBlock
-                Text="Synopsis :"
+                Text="{DynamicResource Text.32.Colon}"
                 Classes="fieldLabel"
               />
               <TextBox
@@ -704,7 +710,10 @@
           >
             <Grid ColumnDefinitions="200,6,200">
               <StackPanel>
-                <TextBlock Text="Titre:" Classes="fieldLabel" />
+                <TextBlock
+                  Text="{DynamicResource Text.22.Colon}"
+                  Classes="fieldLabel"
+                />
                 <TextBox
                   Classes="legacyField"
                   Text="{Binding EditableCard?.Title, Mode=TwoWay}"
@@ -713,7 +722,7 @@
               </StackPanel>
               <StackPanel Grid.Column="2">
                 <TextBlock
-                  Text="Titre original:"
+                  Text="{DynamicResource Text.23.Colon}"
                   Classes="fieldLabel"
                 />
                 <TextBox
@@ -725,7 +734,7 @@
             <Grid Grid.Row="1" ColumnDefinitions="200,6,200">
               <StackPanel>
                 <TextBlock
-                  Text="Titre pour le tri:"
+                  Text="{DynamicResource Text.189.Colon}"
                   Classes="fieldLabel"
                 />
                 <TextBox
@@ -735,7 +744,7 @@
               </StackPanel>
               <StackPanel Grid.Column="2">
                 <TextBlock
-                  Text="Réalisateurs:"
+                  Text="{DynamicResource Text.46.Colon}"
                   Classes="fieldLabel"
                 />
                 <TextBox
@@ -745,7 +754,10 @@
               </StackPanel>
             </Grid>
             <StackPanel Grid.Row="2">
-              <TextBlock Text="Genres:" Classes="fieldLabel" />
+              <TextBlock
+                Text="{DynamicResource Text.44.Colon}"
+                Classes="fieldLabel"
+              />
               <Grid ColumnDefinitions="*,6,22">
                 <TextBox
                   Classes="legacyField"
@@ -757,7 +769,7 @@
                   Height="23"
                   MinHeight="23"
                   Padding="1"
-                  ToolTip.Tip="Choisir les genres"
+                  ToolTip.Tip="{DynamicResource Text.311}"
                 >
                   <Image
                     Source="avares://yaDIS3.Desktop/Assets/Icons/accept_database.png"
@@ -791,14 +803,20 @@
               </Grid>
             </StackPanel>
             <StackPanel Grid.Row="3">
-              <TextBlock Text="Studios:" Classes="fieldLabel" />
+              <TextBlock
+                Text="{DynamicResource Text.112.Colon}"
+                Classes="fieldLabel"
+              />
               <TextBox
                 Classes="legacyField"
                 Text="{Binding EditableCard?.Studios, Mode=TwoWay}"
               />
             </StackPanel>
             <StackPanel Grid.Row="4">
-              <TextBlock Text="Accroche:" Classes="fieldLabel" />
+              <TextBlock
+                Text="{DynamicResource Text.110.Colon}"
+                Classes="fieldLabel"
+              />
               <TextBox
                 Classes="legacyField"
                 Text="{Binding EditableCard?.Tagline, Mode=TwoWay}"
@@ -809,28 +827,40 @@
               ColumnDefinitions="56,6,56,6,56,6,88,8,88,*"
             >
               <StackPanel Grid.Column="0">
-                <TextBlock Text="Année:" Classes="fieldLabel" />
+                <TextBlock
+                  Text="{DynamicResource Text.24.Colon}"
+                  Classes="fieldLabel"
+                />
                 <TextBox
                   Classes="legacyField"
                   Text="{Binding EditableCard?.Year, Mode=TwoWay}"
                 />
               </StackPanel>
               <StackPanel Grid.Column="2">
-                <TextBlock Text="Durée:" Classes="fieldLabel" />
+                <TextBlock
+                  Text="{DynamicResource Text.25.Colon}"
+                  Classes="fieldLabel"
+                />
                 <TextBox
                   Classes="legacyField"
                   Text="{Binding EditableCard?.Runtime, Mode=TwoWay}"
                 />
               </StackPanel>
               <StackPanel Grid.Column="4">
-                <TextBlock Text="Note:" Classes="fieldLabel" />
+                <TextBlock
+                  Text="{DynamicResource Text.26.Colon}"
+                  Classes="fieldLabel"
+                />
                 <TextBox
                   Classes="legacyField"
                   Text="{Binding EditableCard?.Rating, Mode=TwoWay}"
                 />
               </StackPanel>
               <StackPanel Grid.Column="6">
-                <TextBlock Text="Pays:" Classes="fieldLabel" />
+                <TextBlock
+                  Text="{DynamicResource Text.48.Colon}"
+                  Classes="fieldLabel"
+                />
                 <TextBox
                   Classes="legacyField"
                   Text="{Binding EditableCard?.Countries, Mode=TwoWay}"
@@ -838,7 +868,7 @@
               </StackPanel>
               <StackPanel Grid.Column="8">
                 <TextBlock
-                  Text="Classification:"
+                  Text="{DynamicResource Text.79.Colon}"
                   Classes="fieldLabel"
                 />
                 <TextBox
@@ -848,7 +878,10 @@
               </StackPanel>
             </Grid>
             <StackPanel Grid.Column="2" Grid.Row="1">
-              <TextBlock Text="Acteurs:" Classes="fieldLabel" />
+              <TextBlock
+                Text="{DynamicResource Text.45.Colon}"
+                Classes="fieldLabel"
+              />
               <TextBox
                 Classes="legacyField"
                 Text="{Binding EditableCard?.Actors, Mode=TwoWay}"
@@ -859,7 +892,10 @@
               Grid.Row="2"
               Grid.RowSpan="3"
             >
-              <TextBlock Text="Synopsis:" Classes="fieldLabel" />
+              <TextBlock
+                Text="{DynamicResource Text.32.Colon}"
+                Classes="fieldLabel"
+              />
               <TextBox
                 Classes="legacyField"
                 Text="{Binding EditableCard?.Plot, Mode=TwoWay}"
@@ -874,7 +910,7 @@
         </Grid>
       </TabItem>
       <TabItem
-        Header="Média"
+        Header="{DynamicResource Text.16}"
         IsVisible="{Binding !IsSeries}"
         x:Name="MediaTab"
       >
@@ -884,10 +920,10 @@
           Spacing="12"
         >
           <StackPanel Width="220">
-            <TextBlock Text="Vidéo" />
+            <TextBlock Text="{DynamicResource Text.19}" />
             <Grid ColumnDefinitions="94,100" Height="36">
               <TextBlock
-                Text="Codec:"
+                Text="{DynamicResource Text.36.Colon}"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 Margin="0,0,6,0"
@@ -903,7 +939,7 @@
             </Grid>
             <Grid ColumnDefinitions="94,100" Height="36">
               <TextBlock
-                Text="Résolution:"
+                Text="{DynamicResource Text.37.Colon}"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 Margin="0,0,6,0"
@@ -919,7 +955,7 @@
             </Grid>
             <Grid ColumnDefinitions="94,100" Height="36">
               <TextBlock
-                Text="Images/s:"
+                Text="{DynamicResource Text.38.Colon}"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 Margin="0,0,6,0"
@@ -935,7 +971,7 @@
             </Grid>
             <Grid ColumnDefinitions="94,100" Height="36">
               <TextBlock
-                Text="Ratio:"
+                Text="{DynamicResource Text.39.Colon}"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 Margin="0,0,6,0"
@@ -951,7 +987,7 @@
             </Grid>
             <Grid ColumnDefinitions="94,100" Height="36">
               <TextBlock
-                Text="Format:"
+                Text="{DynamicResource Text.97.Colon}"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 Margin="0,0,6,0"
@@ -966,10 +1002,10 @@
             </Grid>
           </StackPanel>
           <StackPanel Width="220">
-            <TextBlock Text="Audio" />
+            <TextBlock Text="{DynamicResource Text.20}" />
             <Grid ColumnDefinitions="94,100" Height="36">
               <TextBlock
-                Text="Codec:"
+                Text="{DynamicResource Text.36.Colon}"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 Margin="0,0,6,0"
@@ -985,7 +1021,7 @@
             </Grid>
             <Grid ColumnDefinitions="94,100" Height="36">
               <TextBlock
-                Text="Canaux:"
+                Text="{DynamicResource Text.105.Colon}"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 Margin="0,0,6,0"
@@ -1000,15 +1036,24 @@
               />
             </Grid>
             <StackPanel>
-              <TextBlock Text="Langues:" Classes="fieldLabel" />
+              <TextBlock
+                Text="{DynamicResource Text.27.Colon}"
+                Classes="fieldLabel"
+              />
               <TextBox
                 Classes="legacyField"
                 Text="{Binding EditableCard?.AudioLanguages, Mode=TwoWay}"
               />
             </StackPanel>
-            <TextBlock Text="Sous-titres" Margin="0,12,0,0" />
+            <TextBlock
+              Text="{DynamicResource Text.28}"
+              Margin="0,12,0,0"
+            />
             <StackPanel>
-              <TextBlock Text="Langues:" Classes="fieldLabel" />
+              <TextBlock
+                Text="{DynamicResource Text.27.Colon}"
+                Classes="fieldLabel"
+              />
               <TextBox
                 Classes="legacyField"
                 Text="{Binding EditableCard?.SubtitleLanguages, Mode=TwoWay}"
@@ -1021,7 +1066,7 @@
             IsVisible="{Binding UseCases}"
           >
             <TextBlock
-              Text="Boîtier:"
+              Text="{DynamicResource Text.52.Colon}"
               VerticalAlignment="Center"
               HorizontalAlignment="Right"
               Margin="0,0,6,0"
@@ -1036,16 +1081,19 @@
           </Grid>
         </StackPanel>
       </TabItem>
-      <TabItem Header="Jaquette" IsVisible="{Binding !IsSeries}">
+      <TabItem
+        Header="{DynamicResource Text.17}"
+        IsVisible="{Binding !IsSeries}"
+      >
         <Grid RowDefinitions="Auto,*" Margin="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
             <Button
-              Content="Importer une image…"
+              Content="{DynamicResource Text.83.Ellipsis}"
               Click="ImportPoster"
               IsEnabled="{Binding HasCard}"
             />
             <TextBlock
-              Text="La nouvelle image sera conservée à l’enregistrement."
+              Text="{DynamicResource Text.312}"
               Classes="muted"
               VerticalAlignment="Center"
             />
@@ -1059,16 +1107,19 @@
           />
         </Grid>
       </TabItem>
-      <TabItem Header="Bannière" IsVisible="{Binding IsSeries}">
+      <TabItem
+        Header="{DynamicResource Text.14}"
+        IsVisible="{Binding IsSeries}"
+      >
         <Grid RowDefinitions="Auto,*" Margin="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
             <Button
-              Content="Importer une image…"
+              Content="{DynamicResource Text.83.Ellipsis}"
               Click="ImportBanner"
               IsEnabled="{Binding HasCard}"
             />
             <TextBlock
-              Text="La nouvelle image sera conservée à l’enregistrement."
+              Text="{DynamicResource Text.312}"
               Classes="muted"
               VerticalAlignment="Center"
             />
@@ -1082,16 +1133,16 @@
           />
         </Grid>
       </TabItem>
-      <TabItem Header="Fanart">
+      <TabItem Header="{DynamicResource Text.18}">
         <Grid RowDefinitions="Auto,*" Margin="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
             <Button
-              Content="Importer une image…"
+              Content="{DynamicResource Text.83.Ellipsis}"
               Click="ImportFanart"
               IsEnabled="{Binding HasCard}"
             />
             <TextBlock
-              Text="La nouvelle image sera conservée à l’enregistrement."
+              Text="{DynamicResource Text.312}"
               Classes="muted"
               VerticalAlignment="Center"
             />
@@ -1105,7 +1156,10 @@
           />
         </Grid>
       </TabItem>
-      <TabItem Header="Épisodes" IsVisible="{Binding IsSeries}">
+      <TabItem
+        Header="{DynamicResource Text.302}"
+        IsVisible="{Binding IsSeries}"
+      >
         <Grid Margin="8" RowDefinitions="Auto,*" RowSpacing="6">
           <Grid
             ColumnDefinitions="Auto,*,Auto"
@@ -1142,12 +1196,12 @@
               Spacing="8"
             >
               <CheckBox
-                Content="Aperçu de l’épisode"
+                Content="{DynamicResource Text.313}"
                 IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}"
                 IsEnabled="{Binding HasEpisode}"
               />
               <Button
-                Content="Analyser les vidéos…"
+                Content="{DynamicResource Text.314.Ellipsis}"
                 Click="ScanEpisodes"
               />
             </StackPanel>
@@ -1159,7 +1213,7 @@
           >
             <StackPanel Spacing="3">
               <TextBlock
-                Text="Titre de l’épisode :"
+                Text="{DynamicResource Text.315.Colon}"
                 Classes="fieldLabel"
               />
               <TextBox
@@ -1167,7 +1221,7 @@
                 Text="{Binding SelectedEpisode?.Title, Mode=TwoWay}"
               />
               <TextBlock
-                Text="Diffusion (AAAA-MM-JJ) :"
+                Text="{DynamicResource Text.316.Colon}"
                 Classes="fieldLabel"
               />
               <Grid ColumnDefinitions="*,65" ColumnSpacing="6">
@@ -1177,11 +1231,11 @@
                 <TextBox
                   Grid.Column="1"
                   Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}"
-                  PlaceholderText="Note"
+                  PlaceholderText="{DynamicResource Text.26}"
                 />
               </Grid>
               <TextBlock
-                Text="Réalisation :"
+                Text="{DynamicResource Text.46.Colon}"
                 Classes="fieldLabel"
               />
               <TextBox
@@ -1198,7 +1252,7 @@
               RowSpacing="3"
             >
               <TextBlock
-                Text="Synopsis :"
+                Text="{DynamicResource Text.32.Colon}"
                 Classes="fieldLabel"
               />
               <TextBox
@@ -1216,7 +1270,7 @@
                 Stretch="Uniform"
               />
               <Button
-                Content="Choisir l’image…"
+                Content="{DynamicResource Text.83.Ellipsis}"
                 Grid.Row="1"
                 Click="ImportEpisodeImage"
                 Margin="0,4,0,0"
@@ -1226,7 +1280,7 @@
         </Grid>
       </TabItem>
       <TabItem
-        Header="Recherche TVDB"
+        Header="{DynamicResource Text.317}"
         IsVisible="False"
         x:Name="TvdbSearchTab"
       >
@@ -1237,7 +1291,7 @@
         >
           <StackPanel Orientation="Horizontal" Spacing="12">
             <Button
-              Content="Configuration TVDB"
+              Content="{DynamicResource Text.307}"
               Click="ConfigureTvdb"
             />
             <TextBlock
@@ -1253,11 +1307,11 @@
           >
             <TextBox
               Text="{Binding Query, Mode=TwoWay}"
-              PlaceholderText="Titre à rechercher…"
+              PlaceholderText="{DynamicResource Text.310.Ellipsis}"
             />
             <Button
               Grid.Column="1"
-              Content="Rechercher"
+              Content="{DynamicResource Text.377}"
               Command="{Binding SearchCommand}"
             />
           </Grid>
@@ -1290,7 +1344,7 @@
             ColumnSpacing="12"
           >
             <TextBlock
-              Text="Ordre des épisodes"
+              Text="{DynamicResource Text.301}"
               VerticalAlignment="Center"
             />
             <ComboBox
@@ -1308,21 +1362,21 @@
           </Grid>
           <Button
             Grid.Row="4"
-            Content="Appliquer les informations à la série"
+            Content="{DynamicResource Text.318}"
             Command="{Binding ApplySeriesCommand}"
             HorizontalAlignment="Left"
           />
         </Grid>
       </TabItem>
       <TabItem
-        Header="Export Dune"
+        Header="{DynamicResource Text.319}"
         IsVisible="False"
         x:Name="DuneSettingsTab"
       >
         <ScrollViewer>
           <StackPanel Margin="10,16" Spacing="12">
             <TextBlock
-              Text="Template et rendu"
+              Text="{DynamicResource Text.320}"
               Classes="section"
             />
             <Grid
@@ -1342,42 +1396,37 @@
               </ComboBox>
               <Button
                 Grid.Column="1"
-                Content="Charger un template…"
+                Content="{DynamicResource Text.321.Ellipsis}"
                 Click="ChooseTemplate"
-              />
-              <ComboBox
-                Grid.Column="2"
-                ItemsSource="{Binding TemplateLanguages}"
-                SelectedItem="{Binding TemplateLanguage, Mode=TwoWay}"
               />
             </Grid>
             <StackPanel Orientation="Horizontal" Spacing="16">
               <CheckBox
-                Content="Fonds AAI (sinon JPEG)"
+                Content="{DynamicResource Text.322}"
                 IsChecked="{Binding AaiBackgrounds, Mode=TwoWay}"
               />
               <CheckBox
-                Content="Boîtiers des films"
+                Content="{DynamicResource Text.99}"
                 IsChecked="{Binding UseCases, Mode=TwoWay}"
               />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="12">
               <Button
-                Content="Traiter la fiche sélectionnée"
+                Content="{DynamicResource Text.11}"
                 Command="{Binding ProcessCommand}"
               />
               <CheckBox
-                Content="Aperçu de l’épisode sélectionné"
+                Content="{DynamicResource Text.323}"
                 IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}"
                 IsEnabled="{Binding HasEpisode}"
               />
             </StackPanel>
             <TextBlock
-              Text="Chemins de lecture du Dune"
+              Text="{DynamicResource Text.324}"
               Classes="section"
             />
             <TextBlock
-              Text="Une correspondance par ligne : racine locale =&gt; adresse Dune. Si aucune ne correspond, le chemin Dune enregistré dans la fiche est utilisé."
+              Text="{DynamicResource Text.325}"
               TextWrapping="Wrap"
               Classes="muted"
             />
@@ -1392,21 +1441,21 @@
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
               <TextBox
                 Text="{Binding ExportParentPath, Mode=TwoWay}"
-                PlaceholderText="Dossier de destination"
+                PlaceholderText="{DynamicResource Text.326}"
               />
               <Button
                 Grid.Column="1"
-                Content="Parcourir…"
+                Content="{DynamicResource Text.327.Ellipsis}"
                 Click="ChooseExportDestination"
               />
             </Grid>
             <Button
-              Content="Exporter toute la bibliothèque vers Dune"
+              Content="{DynamicResource Text.328}"
               Command="{Binding ExportCommand}"
               HorizontalAlignment="Left"
             />
             <TextBlock
-              Text="L’export utilise le dossier de destination choisi. Sa version précédente est conservée avec le suffixe .previous."
+              Text="{DynamicResource Text.329}"
               TextWrapping="Wrap"
               Classes="muted"
             />
@@ -1440,7 +1489,7 @@
         ToolTip.Tip="{Binding Status}"
       />
       <Button
-        Content="Annuler"
+        Content="{DynamicResource Text.90}"
         Grid.Column="3"
         Command="{Binding CancelCommand}"
         IsVisible="{Binding IsBusy}"

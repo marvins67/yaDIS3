@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using System.Xml.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -5,8 +7,10 @@ using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.Logging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Xunit;
 using YaDIS3.Core;
+using YaDIS3.Desktop.Localization;
 using YaDIS3.Desktop.ViewModels;
 using YaDIS3.Desktop.Views;
 
@@ -71,6 +75,8 @@ public sealed class SelectionBindingTests
         try
         {
             Dispatcher.UIThread.RunJobs();
+            VerifyMissingXmlResource();
+            VerifyXmlResources(window);
             VerifyFirstLaunch(window, model);
             VerifyMainLayout(window);
             VerifyStateMenu(window, model, workspace.Cards[0]);
@@ -121,6 +127,80 @@ public sealed class SelectionBindingTests
         finally
         {
             window.Close();
+        }
+    }
+
+    private static void VerifyMissingXmlResource()
+    {
+        string folder = Path.Combine(
+            Path.GetTempPath(),
+            "yadis3-missing-text-" + Guid.NewGuid()
+        );
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(folder, "fr.xml"),
+                "<strings><string id='0'>fr</string><string id='1'>Français</string></strings>",
+                Encoding.UTF8
+            );
+            LegacyLanguageCatalog catalog =
+                new LegacyLanguageLoader(
+                    new ExportFileSystem()
+                ).Load(folder, "fr", new CultureInfo("fr-FR"));
+            ResourceDictionary resources = new();
+            LanguageResources.Apply(resources, catalog);
+            Assert.Equal(
+                "<label not found>",
+                resources["Text.10"]
+            );
+            Assert.Equal(
+                "<label not found>:",
+                resources["Text.22.Colon"]
+            );
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    private static void VerifyXmlResources(MainWindow window)
+    {
+        LegacyLanguageCatalog english =
+            LegacyLanguageCatalog.Load("en");
+        LegacyLanguageCatalog french =
+            LegacyLanguageCatalog.Load("fr");
+        try
+        {
+            LanguageResources.Apply(
+                Application.Current!.Resources,
+                english
+            );
+            Dispatcher.UIThread.RunJobs();
+            Button configure = window.FindControl<Button>(
+                "ConfigureButton"
+            )!;
+            Assert.Equal(
+                english["10"],
+                configure
+                    .GetVisualDescendants()
+                    .OfType<TextBlock>()
+                    .Single(item => item.Text == english["10"])
+                    .Text
+            );
+            Assert.Equal(
+                english["31"],
+                Application.Current.Resources["Text.31"]
+            );
+        }
+        finally
+        {
+            LanguageResources.Apply(
+                Application.Current!.Resources,
+                french
+            );
+            Dispatcher.UIThread.RunJobs();
         }
     }
 

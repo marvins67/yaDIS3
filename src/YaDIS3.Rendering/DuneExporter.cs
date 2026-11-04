@@ -17,9 +17,13 @@ public sealed partial class DuneExporter(
     IExportFileSystem? fileSystem = null,
     LegacyCatalogOptions? catalogOptions = null,
     TimeProvider? timeProvider = null,
-    ILogger<DuneExporter>? logger = null
+    ILogger<DuneExporter>? logger = null,
+    LegacyLanguageCatalog? texts = null
 )
 {
+    private readonly LegacyLanguageCatalog _texts =
+        texts ?? LegacyLanguageCatalog.Load(options.Language);
+
     private readonly ILogger<DuneExporter> _logger =
         logger ?? NullLogger<DuneExporter>.Instance;
     private readonly IExportFileSystem _fileSystem =
@@ -394,7 +398,8 @@ public sealed partial class DuneExporter(
             options,
             _timeProvider,
             _fileSystem,
-            _catalogOptions
+            _catalogOptions,
+            _texts
         ).Write(renderer, media, stage, cancellationToken);
     }
 
@@ -588,7 +593,9 @@ public sealed partial class DuneExporter(
         {
             cancellationToken.ThrowIfCancellationRequested();
             progress?.Report(
-                "Traitement : " + SafeCaption(plan.Media.Title)
+                _texts["11"]
+                    + " : "
+                    + SafeCaption(plan.Media.Title)
             );
             string output = Path.Combine(
                 stage,

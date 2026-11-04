@@ -11,7 +11,8 @@ namespace YaDIS3.Core;
 /// </summary>
 public sealed partial class LegacyDunePathResolver(
     IDunePathEnvironment environment,
-    ILogger? logger = null
+    ILogger? logger = null,
+    LegacyLanguageCatalog? texts = null
 )
 {
     private readonly IDunePathEnvironment _environment =
@@ -21,21 +22,18 @@ public sealed partial class LegacyDunePathResolver(
     private readonly ILogger _logger =
         logger ?? NullLogger.Instance;
 
-    /// <summary>
-    /// Libellé 31 du fichier languages/fr.xml de yaDIS2.
-    /// La boîte française utilise cette valeur par défaut.
-    /// </summary>
-    public const string MissingLabel =
-        "Veuillez saisir le chemin au format Dune";
+    private readonly LegacyLanguageCatalog _texts =
+        texts ?? LegacyLanguageCatalog.Load();
 
     /// <summary>Déduit le chemin de lecture selon yaDIS2.</summary>
     public async Task<string> ResolveAsync(
         string folder,
-        string unavailableLabel = MissingLabel,
+        string? unavailableLabel = null,
         CancellationToken cancellationToken = default
     )
     {
         ArgumentNullException.ThrowIfNull(folder);
+        unavailableLabel ??= _texts.GetString("31");
         try
         {
             if (folder.StartsWith('/'))

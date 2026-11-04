@@ -11,6 +11,9 @@ namespace YaDIS3.Desktop.Views;
 /// </summary>
 public sealed partial class SourceFolderWindow : Window
 {
+    private SourceFolderViewModel Model =>
+        (SourceFolderViewModel)DataContext!;
+
     /// <summary>
     /// Charge la boîte d'ajout ou d'édition.
     /// </summary>
@@ -31,7 +34,7 @@ public sealed partial class SourceFolderWindow : Window
             await StorageProvider.OpenFolderPickerAsync(
                 new()
                 {
-                    Title = "Dossier contenant les médias",
+                    Title = Model.Texts.GetString("353"),
                     AllowMultiple = false,
                 }
             );

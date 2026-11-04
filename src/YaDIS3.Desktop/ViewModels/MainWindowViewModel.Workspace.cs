@@ -168,8 +168,7 @@ public sealed partial class MainWindowViewModel
             ).SaveAsync(card, OperationToken);
         }
 
-        Status =
-            "Modifications enregistrées. Les copies précédentes portent le suffixe .yadis3-modern.bak.";
+        Status = Texts.GetString("351");
         RefreshImages();
         NotifyAll();
     }
@@ -183,7 +182,7 @@ public sealed partial class MainWindowViewModel
         Workspace current =
             _workspace
             ?? throw new InvalidOperationException(
-                "Ouvrez ou créez d'abord une bibliothèque."
+                Texts.GetString("352")
             );
         IReadOnlyList<VideoEpisode> detected = await Task.Run(
             () =>
@@ -208,7 +207,7 @@ public sealed partial class MainWindowViewModel
         Filter = "";
         SelectedCard = card;
         Status =
-            $"Série manuelle créée : {card.Episodes.Count} épisode(s).";
+            Texts.Format("372", card.Episodes.Count);
     }
 
     /// <summary>
@@ -220,7 +219,7 @@ public sealed partial class MainWindowViewModel
         MediaCard card =
             SelectedCard
             ?? throw new InvalidOperationException(
-                "Sélectionnez une série."
+                Texts.GetString("347")
             );
         IReadOnlyList<VideoEpisode> found = await Task.Run(() =>
             EpisodeScanner.Detect(directory)
@@ -230,6 +229,6 @@ public sealed partial class MainWindowViewModel
             card.Episodes.Count > 0 ? card.Episodes[0] : null;
         Notify(nameof(SelectedCard));
         Status =
-            $"{card.Episodes.Count} épisode(s). Les informations existantes sont conservées ; enregistrez les changements.";
+            Texts.Format("373", card.Episodes.Count);
     }
 }

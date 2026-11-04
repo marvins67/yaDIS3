@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using YaDIS3.Core;
+using YaDIS3.Desktop.Localization;
 using YaDIS3.Rendering;
 
 namespace YaDIS3.Desktop.ViewModels;
@@ -18,6 +19,11 @@ public sealed partial class ConfigurationViewModel
         IDisposable
 {
     private DuneConfiguration _settings;
+    private readonly IApplicationRestart _restart;
+
+    /// <summary>Langue active, conservée jusqu'au redémarrage.</summary>
+    public LegacyLanguageCatalog Texts { get; }
+
     private readonly LegacyDunePathResolver _dunePaths;
     private XDocument _groups = new(new XElement("groups"));
     private readonly bool _hasWorkspace;
@@ -54,17 +60,39 @@ public sealed partial class ConfigurationViewModel
         > save,
         ILogger<ConfigurationViewModel>? logger = null,
         DuneConfigurationStore? configurationStore = null,
-        LegacyDunePathResolver? dunePaths = null
+        LegacyDunePathResolver? dunePaths = null,
+        LegacyLanguageCatalog? texts = null,
+        IApplicationRestart? restart = null
     )
     {
+        Texts = texts ?? LegacyLanguageCatalog.Load();
+        RecentSorts =
+        [
+            Texts.GetString("165"),
+            Texts.GetString("166"),
+        ];
+        ShortcutTypes =
+        [
+            Texts.GetString("41"),
+            Texts.GetString("172"),
+            Texts.GetString("173"),
+        ];
+        _restart = restart ?? new DesktopApplicationRestart();
         _configurationStore = configurationStore ?? new();
         _logger =
             logger
             ?? NullLogger<ConfigurationViewModel>.Instance;
         _dunePaths =
             dunePaths
-            ?? new(new SystemDunePathEnvironment(), _logger);
-        _settings = snapshot.Settings;
+            ?? new(
+                new SystemDunePathEnvironment(),
+                _logger,
+                Texts
+            );
+        _settings = snapshot.Settings with
+        {
+            Language = Texts.Current.Code,
+        };
         _workspace = workspace;
         _hasWorkspace = workspace.Length > 0;
         _save = save;
@@ -91,8 +119,28 @@ public sealed partial class ConfigurationViewModel
     /// <summary>
     /// Langues déjà prises en charge pour le rendu.
     /// </summary>
-    public IReadOnlyList<string> Languages { get; } =
-    ["fr", "en"];
+    public IReadOnlyList<LanguageDefinition> Languages =>
+        Texts.Languages;
+
+    /// <summary>Choix provisoire soumis à confirmation par la fenêtre.</summary>
+    public LanguageDefinition? SelectedLanguage
+    {
+        get =>
+            Languages.FirstOrDefault(item =>
+                item.Code == Language
+            );
+        set
+        {
+            if (value is not null)
+            {
+                Language = value.Code;
+            }
+        }
+    }
+
+    /// <summary>Le choix initial ne déclenche pas de demande de redémarrage.</summary>
+    public bool HasLanguageChange =>
+        Language != Texts.Current.Code;
 
     /// <summary>
     /// Le périmètre de ce portage est limité à Dune.
@@ -131,8 +179,7 @@ public sealed partial class ConfigurationViewModel
     /// <summary>
     /// Options historiques du tri des nouveautés.
     /// </summary>
-    public IReadOnlyList<string> RecentSorts { get; } =
-    ["Alphabétique", "Date d'ajout"];
+    public IReadOnlyList<string> RecentSorts { get; }
 
     /// <summary>
     /// Retrait du dossier sélectionné dans la copie de travail.
@@ -225,7 +272,17 @@ public sealed partial class ConfigurationViewModel
     public string TemplateDescription =>
         SelectedTemplate is null
             ? ""
-            : $"Auteur : {SelectedTemplate.Root.Attribute("author")?.Value}\nVersion : {SelectedTemplate.Root.Attribute("version")?.Value}";
+            : Texts["93"]
+                + " : "
+                + SelectedTemplate
+                    .Root.Attribute("author")
+                    ?.Value
+                + "\n"
+                + Texts["144"]
+                + " : "
+                + SelectedTemplate
+                    .Root.Attribute("version")
+                    ?.Value;
 
     /// <summary>
     /// Thème proposé sans changer immédiatement le rendu actif.
@@ -267,7 +324,7 @@ public sealed partial class ConfigurationViewModel
         catch (Exception exception)
             when (exception is ArgumentException or IOException)
         {
-            Report("aperçu du thème", exception);
+            Report(Texts.GetString("350"), exception);
         }
     }
 
@@ -289,7 +346,10 @@ public sealed partial class ConfigurationViewModel
 
     private void LoadDraft(ConfigurationSnapshot snapshot)
     {
-        _settings = snapshot.Settings;
+        _settings = snapshot.Settings with
+        {
+            Language = Texts.Current.Code,
+        };
         _groups = new(snapshot.Groups);
         Folders.Clear();
         Selections.Clear();
@@ -297,7 +357,12 @@ public sealed partial class ConfigurationViewModel
         Categories.Clear();
         foreach (MediaSourceFolder folder in snapshot.Folders)
         {
-            Folders.Add(new(folder) { BasicMode = BasicMode });
+            Folders.Add(
+                new(folder, texts: Texts)
+                {
+                    BasicMode = BasicMode,
+                }
+            );
         }
         LoadSelections();
         foreach (DuneShortcut shortcut in snapshot.Shortcuts)
@@ -338,15 +403,15 @@ public sealed partial class ConfigurationViewModel
     {
         string[] names =
         [
-            "Alphabet",
-            "Genres",
-            "Acteurs",
-            "Réalisateurs",
-            "Durées",
-            "Pays",
-            "Années",
-            "Notes",
-            "Formats",
+            Texts.GetString("43"),
+            Texts.GetString("44"),
+            Texts.GetString("45"),
+            Texts.GetString("46"),
+            Texts.GetString("47"),
+            Texts.GetString("48"),
+            Texts.GetString("49"),
+            Texts.GetString("50"),
+            Texts.GetString("51"),
         ];
         foreach (string name in names)
         {
@@ -413,7 +478,8 @@ public sealed partial class ConfigurationViewModel
     /// <summary>Prépare un ajout ou une édition sans modifier le dossier existant.</summary>
     public SourceFolderViewModel CreateFolderDraft(
         MediaSourceFolder folder
-    ) => new(folder, _dunePaths) { BasicMode = BasicMode };
+    ) =>
+        new(folder, _dunePaths, Texts) { BasicMode = BasicMode };
 
     /// <summary>
     /// Valide l'ajout ou l'édition dans la copie de travail.

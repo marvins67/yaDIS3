@@ -12,7 +12,8 @@ public sealed partial class MainWindowViewModel
     /// En mode basique, Traiter écrit directement auprès des
     /// vidéos.
     /// </summary>
-    public bool CanExport => !_configuration.BasicMode
+    public bool CanExport =>
+        !_configuration.BasicMode
         && !string.IsNullOrEmpty(ExportParentPath);
 
     /// <summary>
@@ -46,7 +47,9 @@ public sealed partial class MainWindowViewModel
             genres,
             ApplyConfigurationAsync,
             _configurationLogger,
-            _configurationStore
+            _configurationStore,
+            texts: Texts,
+            restart: _restart
         );
     }
 
@@ -55,7 +58,7 @@ public sealed partial class MainWindowViewModel
         {
             Template = SelectedTemplate?.Name ?? "Origins",
             TemplatePath = SelectedTemplate?.Directory ?? "",
-            Language = TemplateLanguage,
+            Language = Texts.Current.Code,
             Aai = AaiBackgrounds,
             Cases = UseCases,
             Destination = ExportParentPath,

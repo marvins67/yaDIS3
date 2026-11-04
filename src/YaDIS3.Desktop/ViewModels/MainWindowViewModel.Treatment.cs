@@ -59,7 +59,7 @@ public sealed partial class MainWindowViewModel
         Workspace workspace =
             _workspace
             ?? throw new InvalidOperationException(
-                "Ouvrez une bibliothèque."
+                Texts.GetString("340")
             );
         MediaCard[] cards =
             TreatmentSelection.Count > 0
@@ -84,7 +84,8 @@ public sealed partial class MainWindowViewModel
         MediaTreatment treatment = new(
             _repository,
             preparation,
-            TimeProvider.System
+            TimeProvider.System,
+            Texts
         );
         var progress = new Progress<string>(message =>
             Status = message
@@ -147,7 +148,7 @@ public sealed partial class MainWindowViewModel
                 );
             }
         }
-        return $"Traitées : {completed}. En attente ou manquantes : {skipped}."
+        return Texts.Format("376", completed, skipped)
             + (
                 errors.Count == 0
                     ? ""

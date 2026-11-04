@@ -6,6 +6,7 @@ using Avalonia.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using YaDIS3.Core;
+using YaDIS3.Desktop.Localization;
 
 namespace YaDIS3.Desktop.ViewModels;
 
@@ -17,6 +18,10 @@ public sealed partial class MainWindowViewModel
         IDisposable
 {
     private readonly IWorkspaceRepository _repository;
+    private readonly IApplicationRestart _restart;
+
+    /// <summary>Catalogue chargé pour la durée de ce processus.</summary>
+    public LegacyLanguageCatalog Texts { get; }
     private readonly ImageImporter _importer;
     private readonly HttpClient _http;
     private readonly DuneConfigurationStore _configurationStore;
@@ -51,7 +56,7 @@ public sealed partial class MainWindowViewModel
 
     private string _query = "";
 
-    private string _credentials = "TVDB non configuré";
+    private string _credentials = "";
 
     private string _status = "";
 
@@ -120,7 +125,7 @@ public sealed partial class MainWindowViewModel
     /// absence.
     /// </summary>
     public string WorkspacePath =>
-        _workspace?.Directory ?? "Aucune bibliothèque ouverte";
+        _workspace?.Directory ?? Texts.GetString("336");
 
     /// <summary>
     /// Indique si une fiche chargée contient des modifications
@@ -150,22 +155,21 @@ public sealed partial class MainWindowViewModel
     /// la barre d'état.
     /// </summary>
     public string CountLabel =>
-        $"{Cards.Count} fiche(s) · {Cards.Count(cardValue => cardValue.IsDirty)} modifiée(s)";
+        Texts.Format("370", Cards.Count, Cards.Count(cardValue => cardValue.IsDirty));
 
     /// <summary>
     /// Description des fonctionnalités disponibles dans cette
     /// version.
     /// </summary>
-    public string MigrationNote { get; } =
-        "Édition, rendu des templates et export Dune disponibles. Choisissez un template puis Traiter, ou exportez la bibliothèque depuis l’onglet Export Dune.";
+    public string MigrationNote => Texts.GetString("337");
 
     /// <summary>
     /// Position de l'épisode sélectionné dans la série.
     /// </summary>
     public string EpisodePosition =>
         SelectedCard is null || SelectedEpisode is null
-            ? "Aucun épisode — analysez un dossier de vidéos."
-            : $"Épisode {SelectedCard.Episodes.IndexOf(SelectedEpisode) + 1} / {SelectedCard.Episodes.Count}";
+            ? Texts.GetString("338")
+            : Texts.Format("371", SelectedCard.Episodes.IndexOf(SelectedEpisode) + 1, SelectedCard.Episodes.Count);
 
     /// <summary>
     /// Dernier état d'opération affiché dans la fenêtre.
@@ -369,7 +373,9 @@ public sealed partial class MainWindowViewModel
             >(),
             services.GetRequiredService<
                 ILogger<ConfigurationViewModel>
-            >()
+            >(),
+            services.GetRequiredService<LegacyLanguageCatalog>(),
+            services.GetRequiredService<IApplicationRestart>()
         )
     {
         _ownedServices = services;
@@ -387,7 +393,9 @@ public sealed partial class MainWindowViewModel
         DuneConfigurationService configurationService,
         SourceFolderScanner sourceScanner,
         ILogger<MainWindowViewModel> logger,
-        ILogger<ConfigurationViewModel> configurationLogger
+        ILogger<ConfigurationViewModel> configurationLogger,
+        LegacyLanguageCatalog? texts = null,
+        IApplicationRestart? restart = null
     )
     {
         ArgumentNullException.ThrowIfNull(repository);
@@ -398,6 +406,14 @@ public sealed partial class MainWindowViewModel
         ArgumentNullException.ThrowIfNull(sourceScanner);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(configurationLogger);
+        Texts = texts ?? LegacyLanguageCatalog.Load();
+        MediaFilters = [
+            Texts.GetString("333"),
+            Texts.GetString("63"),
+            Texts.GetString("64"),
+        ];
+
+        _restart = restart ?? new DesktopApplicationRestart();
         _repository = repository;
         _importer = importer;
         _http = clients.CreateClient(
@@ -418,6 +434,8 @@ public sealed partial class MainWindowViewModel
             SelectMediaAsync(2)
         );
         StateFilters = CreateStateFilters();
+        _stateFilterLabel = StateFilters[0].Label;
+        _credentials = Texts.GetString("300");
         CycleStateFilterCommand = new UiCommand(
             CycleStateFilterAsync
         );
@@ -459,7 +477,7 @@ public sealed partial class MainWindowViewModel
         }
         catch (OperationCanceledException)
         {
-            Status = "Opération annulée.";
+            Status = Texts.GetString("339");
         }
         // Présenter l'erreur à l'utilisateur laisse l'éditeur et ses brouillons ouverts.
         catch (Exception exception)

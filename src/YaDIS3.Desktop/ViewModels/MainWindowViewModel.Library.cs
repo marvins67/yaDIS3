@@ -22,8 +22,7 @@ public sealed partial class MainWindowViewModel
     /// <summary>
     /// Catégories de médias disponibles.
     /// </summary>
-    public IReadOnlyList<string> MediaFilters { get; } =
-    ["Films et séries", "Films", "Séries TV"];
+    public IReadOnlyList<string> MediaFilters { get; }
 
     /// <summary>
     /// Catégorie de médias sélectionnée.
@@ -88,14 +87,14 @@ public sealed partial class MainWindowViewModel
     /// </summary>
     public string PreviewHint =>
         HasCard
-            ? "Cliquez sur Traiter pour créer l’aperçu de cette fiche."
-            : "Ouvrez une bibliothèque et sélectionnez un film ou une série.";
+            ? Texts.GetString("334")
+            : Texts.GetString("335");
 
     /// <summary>
     /// Libellé de l'onglet d'informations du média sélectionné.
     /// </summary>
     public string MediaTabTitle =>
-        IsSeries ? "Série TV" : "Film";
+        IsSeries ? Texts.GetString("21") : Texts.GetString("15");
 
     /// <summary>
     /// Nombre de fiches visibles et chargées.
@@ -104,7 +103,11 @@ public sealed partial class MainWindowViewModel
         VisibleCards.Count == 0
             ? ""
             : $"{VisibleCards.Count} "
-                + (IsSeriesFilter ? "Séries TV" : "Films");
+                + (
+                    IsSeriesFilter
+                        ? Texts.GetString("64")
+                        : Texts.GetString("63")
+                );
 
     /// <summary>
     /// Noms des acteurs conservés dans les métadonnées
@@ -119,7 +122,9 @@ public sealed partial class MainWindowViewModel
 
     /// <summary>Libellé du sélecteur de type historique.</summary>
     public string MediaFilterLabel =>
-        IsSeriesFilter ? "Séries TV" : "Films";
+        IsSeriesFilter
+            ? Texts.GetString("64")
+            : Texts.GetString("63");
 
     /// <summary>Alterner films et séries par le clic principal.</summary>
     public ICommand ToggleMediaFilterCommand { get; }

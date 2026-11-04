@@ -6,19 +6,41 @@ namespace YaDIS3.Desktop.ViewModels;
 /// Copie éditable d'un dossier, validée avant insertion dans la
 /// liste.
 /// </summary>
-public sealed class SourceFolderViewModel(
-    MediaSourceFolder folder,
-    LegacyDunePathResolver? dunePaths = null
-) : ObservableViewModel
+public sealed class SourceFolderViewModel : ObservableViewModel
 {
-    private readonly LegacyDunePathResolver _dunePaths =
-        dunePaths ?? new(new SystemDunePathEnvironment());
+    private readonly LegacyDunePathResolver _dunePaths;
+    private readonly MediaSourceFolder _folder;
 
-    private string _path = folder.Path;
-    private string _dunePath = folder.DunePath;
-    private int _type = folder.Type;
+    /// <summary>Libellés du catalogue actif.</summary>
+    public LegacyLanguageCatalog Texts { get; }
+
+    private string _path;
+    private string _dunePath;
+    private int _type;
     private bool _basicMode;
     private bool _resolving;
+
+    /// <summary>Prépare les listes une seule fois pour conserver la sélection.</summary>
+    public SourceFolderViewModel(
+        MediaSourceFolder folder,
+        LegacyDunePathResolver? dunePaths = null,
+        LegacyLanguageCatalog? texts = null
+    )
+    {
+        ArgumentNullException.ThrowIfNull(folder);
+        _folder = folder;
+        Texts = texts ?? LegacyLanguageCatalog.Load();
+        _dunePaths =
+            dunePaths
+            ?? new(
+                new SystemDunePathEnvironment(),
+                texts: Texts
+            );
+        _path = folder.Path;
+        _dunePath = folder.DunePath;
+        _type = folder.Type;
+        Types = [Texts["63"], Texts["64"]];
+    }
 
     /// <summary>Empêche une seconde sélection pendant la résolution réseau.</summary>
     public bool IsResolving => _resolving;
@@ -91,7 +113,10 @@ public sealed class SourceFolderViewModel(
     /// <summary>
     /// Type affiché dans la liste des dossiers.
     /// </summary>
-    public string TypeLabel => Type == 0 ? "Films" : "Séries TV";
+    public string TypeLabel =>
+        Type == 0
+            ? Texts.GetString("63")
+            : Texts.GetString("64");
 
     /// <summary>Exemples proposés dans AddFolderForm.</summary>
     public IReadOnlyList<string> DunePathExamples { get; } =
@@ -105,8 +130,7 @@ public sealed class SourceFolderViewModel(
     /// <summary>
     /// Libellés du sélecteur de type.
     /// </summary>
-    public IReadOnlyList<string> Types { get; } =
-    ["Films", "Séries TV"];
+    public IReadOnlyList<string> Types { get; }
 
     /// <summary>
     /// Le mode basique ne demande pas de chemin réseau.
@@ -133,7 +157,7 @@ public sealed class SourceFolderViewModel(
     /// Conserve les extensions XML du dossier original.
     /// </summary>
     public MediaSourceFolder Snapshot() =>
-        folder with
+        _folder with
         {
             Path = Path,
             DunePath = DunePath,

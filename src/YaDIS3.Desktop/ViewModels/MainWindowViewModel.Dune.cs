@@ -14,8 +14,6 @@ public sealed partial class MainWindowViewModel
 {
     private DuneTemplate? _selectedTemplate;
 
-    private string _templateLanguage = "fr";
-
     private string _pathMappings = "";
 
     private string _exportParentPath = "";
@@ -35,12 +33,6 @@ public sealed partial class MainWindowViewModel
     /// </summary>
     public ObservableCollection<DuneTemplate> Templates { get; } =
     [];
-
-    /// <summary>
-    /// Langues de rendu prises en charge.
-    /// </summary>
-    public IReadOnlyList<string> TemplateLanguages { get; } =
-    ["fr", "en"];
 
     /// <summary>
     /// Commande de traitement de la fiche sélectionnée.
@@ -73,15 +65,7 @@ public sealed partial class MainWindowViewModel
     /// <summary>
     /// Langue des libellés du template.
     /// </summary>
-    public string TemplateLanguage
-    {
-        get => _templateLanguage;
-        set
-        {
-            _templateLanguage = value;
-            Notify();
-        }
-    }
+    public string TemplateLanguage => Texts.Current.Code;
 
     /// <summary>
     /// Correspondances entre les racines locales et les adresses
@@ -218,7 +202,7 @@ public sealed partial class MainWindowViewModel
             Path.Combine(
                 AppContext.BaseDirectory,
                 "Assets",
-                "Images"
+                Texts.GetString("341")
             )
         );
         DuneTemplate? existing = Templates.FirstOrDefault(
@@ -231,7 +215,7 @@ public sealed partial class MainWindowViewModel
         }
 
         SelectedTemplate = existing ?? template;
-        Status = "Template chargé : " + template.Name;
+        Status = Texts.GetString("342") + template.Name;
     }
 
     private void LoadDunePreferences()
@@ -241,6 +225,10 @@ public sealed partial class MainWindowViewModel
             : _configurationStore
                 .Load(_workspace.Directory)
                 .Settings;
+        _configuration = _configuration with
+        {
+            Language = Texts.Current.Code,
+        };
         PathMappings = _workspace is null
             ? ""
             : string.Join(
@@ -255,7 +243,6 @@ public sealed partial class MainWindowViewModel
                     )
             );
         ExportParentPath = _configuration.Destination;
-        TemplateLanguage = _configuration.Language;
         AaiBackgrounds = _configuration.Aai;
         UseCases = _configuration.Cases;
         SelectedTemplate =
@@ -335,7 +322,12 @@ public sealed partial class MainWindowViewModel
             OperationToken
         );
         Status =
-            $"Export terminé : {result.MediaCount} fiche(s), {result.EpisodeCount} épisode(s), dans {result.Directory}."
+            Texts.Format(
+                "375",
+                result.MediaCount,
+                result.EpisodeCount,
+                result.Directory
+            )
             + (
                 result.Warnings.Count > 0
                     ? " " + string.Join(" · ", result.Warnings)

@@ -13,9 +13,13 @@ internal sealed partial class LegacyDuneCatalogWriter(
     RenderOptions options,
     TimeProvider timeProvider,
     IExportFileSystem fileSystem,
-    LegacyCatalogOptions catalog
+    LegacyCatalogOptions catalog,
+    LegacyLanguageCatalog? texts = null
 )
 {
+    private readonly LegacyLanguageCatalog _texts =
+        texts ?? LegacyLanguageCatalog.Load(options.Language);
+
     private readonly LegacyDuneDefinitions _definitions = new(
         template
     );

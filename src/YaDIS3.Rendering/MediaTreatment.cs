@@ -7,9 +7,13 @@ namespace YaDIS3.Rendering;
 public sealed class MediaTreatment(
     IWorkspaceRepository repository,
     TreatmentPreparation preparation,
-    TimeProvider timeProvider
+    TimeProvider timeProvider,
+    LegacyLanguageCatalog? texts = null
 )
 {
+    private readonly LegacyLanguageCatalog _texts =
+        texts ?? LegacyLanguageCatalog.Load();
+
     /// <summary>Traite une fiche et indique si elle a été rendue.</summary>
     public async Task<bool> TreatAsync(
         MediaCard card,
@@ -34,7 +38,7 @@ public sealed class MediaTreatment(
             && mode == TreatmentMode.Normal
                 ? new MediaContext(card)
                 : null;
-        progress?.Report("Préparation : " + card.FolderName);
+        progress?.Report(_texts["11"] + " : " + card.FolderName);
         try
         {
             if (

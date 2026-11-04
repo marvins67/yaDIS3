@@ -3,7 +3,7 @@ namespace YaDIS3.Desktop.ViewModels;
 public sealed partial class ConfigurationViewModel
 {
     /// <summary>
-    /// Langue des synopsis.
+    /// Langue de l’interface et des synopsis.
     /// </summary>
     public string Language
     {

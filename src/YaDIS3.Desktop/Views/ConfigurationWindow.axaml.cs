@@ -76,7 +76,10 @@ public sealed partial class ConfigurationWindow : Window
         RoutedEventArgs args
     )
     {
-        if (await PickFolder("Espace de travail") is { } path)
+        if (
+            await PickFolder(Model.Texts.GetString("80")) is
+            { } path
+        )
         {
             Model.ChooseWorkspace(path);
         }
@@ -88,9 +91,7 @@ public sealed partial class ConfigurationWindow : Window
     )
     {
         if (
-            await PickFolder(
-                "Emplacement de l’interface Dune"
-            ) is
+            await PickFolder(Model.Texts.GetString("82")) is
             { } path
         )
         {
@@ -112,7 +113,7 @@ public sealed partial class ConfigurationWindow : Window
                     FileTypeFilter =
                     [
                         new FilePickerFileType(
-                            "Configuration JSON"
+                            Model.Texts.GetString("354")
                         )
                         {
                             Patterns = ["*.json"],
@@ -162,7 +163,7 @@ public sealed partial class ConfigurationWindow : Window
         SourceFolderWindow dialog = new()
         {
             DataContext = draft,
-            Title = "Éditer un dossier",
+            Title = Model.Texts.GetString("87"),
         };
         if (await dialog.ShowDialog<bool>(this))
         {
@@ -181,7 +182,9 @@ public sealed partial class ConfigurationWindow : Window
         }
         Window dialog = new()
         {
-            Title = Model.SelectedTemplate?.Name ?? "Thème",
+            Title =
+                Model.SelectedTemplate?.Name
+                ?? Model.Texts.GetString("92"),
             Width = 960,
             Height = 570,
             WindowStartupLocation =

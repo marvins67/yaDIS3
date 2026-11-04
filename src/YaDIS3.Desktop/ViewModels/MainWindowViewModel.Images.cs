@@ -15,12 +15,11 @@ public sealed partial class MainWindowViewModel
         MediaCard card =
             SelectedCard
             ?? throw new InvalidOperationException(
-                "Sélectionnez une fiche."
+                Texts.GetString("330")
             );
         _importer.Import(card, kind, path, SelectedEpisode);
         RefreshImages();
-        Status =
-            "Image importée dans le brouillon. Cliquez sur Enregistrer pour la conserver.";
+        Status = Texts.GetString("331");
     }
 
     /// <summary>
@@ -49,7 +48,7 @@ public sealed partial class MainWindowViewModel
         }
 
         SelectedEpisode = SelectedCard.Episodes[index];
-        Status = "Épisode enregistré.";
+        Status = Texts.GetString("332");
     }
 
     /// <summary>

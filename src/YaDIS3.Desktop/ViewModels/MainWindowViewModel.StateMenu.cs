@@ -5,7 +5,7 @@ namespace YaDIS3.Desktop.ViewModels;
 
 public sealed partial class MainWindowViewModel
 {
-    private string _stateFilterLabel = "Tous";
+    private string _stateFilterLabel = "";
 
     /// <summary>Libellé du filtre actif.</summary>
     public string StateFilterLabel => _stateFilterLabel;
@@ -58,15 +58,24 @@ public sealed partial class MainWindowViewModel
 
     private LibraryFilterItem[] CreateStateFilters() =>
         [
-            StateItem("Tous", LibraryFilterKind.All),
-            StateItem("Vérifiés", LibraryFilterKind.Checked),
             StateItem(
-                "Non vérifiés",
+                Texts.GetString("56"),
+                LibraryFilterKind.All
+            ),
+            StateItem(
+                Texts.GetString("85"),
+                LibraryFilterKind.Checked
+            ),
+            StateItem(
+                Texts.GetString("67"),
                 LibraryFilterKind.Unchecked
             ),
-            StateItem("Manquants", LibraryFilterKind.Missing),
             StateItem(
-                "Non traités",
+                Texts.GetString("68"),
+                LibraryFilterKind.Missing
+            ),
+            StateItem(
+                Texts.GetString("69"),
                 LibraryFilterKind.Unprocessed
             ),
         ];
@@ -111,13 +120,13 @@ public sealed partial class MainWindowViewModel
         SagaFilters = GroupFilters(
             "saga",
             LibraryFilterKind.Saga,
-            "Toutes les sagas",
+            Texts.GetString("198"),
             LibraryFilterKind.AllSagas
         );
         SelectionFilters = GroupFilters(
             "selection",
             LibraryFilterKind.Selection,
-            "Toutes les sélections",
+            Texts.GetString("199"),
             LibraryFilterKind.AllSelections
         );
         GenreFilters = Cards

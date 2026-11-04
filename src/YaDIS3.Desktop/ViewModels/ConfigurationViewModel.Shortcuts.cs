@@ -13,8 +13,7 @@ public sealed partial class ConfigurationViewModel
     /// <summary>
     /// Types de raccourcis de SetupForm.
     /// </summary>
-    public IReadOnlyList<string> ShortcutTypes { get; } =
-    ["Sélection", "Genre", "Dossier"];
+    public IReadOnlyList<string> ShortcutTypes { get; }
 
     /// <summary>
     /// Type du raccourci proposé.
