@@ -18,6 +18,14 @@ public sealed partial class MainWindowViewModel
                 Texts.GetString("330")
             );
         _importer.Import(card, kind, path, SelectedEpisode);
+        if (!card.IsSeries
+            && kind is ArtworkKind.Poster or ArtworkKind.Fanart)
+        {
+            foreach (ArtworkChoiceViewModel choice in Choices(kind))
+            {
+                choice.IsSelected = false;
+            }
+        }
         RefreshImages();
         Status = Texts.GetString("331");
     }
@@ -57,6 +65,7 @@ public sealed partial class MainWindowViewModel
     /// </summary>
     public void RefreshImages()
     {
+        RefreshArtworkChoices();
         Poster = LoadImage(SelectedCard?.PosterPath);
         Banner = LoadImage(SelectedCard?.BannerPath);
         Fanart = LoadImage(SelectedCard?.FanartPath);

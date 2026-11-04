@@ -1,0 +1,9 @@
+<!-- MainModule.CreateMovieXML : toutes les affiches, puis tous
+les fanarts ; conserver l'ordre et les URL originales. -->
+<images>
+  <image type="poster" url="https://image.tmdb.org/t/p/original/poster-fr.jpg" />
+  <image type="poster" url="https://image.tmdb.org/t/p/original/poster-en.jpg" />
+  <image type="poster" url="https://image.tmdb.org/t/p/original/poster-neutral.jpg" />
+  <image type="fanart" url="https://image.tmdb.org/t/p/original/fanart-en.jpg" />
+  <image type="fanart" url="https://image.tmdb.org/t/p/original/fanart-neutral.jpg" />
+</images>

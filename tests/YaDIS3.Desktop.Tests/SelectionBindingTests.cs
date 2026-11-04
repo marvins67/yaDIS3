@@ -16,6 +16,7 @@ using YaDIS3.Desktop.Views;
 
 namespace YaDIS3.Desktop.Tests;
 
+[Collection("Avalonia UI")]
 public sealed class SelectionBindingTests
 {
     private static readonly string[] s_movieTabs =

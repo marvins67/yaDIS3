@@ -16,6 +16,11 @@ public sealed class OnlineTreatmentMetadata(
     ImageImporter importer
 ) : ITreatmentMetadata
 {
+    private readonly Dictionary<
+        MediaCard,
+        IReadOnlyDictionary<ArtworkKind, string>
+    > _movieDefaults = [];
+
     private string TvdbLanguage =>
         language == "fr" ? "fra" : "eng";
 
@@ -70,7 +75,26 @@ public sealed class OnlineTreatmentMetadata(
             $"movie/{id}?language={language}&append_to_response=credits,release_dates",
             cancellationToken
         );
-        return CreateMovieInfo(movie.RootElement);
+        // Une requête sans langue conserve le catalogue complet,
+        // comme GetMovieImages dans yaDIS2.
+        using JsonDocument images = await GetMovieJsonAsync(
+            $"movie/{id}/images",
+            cancellationToken
+        );
+        XElement info = CreateMovieInfo(
+            movie.RootElement,
+            images.RootElement
+        );
+        _movieDefaults[card] = new Dictionary<ArtworkKind, string>
+        {
+            [ArtworkKind.Poster] = MovieImage(
+                Value(movie.RootElement, "poster_path")
+            ),
+            [ArtworkKind.Fanart] = MovieImage(
+                Value(movie.RootElement, "backdrop_path")
+            ),
+        };
+        return info;
     }
 
     private async Task<string?> FindMovieIdAsync(
@@ -166,7 +190,10 @@ public sealed class OnlineTreatmentMetadata(
         );
     }
 
-    private XElement CreateMovieInfo(JsonElement movie)
+    private XElement CreateMovieInfo(
+        JsonElement movie,
+        JsonElement images
+    )
     {
         string date = Value(movie, "release_date");
         return new XElement(
@@ -217,19 +244,32 @@ public sealed class OnlineTreatmentMetadata(
                     ))
             ),
             MovieCredits(movie.GetProperty("credits")),
-            new XElement(
-                "images",
-                new XElement(
-                    "poster",
-                    MovieImage(Value(movie, "poster_path"))
-                ),
-                new XElement(
-                    "fanart",
-                    MovieImage(Value(movie, "backdrop_path"))
-                )
-            )
+            CreateMovieImages(images)
         );
     }
+
+    private static XElement CreateMovieImages(JsonElement images) =>
+        new(
+            "images",
+            MovieImages(images, "posters", "poster"),
+            MovieImages(images, "backdrops", "fanart")
+        );
+
+    private static IEnumerable<XElement> MovieImages(
+        JsonElement images,
+        string collection,
+        string kind
+    ) =>
+        images.GetProperty(collection)
+            .EnumerateArray()
+            .Select(image => new XElement(
+                "image",
+                new XAttribute("type", kind),
+                new XAttribute(
+                    "url",
+                    MovieImage(Value(image, "file_path"))
+                )
+            ));
 
     private static IEnumerable<XElement> MovieCredits(
         JsonElement credits
@@ -326,10 +366,10 @@ public sealed class OnlineTreatmentMetadata(
         )
         {
             string name = kind.ToString().ToLowerInvariant();
-            string? image = card
-                .TreatmentInfo?.Element("images")
-                ?.Element(name)
-                ?.Value;
+            string? image = card.IsSeries
+                ? card.TreatmentInfo?.Element("images")
+                    ?.Element(name)?.Value
+                : MovieArtworkReference(card, kind);
             await ImportMissingAsync(
                 card,
                 kind,
@@ -353,6 +393,20 @@ public sealed class OnlineTreatmentMetadata(
                 cancellationToken
             );
         }
+    }
+
+    private string? MovieArtworkReference(
+        MediaCard card,
+        ArtworkKind kind
+    )
+    {
+        if (_movieDefaults.TryGetValue(card, out var defaults))
+        {
+            return defaults.GetValueOrDefault(kind);
+        }
+        return card.MovieArtwork.FirstOrDefault(image =>
+            image.Kind == kind
+        )?.Url;
     }
 
     private async Task ImportMissingAsync(

@@ -16,6 +16,34 @@
   Icon="avares://yaDIS3.Desktop/Assets/Icons/yadis.ico"
 >
   <Window.Resources>
+    <DataTemplate
+      x:Key="ArtworkChoiceTemplate"
+      x:DataType="vm:ArtworkChoiceViewModel"
+    >
+      <Button
+        Classes="artwork"
+        Classes.chosen="{Binding IsSelected}"
+        Command="{Binding SelectCommand}"
+        ToolTip.Tip="{Binding Hint}"
+        Padding="5"
+      >
+        <Grid Width="{Binding ImageWidth}" Height="168">
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/download_image_small.png"
+            IsVisible="{Binding ShowLoading}"
+            Width="32"
+            Height="32"
+          />
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/delete_image_small.png"
+            IsVisible="{Binding ShowError}"
+            Width="32"
+            Height="32"
+          />
+          <Image Source="{Binding Thumbnail}" Stretch="Fill" />
+        </Grid>
+      </Button>
+    </DataTemplate>
     <ControlTheme
       x:Key="StateMenuItemTheme"
       TargetType="MenuItem"
@@ -30,6 +58,13 @@
     </ControlTheme>
   </Window.Resources>
   <Window.Styles>
+    <Style Selector="Button.artwork">
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="#AAAAAA" />
+    </Style>
+    <Style Selector="Button.artwork.chosen">
+      <Setter Property="BorderBrush" Value="#2779C5" />
+    </Style>
     <Style Selector="Button.toolbar, SplitButton.toolbar">
       <Setter Property="Height" Value="36" />
       <Setter Property="MinHeight" Value="36" />
@@ -568,6 +603,7 @@
     />
     <TabControl
       x:Name="EditorTabs"
+      SelectionChanged="EditorTabChanged"
       Grid.Row="3"
       IsEnabled="{Binding CanEditSelection}"
       Background="#FAFAFA"
@@ -1082,29 +1118,44 @@
         </StackPanel>
       </TabItem>
       <TabItem
+        x:Name="PosterTab"
         Header="{DynamicResource Text.17}"
         IsVisible="{Binding !IsSeries}"
       >
-        <Grid RowDefinitions="Auto,*" Margin="8">
-          <StackPanel Orientation="Horizontal" Spacing="10">
+        <Grid ColumnDefinitions="Auto,*" Margin="8">
+          <StackPanel Spacing="6" Margin="0,0,12,0">
             <Button
               Content="{DynamicResource Text.83.Ellipsis}"
               Click="ImportPoster"
               IsEnabled="{Binding HasCard}"
             />
-            <TextBlock
-              Text="{DynamicResource Text.312}"
-              Classes="muted"
-              VerticalAlignment="Center"
+            <Image
+              Source="{Binding Poster}"
+              Width="126"
+              Height="136"
+              Stretch="Uniform"
             />
           </StackPanel>
-          <Image
-            Grid.Row="1"
-            Source="{Binding Poster}"
-            Stretch="Uniform"
-            Margin="0,6,0,0"
-            HorizontalAlignment="Left"
-          />
+          <ScrollViewer
+            Grid.Column="1"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Disabled"
+          >
+            <ItemsControl
+              x:Name="PosterCatalog"
+              ItemsSource="{Binding PosterChoices}"
+              ItemTemplate="{StaticResource ArtworkChoiceTemplate}"
+            >
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="12"
+                  />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
+          </ScrollViewer>
         </Grid>
       </TabItem>
       <TabItem
@@ -1133,27 +1184,75 @@
           />
         </Grid>
       </TabItem>
-      <TabItem Header="{DynamicResource Text.18}">
-        <Grid RowDefinitions="Auto,*" Margin="8">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button
-              Content="{DynamicResource Text.83.Ellipsis}"
-              Click="ImportFanart"
-              IsEnabled="{Binding HasCard}"
+      <TabItem
+        x:Name="FanartTab"
+        Header="{DynamicResource Text.18}"
+      >
+        <Grid>
+          <Grid
+            ColumnDefinitions="Auto,*"
+            Margin="8"
+            IsVisible="{Binding !IsSeries}"
+          >
+            <StackPanel Spacing="6" Margin="0,0,12,0">
+              <Button
+                Content="{DynamicResource Text.83.Ellipsis}"
+                Click="ImportFanart"
+                IsEnabled="{Binding HasCard}"
+              />
+              <Image
+                Source="{Binding Fanart}"
+                Width="300"
+                Height="136"
+                Stretch="Uniform"
+              />
+            </StackPanel>
+            <ScrollViewer
+              Grid.Column="1"
+              HorizontalScrollBarVisibility="Auto"
+              VerticalScrollBarVisibility="Disabled"
+            >
+              <ItemsControl
+                x:Name="FanartCatalog"
+                ItemsSource="{Binding FanartChoices}"
+                ItemTemplate="{StaticResource ArtworkChoiceTemplate}"
+              >
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel
+                      Orientation="Horizontal"
+                      Spacing="12"
+                    />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+          <Grid
+            RowDefinitions="Auto,*"
+            Margin="8"
+            IsVisible="{Binding IsSeries}"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button
+                Content="{DynamicResource Text.83.Ellipsis}"
+                Click="ImportFanart"
+                IsEnabled="{Binding HasCard}"
+              />
+              <TextBlock
+                Text="{DynamicResource Text.312}"
+                Classes="muted"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+            <Image
+              Grid.Row="1"
+              Source="{Binding Fanart}"
+              Stretch="Uniform"
+              Margin="0,6,0,0"
+              HorizontalAlignment="Left"
             />
-            <TextBlock
-              Text="{DynamicResource Text.312}"
-              Classes="muted"
-              VerticalAlignment="Center"
-            />
-          </StackPanel>
-          <Image
-            Grid.Row="1"
-            Source="{Binding Fanart}"
-            Stretch="Uniform"
-            Margin="0,6,0,0"
-            HorizontalAlignment="Left"
-          />
+          </Grid>
         </Grid>
       </TabItem>
       <TabItem

@@ -1,0 +1,12 @@
+{
+  "id": 42,
+  "posters": [
+    {"file_path": "/poster-fr.jpg", "iso_639_1": "fr"},
+    {"file_path": "/poster-en.jpg", "iso_639_1": "en"},
+    {"file_path": "/poster-neutral.jpg", "iso_639_1": null}
+  ],
+  "backdrops": [
+    {"file_path": "/fanart-en.jpg", "iso_639_1": "en"},
+    {"file_path": "/fanart-neutral.jpg", "iso_639_1": null}
+  ]
+}

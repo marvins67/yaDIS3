@@ -103,7 +103,7 @@ public sealed class MovieMetadataTests
         Assert.Equal(
             expected, info!.Element("certification")!.Value
         );
-        Assert.Single(handler.Requests);
+        Assert.Equal(2, handler.Requests.Count);
     }
 
     [Fact]

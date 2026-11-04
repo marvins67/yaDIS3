@@ -3,7 +3,10 @@ using System.Text;
 
 namespace YaDIS3.Tests;
 
-internal sealed class MovieMetadataHandler(string movie)
+internal sealed class MovieMetadataHandler(
+    string movie,
+    string images = "{\"posters\":[],\"backdrops\":[]}"
+)
     : HttpMessageHandler
 {
     public List<string> Requests { get; } = [];
@@ -24,7 +27,9 @@ internal sealed class MovieMetadataHandler(string movie)
                         StringComparison.Ordinal
                     )
                         ? "{\"results\":[{\"id\":42}]}"
-                        : movie,
+                        : uri.EndsWith("/images", StringComparison.Ordinal)
+                            ? images
+                            : movie,
                     Encoding.UTF8,
                     "application/json"
                 ),

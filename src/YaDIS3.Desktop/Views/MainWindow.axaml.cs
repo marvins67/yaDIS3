@@ -33,6 +33,28 @@ public sealed partial class MainWindow : Window
             (DataContext as IDisposable)?.Dispose();
     }
 
+    private async void EditorTabChanged(
+        object? sender,
+        SelectionChangedEventArgs eventArgs
+    )
+    {
+        if (DataContext is not MainWindowViewModel model
+            || !ReferenceEquals(eventArgs.Source, sender)
+            || sender is not TabControl tabs)
+        {
+            return;
+        }
+        string? name = (tabs.SelectedItem as TabItem)?.Name;
+        if (name is "PosterTab" or "FanartTab")
+        {
+            await model.LoadArtworkChoicesAsync(
+                name == "PosterTab"
+                    ? ArtworkKind.Poster
+                    : ArtworkKind.Fanart
+            );
+        }
+    }
+
     private void PrepareGenres(
         object? sender,
         EventArgs eventArgs

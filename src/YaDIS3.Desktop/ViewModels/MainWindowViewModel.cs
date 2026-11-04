@@ -529,6 +529,7 @@ public sealed partial class MainWindowViewModel
             card.Dispose();
         }
 
+        ClearArtworkChoices();
         _poster?.Dispose();
         _banner?.Dispose();
         _fanart?.Dispose();
