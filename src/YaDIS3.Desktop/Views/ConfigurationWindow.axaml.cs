@@ -134,10 +134,9 @@ public sealed partial class ConfigurationWindow : Window
         RoutedEventArgs args
     )
     {
-        SourceFolderViewModel draft = new(new("", 0, ""))
-        {
-            BasicMode = Model.BasicMode,
-        };
+        SourceFolderViewModel draft = Model.CreateFolderDraft(
+            new("", 0, "")
+        );
         SourceFolderWindow dialog = new()
         {
             DataContext = draft,
@@ -157,10 +156,9 @@ public sealed partial class ConfigurationWindow : Window
         {
             return;
         }
-        SourceFolderViewModel draft = new(current.Snapshot())
-        {
-            BasicMode = Model.BasicMode,
-        };
+        SourceFolderViewModel draft = Model.CreateFolderDraft(
+            current.Snapshot()
+        );
         SourceFolderWindow dialog = new()
         {
             DataContext = draft,

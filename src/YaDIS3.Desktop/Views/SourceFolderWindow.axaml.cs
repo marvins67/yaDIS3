@@ -40,7 +40,9 @@ public sealed partial class SourceFolderWindow : Window
             && folders[0].TryGetLocalPath() is { } path
         )
         {
-            ((SourceFolderViewModel)DataContext!).Path = path;
+            await (
+                (SourceFolderViewModel)DataContext!
+            ).ChooseFolderAsync(path);
         }
     }
 }

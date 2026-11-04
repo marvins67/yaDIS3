@@ -18,6 +18,39 @@ public sealed class ConfigurationViewModelTests
         );
 
     [Fact]
+    public async Task CreateFolderDraft_Edit_DerivesPathWithoutChangingSavedFolder()
+    {
+        using ConfigurationViewModel settings = new(
+            Snapshot(),
+            "/workspace",
+            [],
+            [],
+            (_, _, _) => Task.CompletedTask,
+            dunePaths: new(new FolderPathEnvironment())
+        );
+        MediaSourceFolder original = new(
+            @"D:\Films",
+            0,
+            "nfs://ancien:/Films"
+        );
+        SourceFolderViewModel draft = settings.CreateFolderDraft(
+            original
+        );
+        Assert.Equal(original.DunePath, draft.DunePath);
+        await draft.ChooseFolderAsync(@"Z:\Films");
+        Assert.Equal(
+            "smb://192.168.1.10/Vidéos/Films",
+            draft.DunePath
+        );
+        Assert.Equal("nfs://ancien:/Films", original.DunePath);
+        settings.UpdateFolder(draft);
+        Assert.Equal(
+            draft.DunePath,
+            Assert.Single(settings.Snapshot().Folders).DunePath
+        );
+    }
+
+    [Fact]
     public void Snapshot_Changements_NeModifiePasLaConfigurationActive()
     {
         ConfigurationSnapshot original = Snapshot();
@@ -285,7 +318,11 @@ public sealed class ConfigurationViewModelTests
                 + Guid.NewGuid().ToString("N")
         );
         string workspace = Path.Combine(root, "workspace");
-        string videos = Path.Combine(root, "videos", "Série manuelle");
+        string videos = Path.Combine(
+            root,
+            "videos",
+            "Série manuelle"
+        );
         Directory.CreateDirectory(videos);
         File.WriteAllBytes(
             Path.Combine(videos, "S01E01.mkv"),

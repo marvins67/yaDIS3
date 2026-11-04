@@ -14,6 +14,7 @@
 >
   <Grid
     Margin="12"
+    IsEnabled="{Binding !IsResolving}"
     RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto"
     RowSpacing="6"
   >
@@ -26,7 +27,10 @@
     />
     <TextBlock Grid.Row="2" Text="Dossier :" />
     <Grid Grid.Row="3" ColumnDefinitions="*,6,28">
-      <TextBox Text="{Binding Path, Mode=TwoWay}" />
+      <TextBox
+        Text="{Binding Path}"
+        IsReadOnly="True"
+      />
       <Button Grid.Column="2" Content="…" Click="Browse" />
     </Grid>
     <Grid
@@ -38,9 +42,12 @@
         Text="Chemin Dune :"
         VerticalAlignment="Center"
       />
-      <TextBox
+      <ComboBox
         Grid.Column="1"
+        IsEditable="True"
+        ItemsSource="{Binding DunePathExamples}"
         Text="{Binding DunePath, Mode=TwoWay}"
+        HorizontalAlignment="Stretch"
       />
     </Grid>
     <StackPanel

@@ -18,6 +18,7 @@ public sealed partial class ConfigurationViewModel
         IDisposable
 {
     private DuneConfiguration _settings;
+    private readonly LegacyDunePathResolver _dunePaths;
     private XDocument _groups = new(new XElement("groups"));
     private readonly bool _hasWorkspace;
     private readonly DuneConfigurationStore _configurationStore;
@@ -52,13 +53,17 @@ public sealed partial class ConfigurationViewModel
             Task
         > save,
         ILogger<ConfigurationViewModel>? logger = null,
-        DuneConfigurationStore? configurationStore = null
+        DuneConfigurationStore? configurationStore = null,
+        LegacyDunePathResolver? dunePaths = null
     )
     {
         _configurationStore = configurationStore ?? new();
         _logger =
             logger
             ?? NullLogger<ConfigurationViewModel>.Instance;
+        _dunePaths =
+            dunePaths
+            ?? new(new SystemDunePathEnvironment(), _logger);
         _settings = snapshot.Settings;
         _workspace = workspace;
         _hasWorkspace = workspace.Length > 0;
@@ -404,6 +409,11 @@ public sealed partial class ConfigurationViewModel
             Report("choix du dossier", exception);
         }
     }
+
+    /// <summary>Prépare un ajout ou une édition sans modifier le dossier existant.</summary>
+    public SourceFolderViewModel CreateFolderDraft(
+        MediaSourceFolder folder
+    ) => new(folder, _dunePaths) { BasicMode = BasicMode };
 
     /// <summary>
     /// Valide l'ajout ou l'édition dans la copie de travail.
