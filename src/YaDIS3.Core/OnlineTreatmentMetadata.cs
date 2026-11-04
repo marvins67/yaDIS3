@@ -21,6 +21,8 @@ public sealed class OnlineTreatmentMetadata(
         IReadOnlyDictionary<ArtworkKind, string>
     > _movieDefaults = [];
 
+    private readonly HashSet<MediaCard> _movieLocalImports = [];
+
     private string TvdbLanguage =>
         language == "fr" ? "fra" : "eng";
 
@@ -94,6 +96,7 @@ public sealed class OnlineTreatmentMetadata(
                 Value(movie.RootElement, "backdrop_path")
             ),
         };
+        _movieLocalImports.Add(card);
         return info;
     }
 
@@ -379,6 +382,7 @@ public sealed class OnlineTreatmentMetadata(
                 cancellationToken
             );
         }
+        _movieLocalImports.Remove(card);
         foreach (Episode episode in card.Episodes)
         {
             await ImportMissingAsync(
@@ -418,6 +422,16 @@ public sealed class OnlineTreatmentMetadata(
         CancellationToken cancellationToken
     )
     {
+        // GetMovie ne recherche les images locales que pendant
+        // l'identification ou le rechargement des informations.
+        if (!card.IsSeries
+            && kind is ArtworkKind.Poster or ArtworkKind.Fanart
+            && _movieLocalImports.Contains(card)
+            && LocalMovieArtwork.Find(card, kind) is { } movieImage)
+        {
+            importer.ImportAutomatic(card, kind, movieImage, null);
+            return;
+        }
         if (File.Exists(card.ArtworkPath(name + ".jpg")))
         {
             return;
@@ -427,7 +441,8 @@ public sealed class OnlineTreatmentMetadata(
             name + ".jpg"
         );
         if (
-            Directory.Exists(card.TreatmentSource)
+            card.IsSeries
+            && Directory.Exists(card.TreatmentSource)
             && File.Exists(local)
         )
         {
