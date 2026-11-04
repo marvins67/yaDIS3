@@ -1,17 +1,39 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
+using System.Xml;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace YaDIS3.Core;
 
 /// <summary>Appelle MediaInfo sans dépendance native liée à l'application.</summary>
-public sealed class MediaInfoReader(
-    string executable = "mediainfo"
+public sealed partial class MediaInfoReader(
+    string executable = "mediainfo",
+    ILogger? logger = null
 ) : IVideoInformationReader
 {
     /// <inheritdoc />
     public async Task<XElement> ReadAsync(
+        string file,
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            return await ReadCoreAsync(file, cancellationToken);
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidOperationException or XmlException)
+        {
+            AnalysisFailed(logger ?? NullLogger<MediaInfoReader>.Instance, exception);
+            return LegacyMediaInfo.Empty();
+        }
+    }
+
+
+    private async Task<XElement> ReadCoreAsync(
         string file,
         CancellationToken cancellationToken
     )
@@ -48,7 +70,7 @@ public sealed class MediaInfoReader(
                     "Échec MediaInfo : " + diagnostic
                 );
             }
-            return ConvertTracks(XDocument.Parse(xml));
+            return LegacyMediaInfo.Convert(XDocument.Parse(xml));
         }
         finally
         {
@@ -77,96 +99,9 @@ public sealed class MediaInfoReader(
         }
     }
 
-    private static XElement ConvertTracks(XDocument document)
-    {
-        XElement[] tracks = document
-            .Descendants()
-            .Where(node => node.Name.LocalName == "track")
-            .ToArray();
-        XElement? general = Track(tracks, "General");
-        XElement? video = Track(tracks, "Video");
-        XElement? audio = Track(tracks, "Audio");
-        if (video is null)
-        {
-            throw new InvalidDataException(
-                "MediaInfo ne signale aucune piste vidéo."
-            );
-        }
-        string duration = Value(general, "Duration");
-        double.TryParse(
-            duration,
-            CultureInfo.InvariantCulture,
-            out double seconds
-        );
-        return new XElement(
-            "mediainfo",
-            new XElement("format", Value(general, "Format")),
-            new XElement("duration", Math.Round(seconds * 1000)),
-            new XElement(
-                "video",
-                new XElement("codec", Value(video, "Format")),
-                new XElement(
-                    "resolution",
-                    Value(video, "Height")
-                        + (
-                            Value(video, "ScanType")
-                            == "Interlaced"
-                                ? "i"
-                                : "p"
-                        )
-                ),
-                new XElement(
-                    "aspectratio",
-                    Value(video, "DisplayAspectRatio")
-                ),
-                new XElement(
-                    "framerate",
-                    Value(video, "FrameRate")
-                )
-            ),
-            new XElement(
-                "audio",
-                new XElement("codec", Value(audio, "Format")),
-                new XElement(
-                    "channels",
-                    Value(audio, "Channels")
-                ),
-                Languages(tracks, "Audio")
-            ),
-            new XElement("subtitles", Languages(tracks, "Text"))
-        );
-    }
-
-    private static XElement? Track(
-        IEnumerable<XElement> tracks,
-        string type
-    ) =>
-        tracks.FirstOrDefault(node =>
-            (string?)node.Attribute("type") == type
-        );
-
-    private static string Value(XElement? track, string name) =>
-        track
-            ?.Elements()
-            .FirstOrDefault(node => node.Name.LocalName == name)
-            ?.Value
-        ?? "";
-
-    private static XElement Languages(
-        IEnumerable<XElement> tracks,
-        string type
-    ) =>
-        new(
-            "languages",
-            string.Join(
-                "|",
-                tracks
-                    .Where(node =>
-                        (string?)node.Attribute("type") == type
-                    )
-                    .Select(node => Value(node, "Language"))
-                    .Where(value => value.Length > 0)
-                    .Distinct(StringComparer.Ordinal)
-            )
-        );
+    [LoggerMessage(6, LogLevel.Warning, "Analyse MediaInfo impossible")]
+    private static partial void AnalysisFailed(
+        ILogger logger,
+        Exception exception
+    );
 }

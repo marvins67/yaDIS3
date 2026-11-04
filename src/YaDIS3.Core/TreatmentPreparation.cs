@@ -114,6 +114,8 @@ public sealed class TreatmentPreparation(
             card,
             cancellationToken
         );
+        bool readDuration = card.TreatmentInfo!.Element("mediainfo") is null
+            || mode == TreatmentMode.ReloadTechnicalInformation;
         await ReadTrackAsync(
             card,
             card.TreatmentInfo!,
@@ -121,6 +123,16 @@ public sealed class TreatmentPreparation(
             mode,
             cancellationToken
         );
+        if (readDuration && !files.DirectoryExists(file)
+            && !Path.GetExtension(file).Equals(".iso", StringComparison.OrdinalIgnoreCase)
+            && (!files.DirectoryExists(source)
+                || files.EnumerateFiles(source).Count(LegacyVideoFiles.IsVideo) == 1)
+            && double.TryParse(card.TreatmentInfo!.Element("mediainfo")?.Element("duration")?.Value,
+                System.Globalization.CultureInfo.InvariantCulture, out double duration))
+        {
+            card.UpdateForTreatment(() => card.TreatmentInfo!
+                .SetElementValue("runtime", Math.Round(duration / 60000)));
+        }
     }
 
     private string FindMovieVideo(string source)

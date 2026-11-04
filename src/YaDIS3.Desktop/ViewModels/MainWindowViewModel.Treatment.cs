@@ -79,7 +79,7 @@ public sealed partial class MainWindowViewModel
         TreatmentPreparation preparation = new(
             new ExportFileSystem(),
             metadata,
-            new MediaInfoReader()
+            new MediaInfoReader(logger: _logger)
         );
         MediaTreatment treatment = new(
             _repository,
