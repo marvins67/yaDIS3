@@ -4,3 +4,5 @@
 .DS_Store
 .vscode/launch.json
 .vscode/tasks.json
+src/YaDIS3.Desktop/workspace/folders.xml
+src/YaDIS3.Desktop/workspace/groups.xml
