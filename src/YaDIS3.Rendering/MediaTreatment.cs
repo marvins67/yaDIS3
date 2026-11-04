@@ -31,6 +31,7 @@ public sealed class MediaTreatment(
         {
             return false;
         }
+        MediaContext? original = card.IsSeries ? new MediaContext(card) : null;
         MediaContext? previous =
             card.IsSeries
             && !card.IsDirty
@@ -41,13 +42,23 @@ public sealed class MediaTreatment(
         progress?.Report(_texts["11"] + " : " + card.FolderName);
         try
         {
-            if (
-                !await preparation.PrepareAsync(
-                    card,
-                    mode,
-                    cancellationToken
-                )
-            )
+            bool prepared;
+            try
+            {
+                prepared = await preparation.PrepareAsync(
+                    card, mode, cancellationToken);
+            }
+            finally
+            {
+                // Une erreur ultérieure ne doit pas laisser les anciens rendus
+                // des épisodes déjà retirés du XML enregistré dans le catch.
+                if (original is not null)
+                {
+                    EpisodeTreatmentCleanup.RemoveDeleted(
+                        original, new MediaContext(card), workspace);
+                }
+            }
+            if (!prepared)
             {
                 card.MarkTreatmentFailed();
                 await repository.SaveAsync(

@@ -686,7 +686,7 @@ public sealed partial class DuneExporter(
         }
     }
 
-    private static bool RenderCacheOwned(string path)
+    internal static bool RenderCacheOwned(string path)
     {
         try
         {

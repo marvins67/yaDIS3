@@ -17,12 +17,15 @@ internal sealed class TreatmentInputs
 
     public bool FailSearch { get; init; }
 
+    public Action? DuringSeriesSearch { get; init; }
+
     public Task<SeriesDetails?> FindSeriesAsync(
         MediaCard card,
         CancellationToken cancellationToken
     )
     {
         SeriesRequests++;
+        DuringSeriesSearch?.Invoke();
         if (FailSearch)
         {
             throw new HttpRequestException("TVDB indisponible");

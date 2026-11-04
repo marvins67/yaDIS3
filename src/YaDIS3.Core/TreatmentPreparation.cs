@@ -76,6 +76,17 @@ public sealed class TreatmentPreparation(
                 cancellationToken
             );
         }
+        // La recherche en ligne peut durer : ne pas synchroniser une source
+        // déconnectée depuis le scan, ni une vidéo devenue inaccessible.
+        if (!files.DirectoryExists(source))
+        {
+            throw new DirectoryNotFoundException(source);
+        }
+        files.GetAttributes(source);
+        foreach (VideoEpisode episode in detected)
+        {
+            files.GetAttributes(episode.File);
+        }
         card.SynchronizeForTreatment(detected, files);
         if (series is not null)
         {

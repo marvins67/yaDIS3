@@ -21,23 +21,6 @@ public static class EpisodeScanner
         "file",
     ];
 
-    private static readonly HashSet<string> s_extensions = new(
-        StringComparer.OrdinalIgnoreCase
-    )
-    {
-        ".mkv",
-        ".mp4",
-        ".avi",
-        ".m2ts",
-        ".mov",
-        ".wmv",
-        ".ts",
-        ".iso",
-        ".mpg",
-        ".mpeg",
-        ".vob",
-    };
-
     /// <summary>
     /// Recherche les fichiers vidéo reconnus et extrait leurs
     /// numéros d'épisode.
@@ -53,14 +36,14 @@ public static class EpisodeScanner
                 new EnumerationOptions
                 {
                     RecurseSubdirectories = true,
-                    IgnoreInaccessible = true,
+                    IgnoreInaccessible = false,
                     AttributesToSkip =
                         FileAttributes.ReparsePoint,
                 }
             )
             .Order(StringComparer.Ordinal)
             .Where(path =>
-                s_extensions.Contains(Path.GetExtension(path))
+                LegacyVideoFiles.IsVideo(path)
             )
             .SelectMany(Parse)
             .DistinctBy(element =>
@@ -72,8 +55,7 @@ public static class EpisodeScanner
     }
 
     /// <summary>
-    /// Extracts season and episode numbers from a video
-    /// filename.
+    /// Extrait les numéros de saison et d’épisode du nom vidéo.
     /// </summary>
     public static IReadOnlyList<VideoEpisode> Parse(string file)
     {
@@ -82,46 +64,63 @@ public static class EpisodeScanner
             (normalized.LastIndexOf('/') + 1)..
         ];
         string stem = Path.GetFileNameWithoutExtension(name);
-        Match pair = Regex.Match(
+        MatchCollection pairs = Regex.Matches(
             stem,
             """(?i)(?:\bS(?<s>\d{1,2})[ ._-]*E(?<e>\d{1,3})|(?<!\d)(?<s>\d{1,2})[xXeE](?<e>\d{1,3}))(?!\d)"""
         );
-        if (pair.Success)
+        if (pairs.Count > 0)
         {
-            int season = int.Parse(
-                pair.Groups["s"].Value,
-                CultureInfo.InvariantCulture
-            );
-            int number = int.Parse(
-                pair.Groups["e"].Value,
-                CultureInfo.InvariantCulture
-            );
-            Match range = Regex.Match(
-                stem[(pair.Index + pair.Length)..],
-                """^(?:[ ._]*E|\s*-\s*)(?<last>\d{1,3})(?!\d)""",
-                RegexOptions.IgnoreCase
-            );
-            int end = range.Success
-                ? int.Parse(
-                    range.Groups["last"].Value,
-                    CultureInfo.InvariantCulture
-                )
-                : number;
-            if (end < number || end - number > 100)
-            {
-                end = number;
-            }
-
-            return Enumerable
-                .Range(number, end - number + 1)
-                .Select(numberValue => new VideoEpisode(
-                    season,
-                    numberValue,
-                    file
-                ))
+            return pairs.Cast<Match>()
+                .SelectMany(pair => ParsePair(file, stem, pair))
+                .DistinctBy(item => (item.Season, item.Number))
                 .ToArray();
         }
 
+        return ParseSingle(file, normalized, stem);
+    }
+
+    private static VideoEpisode[] ParsePair(
+        string file, string stem, Match pair
+    )
+    {
+        int season = int.Parse(
+            pair.Groups["s"].Value,
+            CultureInfo.InvariantCulture
+        );
+        int number = int.Parse(
+            pair.Groups["e"].Value,
+            CultureInfo.InvariantCulture
+        );
+        Match range = Regex.Match(
+            stem[(pair.Index + pair.Length)..],
+            """^(?:[ ._]*E|\s*-\s*)(?<last>\d{1,3})(?!\d)""",
+            RegexOptions.IgnoreCase
+        );
+        int end = range.Success
+            ? int.Parse(
+                range.Groups["last"].Value,
+                CultureInfo.InvariantCulture
+            )
+            : number;
+        if (end < number || end - number > 100)
+        {
+            end = number;
+        }
+
+        return Enumerable
+            .Range(number, end - number + 1)
+            .Select(numberValue => new VideoEpisode(
+                season,
+                numberValue,
+                file
+            ))
+            .ToArray();
+    }
+
+    private static VideoEpisode[] ParseSingle(
+        string file, string normalized, string stem
+    )
+    {
         Match single = Regex.Match(
             stem,
             """(?i)(?:\b(?:E|EP|Episode|Épisode)[ ._-]*|^\s*|\s+-\s+)(?<e>\d{1,3})(?=$|\s+-\s+|[ ._-]+[A-Za-zÀ-ÿ])"""
@@ -221,7 +220,7 @@ public static class EpisodeScanner
                             "file",
                             found.File
                         );
-                        existing.Element("mediainfo")?.Remove();
+                        // Un renommage conserve aussi les retouches techniques.
                     }
 
                     continue;
@@ -254,8 +253,7 @@ public static class EpisodeScanner
                 info.Add(episode);
             }
         });
-        // Offline volumes must never cause automatic deletion of
-        // existing metadata.
+        // Le traitement vérifie la disponibilité avant toute suppression.
         card.RefreshEpisodes();
     }
 }
