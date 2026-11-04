@@ -22,10 +22,11 @@ public sealed partial class LegacyDunePathResolver(
         logger ?? NullLogger.Instance;
 
     /// <summary>
-    /// Repli de GetString lorsque le catalogue historique est absent.
-    /// Le libellé 31 peut être fourni par un catalogue existant.
+    /// Libellé 31 du fichier languages/fr.xml de yaDIS2.
+    /// La boîte française utilise cette valeur par défaut.
     /// </summary>
-    public const string MissingLabel = "<label not found>";
+    public const string MissingLabel =
+        "Veuillez saisir le chemin au format Dune";
 
     /// <summary>Déduit le chemin de lecture selon yaDIS2.</summary>
     public async Task<string> ResolveAsync(

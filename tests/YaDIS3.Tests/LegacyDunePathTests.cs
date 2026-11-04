@@ -73,7 +73,10 @@ public sealed class LegacyDunePathTests
         @"\\DUNE\Disk_26b6a642067197ba",
         "storage_uuid://26b6a642067197ba"
     )]
-    [InlineData(@"\\DUNE\Disque\Films", "<label not found>")]
+    [InlineData(
+        @"\\DUNE\Disque\Films",
+        "Veuillez saisir le chemin au format Dune"
+    )]
     [InlineData(
         @"\\DUNE\DuneHDD_26B6A642067197BA\Films",
         "storage_uuid://26b6a642067197ba/6B6A642067197BA/Films"
@@ -110,7 +113,10 @@ public sealed class LegacyDunePathTests
         @"\\DUNE\DuneHDD_26b6a642067197ba",
         "storage_uuid://26b6a642067197ba/Séries"
     )]
-    [InlineData(@"\\DUNE\Disque", "<label not found>/Séries")]
+    [InlineData(
+        @"\\DUNE\Disque",
+        "Veuillez saisir le chemin au format Dune/Séries"
+    )]
     public async Task ResolveAsync_MappedDrive_ResolvesBeforeConverting(
         string network,
         string expected
