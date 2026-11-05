@@ -619,6 +619,7 @@ public sealed partial class ConfigurationViewModel
         {
             ConfigurationSnapshot snapshot = Snapshot();
             DuneConfigurationStore.Validate(snapshot);
+            operation.Token.ThrowIfCancellationRequested();
             await _save(
                 snapshot,
                 WorkspacePath,
