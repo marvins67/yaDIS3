@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
@@ -8,7 +9,8 @@ public sealed class MediaTreatment(
     IWorkspaceRepository repository,
     TreatmentPreparation preparation,
     TimeProvider timeProvider,
-    LegacyLanguageCatalog? texts = null
+    LegacyLanguageCatalog? texts = null,
+    ILogger? logger = null
 )
 {
     private readonly LegacyLanguageCatalog _texts =
@@ -67,9 +69,21 @@ public sealed class MediaTreatment(
                 );
                 return false;
             }
+        }
+        catch (Exception exception)
+            when (exception is not OperationCanceledException)
+        {
+            card.MarkTreatmentFailed();
+            await repository.SaveAsync(card, cancellationToken);
+            throw;
+        }
+        try
+        {
+            // Une exception pendant l’écriture interrompt ProcessForm avant la sauvegarde du statut.
             await new MediaProcessingService(
                 repository,
-                timeProvider
+                timeProvider,
+                logger
             ).ProcessAsync(
                 card,
                 template,
@@ -84,15 +98,13 @@ public sealed class MediaTreatment(
                 ),
                 cancellationToken: cancellationToken
             );
-            return true;
         }
         catch (Exception exception)
             when (exception is not OperationCanceledException)
         {
-            card.MarkTreatmentFailed();
-            await repository.SaveAsync(card, cancellationToken);
-            throw;
+            throw new TreatmentRenderException(exception.Message, exception);
         }
+        return true;
     }
 
     private static HashSet<string>? FindReusableEpisodes(

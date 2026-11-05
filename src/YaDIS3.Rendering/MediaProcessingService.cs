@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
@@ -10,19 +11,22 @@ public sealed class MediaProcessingService
 {
     private readonly IWorkspaceRepository _repository;
     private readonly TimeProvider _timeProvider;
+    private readonly ILogger? _logger;
 
     /// <summary>
     /// Injecte le stockage et l'horloge du traitement.
     /// </summary>
     public MediaProcessingService(
         IWorkspaceRepository repository,
-        TimeProvider timeProvider
+        TimeProvider timeProvider,
+        ILogger? logger = null
     )
     {
         ArgumentNullException.ThrowIfNull(repository);
         ArgumentNullException.ThrowIfNull(timeProvider);
         _repository = repository;
         _timeProvider = timeProvider;
+        _logger = logger;
     }
 
     /// <summary>
@@ -66,7 +70,8 @@ public sealed class MediaProcessingService
                     progress: progress,
                     cancellationToken: cancellationToken,
                     useFirstEpisodePreview: useFirstEpisodePreview,
-                    reusableEpisodes: reusableEpisodes
+                    reusableEpisodes: reusableEpisodes,
+                    logger: _logger
                 ),
             cancellationToken
         );

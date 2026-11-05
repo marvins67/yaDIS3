@@ -167,24 +167,68 @@ public sealed partial class TemplateRenderer
                 XElement episodeSpec = _template.Node(
                     "tv/synopsis/episode/episodeicon"
                 );
-                using SKBitmap overlay = LoadOrRenderEpisodeIcon(
-                    media, episode, framed, episodeSpec, output
-                );
-                using SKBitmap full = episodeBackground.Copy();
-                using (var canvas = new SKCanvas(full))
+                try
                 {
-                    DrawImage(
-                        canvas,
-                        overlay,
-                        ReadRectangle(episodeSpec.Element("area"))
-                    );
+                    using SKBitmap overlay = LoadOrRenderEpisodeIcon(
+                        media, episode, framed, episodeSpec, output, key);
+                    string preview = Path.Combine(output, "preview.jpg");
+                    SaveEpisodePreview(episodeBackground, overlay, episodeSpec, preview);
+                    episodePreviews[key] = preview;
                 }
-
-                string preview = Path.Combine(output, "preview.jpg");
-                SaveJpeg(full, preview, _options.JpegQuality);
-                episodePreviews[key] = preview;
+                catch (Exception exception)
+                    when (_treatmentPreview is not null && IsRenderFailure(exception))
+                {
+                    // Un épisode incomplet ne bloque pas les épisodes suivants.
+                    s_skippedArtwork(_logger, output, exception);
+                }
             }
         }
+    }
+
+    private void PublishSeriesTreatmentPreview(
+        MediaContext media, string directory, string preview, SKBitmap background,
+        Dictionary<string, string> episodePreviews
+    )
+    {
+        if (media.Info.Element("episode") is not { } first)
+        {
+            return;
+        }
+
+        string season = MediaContext.ViewingSeason(first);
+        string folder = MediaContext.EpisodeFolder(first);
+        string icon = Path.Combine(directory, season, folder, "icon.aai");
+        try
+        {
+            if (episodePreviews.TryGetValue(season + "/" + folder, out string? rendered))
+            {
+                File.Copy(rendered, _treatmentPreview!, overwrite: true);
+            }
+            else
+            {
+                // L’icône peut encore être lisible malgré l’échec du rendu de l’épisode.
+                using SKBitmap overlay = AaiCodec.Load(icon);
+                SaveEpisodePreview(background, overlay,
+                    _template.Node("tv/synopsis/episode/episodeicon"), _treatmentPreview!);
+            }
+            File.Copy(_treatmentPreview!, preview, overwrite: true);
+        }
+        catch (Exception exception) when (IsRenderFailure(exception))
+        {
+            s_skippedArtwork(_logger, _treatmentPreview!, exception);
+        }
+    }
+
+    private void SaveEpisodePreview(
+        SKBitmap background, SKBitmap overlay, XElement specification, string path
+    )
+    {
+        using SKBitmap full = background.Copy();
+        using (var canvas = new SKCanvas(full))
+        {
+            DrawImage(canvas, overlay, ReadRectangle(specification.Element("area")));
+        }
+        SaveJpeg(full, path, _options.JpegQuality);
     }
 
     private SKBitmap LoadOrRenderEpisodeIcon(
@@ -192,11 +236,21 @@ public sealed partial class TemplateRenderer
         XElement episode,
         SKBitmap framed,
         XElement specification,
-        string output
+        string output,
+        string key
     )
     {
         string icon = Path.Combine(output, "icon.aai");
-        if (File.Exists(icon))
+        if (_treatmentPreview is not null
+            && _reusableTreatmentIcons?.Contains(
+                key.Replace('/', Path.DirectorySeparatorChar)) == true
+            && Directory.Exists(output))
+        {
+            // ProcessTVShow reprend les dossiers existants, même après un rendu incomplet.
+            return AaiCodec.Load(icon);
+        }
+
+        if (_treatmentPreview is null && File.Exists(icon))
         {
             try
             {

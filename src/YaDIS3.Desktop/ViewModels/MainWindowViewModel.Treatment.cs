@@ -85,26 +85,32 @@ public sealed partial class MainWindowViewModel
             _repository,
             preparation,
             TimeProvider.System,
-            Texts
+            Texts,
+            _logger
         );
         var progress = new Progress<string>(message =>
             Status = message
         );
-        string summary = await TreatBatchAsync(
-            cards,
-            treatment,
-            template,
-            workspace.Directory,
-            mode,
-            progress,
-            cancellationToken
-        );
-        SelectedEpisode = SelectedCard?.Episodes
-            is { Count: > 0 } episodes
-            ? episodes[0]
-            : null;
-        RefreshImages();
-        Status = summary;
+        try
+        {
+            Status = await TreatBatchAsync(
+                cards,
+                treatment,
+                template,
+                workspace.Directory,
+                mode,
+                progress,
+                cancellationToken
+            );
+        }
+        finally
+        {
+            SelectedEpisode = SelectedCard?.Episodes
+                is { Count: > 0 } episodes
+                ? episodes[0]
+                : null;
+            RefreshImages();
+        }
     }
 
     private async Task<string> TreatBatchAsync(
@@ -140,6 +146,7 @@ public sealed partial class MainWindowViewModel
             }
             catch (Exception exception)
                 when (exception is not OperationCanceledException
+                    and not TreatmentRenderException
                 )
             {
                 OperationFailed(_logger, exception);

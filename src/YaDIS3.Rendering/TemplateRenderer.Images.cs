@@ -69,6 +69,14 @@ public sealed partial class TemplateRenderer
             return bitmap;
         }
         catch (Exception exception)
+            when (_treatmentPreview is not null && !commonAsset
+                && IsRenderFailure(exception))
+        {
+            // yaDIS2 ignore une illustration locale illisible et poursuit le rendu.
+            s_skippedArtwork(_logger, path, exception);
+            return null;
+        }
+        catch (Exception exception)
             when (exception
                     is IOException
                         or InvalidDataException

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SkiaSharp;
 
 namespace YaDIS3.Rendering;
@@ -14,6 +16,13 @@ public sealed partial class TemplateRenderer : IDisposable
     private readonly DuneTemplate _template;
 
     private readonly RenderOptions _options;
+    private readonly ILogger _logger;
+
+    private static readonly Action<ILogger, string, Exception?> s_skippedArtwork =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning, new EventId(1, "SkippedTreatmentArtwork"),
+            "Rendu ignoré pendant le traitement : {Path}");
+
 
     private readonly Dictionary<string, SKTypeface> _fonts = new(
         StringComparer.OrdinalIgnoreCase
@@ -34,11 +43,13 @@ public sealed partial class TemplateRenderer : IDisposable
     /// </summary>
     public TemplateRenderer(
         DuneTemplate template,
-        RenderOptions options
+        RenderOptions options,
+        ILogger? logger = null
     )
     {
         _template = template;
         _options = options;
+        _logger = logger ?? NullLogger.Instance;
         foreach (string path in template.Fonts)
         {
             SKTypeface face = SKTypeface.FromFile(path);
@@ -76,14 +87,7 @@ public sealed partial class TemplateRenderer : IDisposable
             return RenderCard(media, directory, progress);
         }
         catch (Exception exception)
-            when (exception
-                    is IOException
-                        or InvalidDataException
-                        or UnauthorizedAccessException
-                        or ArgumentException
-                        or InvalidOperationException
-                        or NotSupportedException
-            )
+            when (IsRenderFailure(exception))
         {
             throw new InvalidDataException(
                 $"Échec du rendu de la fiche « {media.Title} » "
@@ -130,6 +134,33 @@ public sealed partial class TemplateRenderer : IDisposable
         }
     }
 
+    private static bool IsRenderFailure(Exception exception) =>
+        exception is IOException or InvalidDataException
+            or UnauthorizedAccessException or ArgumentException
+            or InvalidOperationException or NotSupportedException;
+
+    private string? _treatmentPreview;
+    private IReadOnlySet<string>? _reusableTreatmentIcons;
+
+    internal RenderedCard RenderTreatment(
+        MediaContext media, string directory, string preview,
+        IReadOnlySet<string>? reusableIcons, IProgress<string>? progress,
+        CancellationToken cancellationToken
+    )
+    {
+        _treatmentPreview = preview;
+        _reusableTreatmentIcons = reusableIcons;
+        try
+        {
+            return Render(media, directory, progress, cancellationToken);
+        }
+        finally
+        {
+            _treatmentPreview = null;
+            _reusableTreatmentIcons = null;
+        }
+    }
+
     private RenderedCard RenderCard(
         MediaContext media,
         string directory,
@@ -138,7 +169,10 @@ public sealed partial class TemplateRenderer : IDisposable
     {
         using SKBitmap framed = CreateFramedArtwork(media);
 
-        RenderMediaIcon(media, framed, directory);
+        if (_treatmentPreview is null)
+        {
+            RenderMediaIcon(media, framed, directory);
+        }
 
         using SKBitmap common = CreateBitmap(
             CanvasWidth,
@@ -156,11 +190,21 @@ public sealed partial class TemplateRenderer : IDisposable
 
         if (!media.IsSeries)
         {
+            if (_treatmentPreview is not null)
+            {
+                // ProcessMovie écrit l’aperçu avant l’icône et le fond.
+                SaveJpeg(common, _treatmentPreview, _options.JpegQuality);
+                File.Copy(_treatmentPreview, preview, overwrite: true);
+                RenderMediaIcon(media, framed, directory);
+            }
             SaveBackground(
                 common,
                 Path.Combine(directory, "background")
             );
-            SaveJpeg(common, preview, _options.JpegQuality);
+            if (_treatmentPreview is null)
+            {
+                SaveJpeg(common, preview, _options.JpegQuality);
+            }
             return new(directory, preview, episodePreviews);
         }
 
@@ -171,6 +215,11 @@ public sealed partial class TemplateRenderer : IDisposable
             directory,
             preview
         );
+
+        if (_treatmentPreview is not null)
+        {
+            RenderMediaIcon(media, framed, directory);
+        }
 
         using SKBitmap episodeBackground = common.Copy();
 
@@ -189,6 +238,12 @@ public sealed partial class TemplateRenderer : IDisposable
             episodePreviews,
             progress
         );
+
+        if (_treatmentPreview is not null)
+        {
+            PublishSeriesTreatmentPreview(
+                media, directory, preview, episodeBackground, episodePreviews);
+        }
 
         return new(directory, preview, episodePreviews);
     }

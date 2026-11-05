@@ -416,6 +416,7 @@ public sealed partial class DuneExporter(
         IProgress<string>? progress = null,
         bool useFirstEpisodePreview = false,
         IReadOnlySet<string>? reusableEpisodes = null,
+        ILogger? logger = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -424,20 +425,10 @@ public sealed partial class DuneExporter(
             "interface-yaDIS3"
         );
         Directory.CreateDirectory(parent);
-        string stage = Path.Combine(
-            parent,
-            ".stage-" + Guid.NewGuid().ToString("N")
-        );
         string target = Path.Combine(parent, media.Id);
-
-        if (
-            Directory.Exists(target) && !RenderCacheOwned(target)
-        )
-        {
-            throw new IOException(
-                "Le dossier de cache existe mais n'est pas un rendu reconnu de cette application."
-            );
-        }
+        string stage = useFirstEpisodePreview
+            ? target
+            : Path.Combine(parent, ".stage-" + Guid.NewGuid().ToString("N"));
 
         using var processingLock = new FileStream(
             Path.Combine(parent, media.Id + ".lock"),
@@ -445,59 +436,52 @@ public sealed partial class DuneExporter(
             FileAccess.ReadWrite,
             FileShare.None
         );
+        if (Directory.Exists(target) && !RenderCacheOwned(target))
+        {
+            throw new IOException(
+                "Le dossier de cache existe mais n'est pas un rendu reconnu de cette application."
+            );
+        }
+
+        string dataPreview = media.Artwork("preview.jpg");
         try
         {
             using var renderer = new TemplateRenderer(
                 template,
-                options
-            );
-            ReuseEpisodes(
-                target,
-                stage,
-                template,
                 options,
-                reusableEpisodes
+                logger
             );
-            RenderedCard rendered = renderer.Render(
-                media,
-                stage,
-                progress,
-                cancellationToken
-            );
-            if (
-                useFirstEpisodePreview
-                && media.Info.Element("episode") is { } firstEpisode
-                && rendered.EpisodePreviews.TryGetValue(
-                    MediaContext.ViewingSeason(firstEpisode)
-                        + "/"
-                        + MediaContext.EpisodeFolder(firstEpisode),
-                    out string? first
-                )
-            )
+            RenderedCard rendered;
+            if (useFirstEpisodePreview)
             {
-                File.Copy(
-                    first,
-                    Path.Combine(stage, "preview.jpg"),
-                    true
-                );
+                CheckRenderLinks(target);
+                if (new FileInfo(dataPreview).LinkTarget is not null)
+                {
+                    throw new IOException($"L’aperçu est un lien : {dataPreview}");
+                }
+                bool reuse = CanReuseEpisodes(target, template, options, reusableEpisodes);
+                if (!Directory.Exists(target))
+                {
+                    Directory.CreateDirectory(target);
+                    WriteRenderManifest(target, media, template, options);
+                }
+                rendered = renderer.RenderTreatment(
+                    media, target, dataPreview, reuse ? reusableEpisodes : null,
+                    progress, cancellationToken);
             }
-            File.WriteAllText(
-                Path.Combine(stage, "render.json"),
-                JsonSerializer.Serialize(
-                    new
-                    {
-                        Producer = "yaDIS3.Modern",
-                        Version = 1,
-                        MediaId = media.Id,
-                        Template = template.Name,
-                        TemplateDirectory = template.Directory,
-                        Options = options,
-                    }
-                )
-            );
+            else
+            {
+                ReuseEpisodes(target, stage, template, options, reusableEpisodes);
+                rendered = renderer.Render(media, stage, progress, cancellationToken);
+            }
+            WriteRenderManifest(stage, media, template, options);
             cancellationToken.ThrowIfCancellationRequested();
-            CommitRenderStage(stage, target);
-            string preview = CopyRenderedPreview(target, media);
+            string preview = dataPreview;
+            if (!useFirstEpisodePreview)
+            {
+                CommitRenderStage(stage, target);
+                preview = CopyRenderedPreview(target, media);
+            }
             if (options.BasicMode)
             {
                 new LegacyBasicDuneWriter(
@@ -526,9 +510,54 @@ public sealed partial class DuneExporter(
         }
         finally
         {
-            if (Directory.Exists(stage))
+            if (!useFirstEpisodePreview && Directory.Exists(stage))
             {
                 Directory.Delete(stage, true);
+            }
+        }
+    }
+
+    private static void WriteRenderManifest(
+        string directory, MediaContext media, DuneTemplate template, RenderOptions options
+    )
+    {
+        string manifest = Path.Combine(directory, "render.json");
+        string temporary = manifest + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temporary, JsonSerializer.Serialize(new
+            {
+                Producer = "yaDIS3.Modern",
+                Version = 1,
+                MediaId = media.Id,
+                Template = template.Name,
+                TemplateDirectory = template.Directory,
+                Options = options,
+            }));
+            File.Move(temporary, manifest, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
+    }
+
+    private static void CheckRenderLinks(string directory)
+    {
+        if (!Directory.Exists(directory))
+        {
+            return;
+        }
+        foreach (string path in Directory.EnumerateFileSystemEntries(directory))
+        {
+            FileAttributes attributes = File.GetAttributes(path);
+            if ((attributes & FileAttributes.ReparsePoint) != 0)
+            {
+                throw new IOException($"Le dossier de rendu contient un lien : {path}");
+            }
+            if ((attributes & FileAttributes.Directory) != 0)
+            {
+                CheckRenderLinks(path);
             }
         }
     }
@@ -541,13 +570,35 @@ public sealed partial class DuneExporter(
         IReadOnlySet<string>? keys
     )
     {
+        if (keys is null || !CanReuseEpisodes(target, template, options, keys))
+        {
+            return;
+        }
+        foreach (string key in keys)
+        {
+            string old = Path.Combine(target, key);
+            string next = Path.Combine(stage, key);
+            string icon = Path.Combine(old, "icon.aai");
+            if (File.Exists(icon))
+            {
+                Directory.CreateDirectory(next);
+                File.Copy(icon, Path.Combine(next, "icon.aai"));
+            }
+        }
+    }
+
+    private static bool CanReuseEpisodes(
+        string target, DuneTemplate template, RenderOptions options,
+        IReadOnlySet<string>? keys
+    )
+    {
         if (
             keys is null
             || keys.Count == 0
             || !Directory.Exists(target)
         )
         {
-            return;
+            return false;
         }
         using JsonDocument manifest = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(target, "render.json"))
@@ -566,19 +617,9 @@ public sealed partial class DuneExporter(
             || previous.Deserialize<RenderOptions>() != options
         )
         {
-            return;
+            return false;
         }
-        foreach (string key in keys)
-        {
-            string old = Path.Combine(target, key);
-            string next = Path.Combine(stage, key);
-            string icon = Path.Combine(old, "icon.aai");
-            if (File.Exists(icon))
-            {
-                Directory.CreateDirectory(next);
-                File.Copy(icon, Path.Combine(next, "icon.aai"));
-            }
-        }
+        return true;
     }
 
     private void RenderExportMedia(

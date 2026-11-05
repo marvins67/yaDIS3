@@ -376,25 +376,23 @@ public sealed class MediaTreatmentTests
         Assert.False(oldPreview.SequenceEqual(File.ReadAllBytes(preview)));
     }
 
-    [Fact]
-    public async Task TreatAsync_EchecRendu_ConserveApercuEtPermetReprise()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TreatAsync_FanartIllisible_ContinueSansFanart(bool series)
     {
         using ExportFixture fixture = new();
         using WorkspaceRepository repository = new();
-        using MediaCard card = PrepareCard(fixture, repository, series: true);
+        using MediaCard card = PrepareCard(fixture, repository, series);
         TreatmentInputs inputs = new() { SeriesNotFound = true };
+        WriteRedImage(card.FanartPath);
         Assert.True(await TreatAsync(fixture, repository, card, inputs));
         string preview = Path.Combine(card.DataDirectory, "preview.jpg");
         byte[] oldPreview = File.ReadAllBytes(preview);
         File.WriteAllBytes(card.FanartPath, [1, 2, 3]);
-        await Assert.ThrowsAsync<InvalidDataException>(() =>
-            TreatAsync(fixture, repository, card, inputs));
-        Assert.Equal(oldPreview, File.ReadAllBytes(preview));
-        Assert.Equal("3", XDocument.Load(card.FilePath).Root!
-            .Element("item")!.Element("status")!.Value);
 
-        File.Delete(card.FanartPath);
         Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.False(oldPreview.SequenceEqual(File.ReadAllBytes(preview)));
         Assert.Equal("1", XDocument.Load(card.FilePath).Root!
             .Element("item")!.Element("status")!.Value);
     }
@@ -458,6 +456,76 @@ public sealed class MediaTreatmentTests
         Assert.True(await TreatAsync(fixture, repository, card, inputs));
         Assert.False(original.SequenceEqual(File.ReadAllBytes(icon)));
         Assert.False(card.NeedsEpisodeRerender);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TreatAsync_EcritureBloquee_ConserveLesEcrituresDejaEffectuees(
+        bool series
+    )
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, series);
+        TreatmentInputs inputs = new() { SeriesNotFound = true };
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        string cache = Path.Combine(fixture.Root, "interface-yaDIS3",
+            new MediaContext(card).Id);
+        string preview = Path.Combine(card.DataDirectory, "preview.jpg");
+        string background = Path.Combine(cache, "background.jpg");
+        byte[] oldPreview = File.ReadAllBytes(preview);
+        byte[] oldBackground = File.ReadAllBytes(background);
+        string blocked = Path.Combine(cache,
+            series ? "background2.jpg" : "icon.aai");
+        File.Delete(blocked);
+        Directory.CreateDirectory(blocked);
+        WriteRedImage(card.FanartPath);
+
+        await Assert.ThrowsAsync<TreatmentRenderException>(() =>
+            TreatAsync(fixture, repository, card, inputs));
+        Assert.Equal(series, oldPreview.SequenceEqual(File.ReadAllBytes(preview)));
+        Assert.Equal(!series, oldBackground.SequenceEqual(File.ReadAllBytes(background)));
+        Assert.Equal("1", XDocument.Load(card.FilePath).Root!
+            .Element("item")!.Element("status")!.Value);
+
+        Directory.Delete(blocked);
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.True(File.Exists(blocked));
+        Assert.Equal("1", XDocument.Load(card.FilePath).Root!
+            .Element("item")!.Element("status")!.Value);
+    }
+
+    [Fact]
+    public async Task TreatAsync_IconeEpisodeBloquee_PoursuitAvecEpisodeSuivant()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, series: true);
+        TreatmentInputs inputs = new() { SeriesNotFound = true };
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        string cache = Path.Combine(fixture.Root, "interface-yaDIS3",
+            new MediaContext(card).Id, "01");
+        string icon = Path.Combine(cache, "01_001_000", "icon.aai");
+        string preview = Path.Combine(card.DataDirectory, "preview.jpg");
+        byte[] previous = File.ReadAllBytes(preview);
+        File.Delete(icon);
+        Directory.CreateDirectory(icon);
+        string source = Path.Combine(fixture.Root, "videos", card.FolderName);
+        File.WriteAllBytes(Path.Combine(source, "S01E02.mkv"), []);
+
+        Assert.True(await TreatAsync(fixture, repository, card, inputs,
+            TreatmentMode.AllEpisodes));
+        Assert.True(File.Exists(Path.Combine(cache, "01_002_000", "icon.aai")));
+        Assert.Equal(previous, File.ReadAllBytes(preview));
+        Assert.Equal("1", XDocument.Load(card.FilePath).Root!
+            .Element("item")!.Element("status")!.Value);
+        Directory.Delete(icon);
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.False(File.Exists(icon));
+        Assert.True(await TreatAsync(fixture, repository, card, inputs,
+            TreatmentMode.AllEpisodes));
+        Assert.True(File.Exists(icon));
     }
 
     private static void WriteRedImage(string path)

@@ -173,10 +173,18 @@ public sealed partial class TemplateRenderer
         if (_options.AaiBackgrounds)
         {
             AaiCodec.Save(image, path + ".aai");
+            if (_treatmentPreview is not null)
+            {
+                File.Delete(path + ".jpg");
+            }
         }
         else
         {
             SaveJpeg(image, path + ".jpg", _options.JpegQuality);
+            if (_treatmentPreview is not null)
+            {
+                File.Delete(path + ".aai");
+            }
         }
     }
 
