@@ -321,7 +321,7 @@ public sealed partial class MainWindowViewModel
                     options,
                     mappings,
                     catalogOptions: ConfiguredCatalogOptions()
-                ).Export(
+                ).ExportLegacy(
                     media,
                     destination,
                     progress,
