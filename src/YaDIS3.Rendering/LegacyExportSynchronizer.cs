@@ -54,10 +54,9 @@ public sealed class LegacyExportSynchronizer
         {
             string name = Path.GetFileName(path);
             string target = Path.Combine(destination, name);
-            remaining.Remove(name);
-
             if (File.Exists(path))
             {
+                remaining.Remove(name);
                 CopyWhenChanged(path, target);
             }
             else if (
@@ -65,6 +64,7 @@ public sealed class LegacyExportSynchronizer
                 && !name.StartsWith('_')
             )
             {
+                remaining.Remove(name);
                 SynchronizeDirectory(path, target, cancellationToken);
             }
         }
