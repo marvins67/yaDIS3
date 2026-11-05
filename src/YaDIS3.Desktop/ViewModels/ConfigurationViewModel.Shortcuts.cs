@@ -160,7 +160,16 @@ public sealed partial class ConfigurationViewModel
     {
         foreach (DuneShortcut shortcut in shortcuts.ToArray())
         {
-            Shortcuts.Remove(shortcut);
+            for (int index = 0; index < Shortcuts.Count; index++)
+            {
+                if (!ReferenceEquals(Shortcuts[index], shortcut))
+                {
+                    continue;
+                }
+
+                Shortcuts.RemoveAt(index);
+                break;
+            }
         }
     }
 }
