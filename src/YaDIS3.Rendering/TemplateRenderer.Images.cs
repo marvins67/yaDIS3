@@ -221,10 +221,8 @@ public sealed partial class TemplateRenderer
             && _options.UseCases
         )
         {
-            framePath = _template.Asset(
-                "case_default.png",
-                true
-            );
+            // yaDIS2 poursuit le rendu si le boîtier par défaut manque.
+            framePath = _template.Asset("case_default.png");
         }
 
         DrawImage(
