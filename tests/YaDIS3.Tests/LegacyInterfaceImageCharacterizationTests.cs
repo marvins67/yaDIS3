@@ -49,6 +49,38 @@ public sealed class LegacyInterfaceImageCharacterizationTests
         );
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Export_AvecOuSansBoitier_GenereIconeFilm(
+        bool useCases
+    )
+    {
+        using ExportFixture fixture = new();
+        DuneExporter exporter = new(
+            ExportFixture.Template(),
+            new RenderOptions(UseCases: useCases),
+            []
+        );
+
+        ExportResult result = exporter.Export(
+            fixture.Cards(),
+            fixture.Destination
+        );
+
+        Assert.True(
+            File.Exists(
+                Path.Combine(
+                    result.Directory,
+                    "00",
+                    "99",
+                    ExportFixture.MovieName,
+                    "icon.aai"
+                )
+            )
+        );
+    }
+
     [Fact]
     public void Export_BoitierDeSecoursAbsent_ContinueSansImageDeCadre()
     {
