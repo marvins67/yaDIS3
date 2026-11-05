@@ -1,4 +1,3 @@
-using System.Text;
 using System.Xml.Linq;
 using Xunit;
 using YaDIS3.Core;
@@ -52,7 +51,10 @@ public sealed class InterfaceTemplateCharacterizationTests
             draft.SelectedTemplate = next;
 
             Assert.Equal(next.Name, draft.Snapshot().Settings.Template);
-            Assert.Equal(next.Directory, draft.Snapshot().Settings.TemplatePath);
+            Assert.Equal(
+                next.Directory,
+                draft.Snapshot().Settings.TemplatePath
+            );
             Assert.Equal(initial.Name, snapshot.Settings.Template);
             Assert.Equal(initial.Directory, snapshot.Settings.TemplatePath);
         }
