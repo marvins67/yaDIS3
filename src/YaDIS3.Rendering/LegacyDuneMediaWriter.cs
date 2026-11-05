@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
 using YaDIS3.Core;
@@ -65,7 +66,7 @@ internal sealed class LegacyDuneMediaWriter(
                 .ToArray();
             fileSystem.WriteBytes(
                 Path.Combine(source, "playlist.m3u"),
-                Encoding.UTF8.GetBytes(
+                LegacyPlaylistEncoding().GetBytes(
                     string.Join("\r\n", files) + "\r\n"
                 )
             );
@@ -75,6 +76,21 @@ internal sealed class LegacyDuneMediaWriter(
         }
 
         Save(directory, _definitions.Movie(url));
+    }
+
+    private static Encoding LegacyPlaylistEncoding()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return Encoding.UTF8;
+        }
+
+        // StreamWriter(..., Encoding.Default) de yaDIS2 utilise
+        // la page de code ANSI locale de Windows.
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        return Encoding.GetEncoding(
+            CultureInfo.CurrentCulture.TextInfo.ANSICodePage
+        );
     }
 
     private void Save(string directory, string content)
