@@ -494,32 +494,35 @@ public sealed partial class DuneExporter(
                 workspace,
                 cancellationToken
             );
-            LegacyProcessedMediaPublisher.Publish(
-                media,
-                workspace,
-                target
-            );
-            var legacyExporter = new DuneExporter(
-                template,
-                options,
-                []
-            );
-            var warnings = new List<string>();
-            MediaPlaybackPlan plan = legacyExporter.Plan(
-                media,
-                warnings
-            );
-            legacyExporter.WriteMedia(
-                plan,
-                Path.Combine(
+            if (!options.BasicMode)
+            {
+                LegacyProcessedMediaPublisher.Publish(
+                    media,
                     workspace,
-                    "interface",
-                    Relative(media).Replace(
-                        '/',
-                        Path.DirectorySeparatorChar
+                    target
+                );
+                var legacyExporter = new DuneExporter(
+                    template,
+                    options,
+                    []
+                );
+                var warnings = new List<string>();
+                MediaPlaybackPlan plan = legacyExporter.Plan(
+                    media,
+                    warnings
+                );
+                legacyExporter.WriteMedia(
+                    plan,
+                    Path.Combine(
+                        workspace,
+                        "interface",
+                        Relative(media).Replace(
+                            '/',
+                            Path.DirectorySeparatorChar
+                        )
                     )
-                )
-            );
+                );
+            }
 
             string? selected =
                 episodeKey is not null
