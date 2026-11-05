@@ -51,6 +51,22 @@ public sealed class ConfigurationViewModelTests
     }
 
     [Fact]
+    public void ExportCommand_DestinationConfiguree_EstInitialiseeEtAutorisee()
+    {
+        using MainWindowViewModel main = new();
+        Assert.NotNull(main.ExportCommand);
+        Assert.False(main.CanExport);
+
+        main.ExportParentPath = Path.Combine(
+            Path.GetTempPath(),
+            "export-dune"
+        );
+
+        Assert.True(main.CanExport);
+        Assert.True(main.ExportCommand.CanExecute(null));
+    }
+
+    [Fact]
     public void Snapshot_Changements_NeModifiePasLaConfigurationActive()
     {
         ConfigurationSnapshot original = Snapshot();
