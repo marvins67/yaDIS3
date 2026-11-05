@@ -463,54 +463,34 @@
                 Click="FlushImageCache"
                 IsEnabled="{Binding HasWorkspace}"
               />
+              <Separator />
+              <MenuItem
+                Header="{DynamicResource Text.305.Ellipsis}"
+                Click="CreateWorkspace"
+              />
+              <MenuItem
+                Header="{DynamicResource Text.306.Ellipsis}"
+                Click="AddManualSeries"
+              />
+              <MenuItem
+                Header="{DynamicResource Text.307.Ellipsis}"
+                Click="ConfigureTvdb"
+              />
+              <MenuItem
+                Header="{DynamicResource Text.308}"
+                Command="{Binding SaveCommand}"
+                IsEnabled="{Binding HasChanges}"
+              />
             </MenuFlyout>
           </Button.Flyout>
         </Button>
-        <Button
-          Classes="toolbar"
-          Width="54"
-          ToolTip.Tip="{DynamicResource Text.304}"
-        >
-          <StackPanel Orientation="Horizontal" Spacing="7">
-            <Image
-              Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png"
-              Width="24"
-              Height="24"
-            />
-            <TextBlock Text="▾" VerticalAlignment="Center" FontSize="9" />
-          </StackPanel>
-          <Button.Flyout>
-            <Flyout>
-              <StackPanel Spacing="6" Width="250">
-                <Button
-                  Content="{DynamicResource Text.305.Ellipsis}"
-                  Click="CreateWorkspace"
-                />
-                <Button
-                  Content="{DynamicResource Text.306.Ellipsis}"
-                  Click="AddManualSeries"
-                />
-                <Button
-                  Content="{DynamicResource Text.307.Ellipsis}"
-                  Click="ConfigureTvdb"
-                />
-                <Separator />
-                <Button
-                  Content="{DynamicResource Text.308}"
-                  Command="{Binding SaveCommand}"
-                  IsEnabled="{Binding HasChanges}"
-                />
-                <TextBlock
-                  Text="{DynamicResource Text.309.Colon}"
-                />
-                <TextBox
-                  Text="{Binding Filter, Mode=TwoWay}"
-                  PlaceholderText="{DynamicResource Text.310.Ellipsis}"
-                />
-              </StackPanel>
-            </Flyout>
-          </Button.Flyout>
-        </Button>
+        <TextBox
+          Width="160"
+          Text="{Binding Filter, Mode=TwoWay}"
+          PlaceholderText="{DynamicResource Text.310.Ellipsis}"
+          ToolTip.Tip="{DynamicResource Text.309}"
+          VerticalAlignment="Center"
+        />
         <SplitButton
           x:Name="AboutButton"
           Classes="toolbar"
