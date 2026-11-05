@@ -97,14 +97,14 @@ internal sealed partial class LegacyDuneCatalogWriter
                 "0" => "",
                 _ => shortcut.Attr("path"),
             };
+            string directory = Output(
+                root,
+                FormattableString.Invariant(
+                    $"05_{index++:00}_{name}"
+                )
+            );
             if (target.Length > 0)
             {
-                string directory = Output(
-                    root,
-                    FormattableString.Invariant(
-                        $"05_{index:00}_{name}"
-                    )
-                );
                 Document(
                         "media_url="
                             + target
@@ -112,7 +112,6 @@ internal sealed partial class LegacyDuneCatalogWriter
                     )
                     .Save(directory);
             }
-            index++;
         }
     }
 
