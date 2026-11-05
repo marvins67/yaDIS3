@@ -10,5 +10,8 @@
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     <Content Include="Fixtures/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../src/YaDIS3.Rendering/Assets/Templates/**/*"
+         Link="Assets/Templates/%(RecursiveDir)%(Filename)%(Extension)"
+         CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
