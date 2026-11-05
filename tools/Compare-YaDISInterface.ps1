@@ -49,7 +49,7 @@ function Get-ComparableText {
 
 $left = Get-Manifest -Root $roots[0]
 $right = Get-Manifest -Root $roots[1]
-$allPaths = @($left.Keys + $right.Keys | Sort-Object -Unique)
+$allPaths = @(@($left.Keys) + @($right.Keys) | Sort-Object -Unique)
 $rows = foreach ($relative in $allPaths) {
     $a = $left[$relative]
     $b = $right[$relative]
