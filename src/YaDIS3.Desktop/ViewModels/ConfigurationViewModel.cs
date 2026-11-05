@@ -274,16 +274,16 @@ public sealed partial class ConfigurationViewModel
     /// Auteur et version provenant de template.xml.
     /// </summary>
     public string TemplateDescription =>
-        SelectedTemplate is null
+        SelectedTemplate is null || _preview is null
             ? ""
             : Texts["93"]
-                + " : "
+                + ": "
                 + SelectedTemplate
                     .Root.Attribute("author")
                     ?.Value
-                + "\n"
-                + Texts["144"]
-                + " : "
+                + "\r\n"
+                + Texts["123"]
+                + ": "
                 + SelectedTemplate
                     .Root.Attribute("version")
                     ?.Value;
@@ -326,9 +326,16 @@ public sealed partial class ConfigurationViewModel
             _preview = new Bitmap(path);
         }
         catch (Exception exception)
-            when (exception is ArgumentException or IOException)
+            when (exception is ArgumentException
+                or IOException
+                or UnauthorizedAccessException)
         {
-            Report(Texts.GetString("350"), exception);
+            // yaDIS2 n'affiche pas d'erreur pour l'image du thème.
+            _logger.LogWarning(
+                exception,
+                "Aperçu du thème indisponible : {PreviewPath}",
+                path
+            );
         }
     }
 
