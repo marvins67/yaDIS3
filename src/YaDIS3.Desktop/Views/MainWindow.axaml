@@ -484,13 +484,6 @@
             </MenuFlyout>
           </Button.Flyout>
         </Button>
-        <TextBox
-          Width="160"
-          Text="{Binding Filter, Mode=TwoWay}"
-          PlaceholderText="{DynamicResource Text.310.Ellipsis}"
-          ToolTip.Tip="{DynamicResource Text.309}"
-          VerticalAlignment="Center"
-        />
         <SplitButton
           x:Name="AboutButton"
           Classes="toolbar"
