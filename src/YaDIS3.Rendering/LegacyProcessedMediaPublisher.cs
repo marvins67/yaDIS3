@@ -52,7 +52,16 @@ internal static class LegacyProcessedMediaPublisher
         foreach (string directory in Directory.EnumerateDirectories(source))
         {
             string name = Path.GetFileName(directory);
-            if (!name.StartsWith('_'))
+            string extension = Path.GetExtension(name);
+            bool blockedImage = extension.Equals(
+                    ".aai",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                || extension.Equals(
+                    ".jpg",
+                    StringComparison.OrdinalIgnoreCase
+                );
+            if (!name.StartsWith('_') && !blockedImage)
             {
                 activeDirectories.Add(name);
                 CopyImages(directory, Path.Combine(output, name));
@@ -75,6 +84,7 @@ internal static class LegacyProcessedMediaPublisher
                 (extension.Equals(".aai", StringComparison.OrdinalIgnoreCase)
                     || extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase))
                 && !File.Exists(Path.Combine(source, name))
+                && !Directory.Exists(Path.Combine(source, name))
             )
             {
                 File.Delete(file);
