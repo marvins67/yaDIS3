@@ -430,8 +430,8 @@
               Height="126"
             >
               <Grid
-                ColumnDefinitions="271,10,*"
-                RowDefinitions="Auto,*"
+                ColumnDefinitions="172,10,158"
+                RowDefinitions="23,*"
               >
                 <ComboBox
                   x:Name="ConfigurationTemplate"
@@ -451,12 +451,18 @@
                   Grid.Row="1"
                   Text="{Binding TemplateDescription}"
                   Margin="0,8,0,0"
+                  TextAlignment="Right"
+                  VerticalAlignment="Bottom"
                 />
                 <Image
                   Grid.Column="2"
                   Grid.RowSpan="2"
                   Source="{Binding TemplatePreview}"
                   Stretch="Uniform"
+                  Width="158"
+                  Height="90"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Top"
                   DoubleTapped="EnlargePreview"
                 />
               </Grid>
