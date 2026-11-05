@@ -247,7 +247,11 @@ public sealed partial class MainWindowViewModel
         UseCases = _configuration.Cases;
         SelectedTemplate =
             Templates.FirstOrDefault(value =>
-                value.Name == _configuration.Template
+                string.Equals(
+                    value.Name,
+                    _configuration.Template,
+                    StringComparison.OrdinalIgnoreCase
+                )
             ) ?? Templates.FirstOrDefault();
         string tvdbSettings = Path.Combine(
             AppContext.BaseDirectory,

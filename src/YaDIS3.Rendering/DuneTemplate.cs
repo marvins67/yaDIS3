@@ -228,27 +228,20 @@ public sealed class DuneTemplate
     )
     {
         string root = baseDirectory ?? AppContext.BaseDirectory;
-        string folder = Path.Combine(
-            root,
-            "Assets",
-            "Templates"
-        );
+        string folder = Path.Combine(root, "templates");
         if (!System.IO.Directory.Exists(folder))
         {
             return [];
         }
 
-        string common = Path.Combine(root, "Assets", "Images");
+        string common = Path.Combine(
+            root,
+            "Assets",
+            "Images"
+        );
         return System
             .IO.Directory.EnumerateDirectories(folder)
             .Select(pathValue => Load(pathValue, common))
-            .OrderBy(template =>
-                template.Name == "Origins" ? 0 : 1
-            )
-            .ThenBy(
-                template => template.Name,
-                StringComparer.Ordinal
-            )
             .ToArray();
     }
 
