@@ -71,9 +71,14 @@ public sealed partial class DuneExporter
             }
         }
 
-        using (var renderer = new TemplateRenderer(template, options))
+        try
         {
+            using var renderer = new TemplateRenderer(template, options);
             WriteIndexes(renderer, media, source, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            warnings.Add(exception.Message);
         }
 
         progress?.Report(_texts["122"]);
