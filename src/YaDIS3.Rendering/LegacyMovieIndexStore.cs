@@ -183,13 +183,17 @@ public sealed class LegacyMovieIndexStore(
             "interface",
             relative
         );
-        if (_fileSystem.DirectoryExists(source))
+        string target = Path.Combine(destination, relative);
+        if (
+            _fileSystem.DirectoryExists(source)
+            && !string.Equals(
+                Path.GetFullPath(source),
+                Path.GetFullPath(target),
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
         {
-            CopyDirectory(
-                source,
-                Path.Combine(destination, relative),
-                cancellationToken
-            );
+            CopyDirectory(source, target, cancellationToken);
         }
     }
 
