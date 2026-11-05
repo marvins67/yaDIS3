@@ -6,6 +6,10 @@ on:
       - feature/redesign
   workflow_dispatch:
 
+concurrency:
+  group: export-validation-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: windows-latest
