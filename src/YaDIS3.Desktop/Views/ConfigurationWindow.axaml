@@ -509,6 +509,7 @@
                   <TextBlock
                     Text="{DynamicResource Text.197.Percent}"
                     VerticalAlignment="Center"
+                    MinWidth="78"
                   />
                   <NumericUpDown
                     Width="58"
@@ -565,6 +566,7 @@
                   <TextBlock
                     Text="{DynamicResource Text.176.Colon}"
                     VerticalAlignment="Center"
+                    MinWidth="52"
                   />
                   <NumericUpDown
                     Width="58"
