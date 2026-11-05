@@ -179,6 +179,36 @@ public sealed class InterfaceConfigurationCharacterizationTests
     }
 
     [Fact]
+    public void Snapshot_SelectionsDeMemeNom_ConserveChaqueEtatIndependant()
+    {
+        ConfigurationSnapshot initial = InitialSnapshot() with
+        {
+            Groups = XDocument.Parse(
+                "<groups><selections>"
+                + "<selection enabled='yes'><name>Famille</name><movie>Film A.iso</movie></selection>"
+                + "<selection enabled='no'><name>Famille</name><movie>Film B.iso</movie></selection>"
+                + "</selections></groups>"
+            ),
+        };
+        using ConfigurationViewModel draft = CreateDraft(initial);
+        draft.Selections[0].Enabled = false;
+        draft.Selections[1].Enabled = true;
+
+        XElement[] result = draft.Snapshot()
+            .Groups.Descendants("selection").ToArray();
+
+        Assert.Equal("no", result[0].Attribute("enabled")?.Value);
+        Assert.Equal("yes", result[1].Attribute("enabled")?.Value);
+        Assert.Equal("Film A.iso", result[0].Element("movie")?.Value);
+        Assert.Equal("Film B.iso", result[1].Element("movie")?.Value);
+        Assert.Equal(
+            "yes",
+            initial.Groups.Descendants("selection")
+                .First().Attribute("enabled")?.Value
+        );
+    }
+
+    [Fact]
     public void AddShortcut_TroisTypes_DoublonsEtOrdreSontConserves()
     {
         using ConfigurationViewModel draft = CreateDraft();
