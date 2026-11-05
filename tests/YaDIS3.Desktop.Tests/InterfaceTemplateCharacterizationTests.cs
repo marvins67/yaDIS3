@@ -34,6 +34,29 @@ public sealed class InterfaceTemplateCharacterizationTests
     }
 
     [Fact]
+    public void TemplateDescription_ApercuCorrompu_EffaceInformationsSansMessage()
+    {
+        string folder = CreateTemplate("Illisible", "Auteur", "2.1");
+        File.WriteAllBytes(
+            Path.Combine(folder, "preview.jpg"),
+            [1, 2, 3, 4]
+        );
+        try
+        {
+            DuneTemplate template = DuneTemplate.Load(folder);
+            using ConfigurationViewModel draft = CreateDraft([template]);
+
+            Assert.Null(draft.TemplatePreview);
+            Assert.Equal("", draft.TemplateDescription);
+            Assert.Equal("", draft.Message);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
     public void SelectedTemplate_ChangementSansValidation_NeModifiePasLaSource()
     {
         string first = CreateTemplate("Premier", "Auteur A", "1.0");
