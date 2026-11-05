@@ -298,11 +298,14 @@ public sealed partial class MainWindowViewModel
             );
         }
 
+        if (!Directory.Exists(ExportParentPath))
+        {
+            throw new DirectoryNotFoundException(Texts.GetString("125"));
+        }
+
         IReadOnlyList<PathMapping> mappings = DunePaths.Parse(
             PathMappings
         );
-        await SaveAllAsync();
-        SaveDunePreferences();
         var media = Cards
             .Select(cardValue => new MediaContext(cardValue))
             .ToArray();
