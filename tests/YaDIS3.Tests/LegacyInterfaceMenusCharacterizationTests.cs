@@ -53,6 +53,12 @@ public sealed class LegacyInterfaceMenusCharacterizationTests
     [InlineData(0, "02")]
     [InlineData(1, "03")]
     [InlineData(2, "04")]
+    [InlineData(3, "05")]
+    [InlineData(4, "06")]
+    [InlineData(5, "07")]
+    [InlineData(6, "08")]
+    [InlineData(7, "09")]
+    [InlineData(8, "10")]
     [InlineData(9, "11")]
     public void Export_CategorieDesactivee_OmetUniquementCeMenu(
         int categoryBit,
@@ -86,9 +92,10 @@ public sealed class LegacyInterfaceMenusCharacterizationTests
                 Path.Combine(result.Directory, "00", "00")
             )
         );
+        string other = disabledFolder == "03" ? "04" : "03";
         Assert.True(
             Directory.Exists(
-                Path.Combine(result.Directory, "00", "05")
+                Path.Combine(result.Directory, "00", other)
             )
         );
     }
