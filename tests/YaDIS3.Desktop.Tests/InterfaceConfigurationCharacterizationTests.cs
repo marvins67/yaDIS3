@@ -209,6 +209,44 @@ public sealed class InterfaceConfigurationCharacterizationTests
     }
 
     [Fact]
+    public void RemoveShortcuts_DoublonSelectionne_SupprimeLaBonneInstance()
+    {
+        using ConfigurationViewModel draft = CreateDraft();
+        draft.ShortcutSelection = SelectionName;
+        draft.AddShortcut();
+        draft.AddShortcut();
+        DuneShortcut first = draft.Shortcuts[0];
+        DuneShortcut selected = draft.Shortcuts[1];
+
+        draft.RemoveShortcuts([selected]);
+
+        Assert.Single(draft.Shortcuts);
+        Assert.Same(first, draft.Shortcuts[0]);
+        Assert.DoesNotContain(
+            draft.Shortcuts,
+            item => ReferenceEquals(item, selected)
+        );
+    }
+
+    [Fact]
+    public void RemoveShortcuts_SelectionMultiple_GardeLesAutresInstances()
+    {
+        using ConfigurationViewModel draft = CreateDraft();
+        draft.ShortcutSelection = SelectionName;
+        draft.AddShortcut();
+        draft.AddShortcut();
+        draft.AddShortcut();
+        DuneShortcut remaining = draft.Shortcuts[1];
+
+        draft.RemoveShortcuts(
+            [draft.Shortcuts[0], draft.Shortcuts[2]]
+        );
+
+        Assert.Single(draft.Shortcuts);
+        Assert.Same(remaining, draft.Shortcuts[0]);
+    }
+
+    [Fact]
     public void AddShortcut_ChampsObligatoiresAbsents_NAjouteRien()
     {
         using ConfigurationViewModel draft = CreateDraft();
