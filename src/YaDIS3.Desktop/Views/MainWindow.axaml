@@ -483,10 +483,6 @@
             <Flyout>
               <StackPanel Spacing="6" Width="250">
                 <Button
-                  Content="{DynamicResource Text.304.Ellipsis}"
-                  Click="OpenWorkspace"
-                />
-                <Button
                   Content="{DynamicResource Text.305.Ellipsis}"
                   Click="CreateWorkspace"
                 />

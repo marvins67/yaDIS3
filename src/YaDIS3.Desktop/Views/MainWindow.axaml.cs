@@ -320,30 +320,6 @@ public sealed partial class MainWindow : Window
         return !Model.HasChanges;
     }
 
-    private async void OpenWorkspace(
-        object? sender,
-        RoutedEventArgs eventArgs
-    )
-    {
-        if (!await ConfirmSwitch())
-        {
-            return;
-        }
-
-        string? path = await Folder(
-            Model.Texts.GetString("357")
-        );
-        if (path is not null)
-        {
-            await Model.RunAsync(() =>
-                Model.OpenAsync(
-                    path,
-                    cancellationToken: Model.OperationToken
-                )
-            );
-        }
-    }
-
     private async void CreateWorkspace(
         object? sender,
         RoutedEventArgs eventArgs
