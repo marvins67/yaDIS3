@@ -328,11 +328,7 @@ public sealed partial class ConfigurationViewModel
         catch (Exception exception)
         {
             // yaDIS2 n'affiche pas d'erreur pour l'image du thème.
-            _logger.LogWarning(
-                exception,
-                "Aperçu du thème indisponible : {PreviewPath}",
-                path
-            );
+            TemplatePreviewUnavailable(path, exception);
         }
     }
 
@@ -665,6 +661,16 @@ public sealed partial class ConfigurationViewModel
     )]
     private partial void ConfigurationFailed(
         string operation,
+        Exception exception
+    );
+
+    [LoggerMessage(
+        2,
+        LogLevel.Warning,
+        "Aperçu du thème indisponible : {PreviewPath}"
+    )]
+    private partial void TemplatePreviewUnavailable(
+        string path,
         Exception exception
     );
 
