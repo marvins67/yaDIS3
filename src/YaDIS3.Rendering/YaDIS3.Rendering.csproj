@@ -14,9 +14,5 @@
              Exclude="Assets/Templates/**/*"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="Assets/Templates/**/*"
-             Link="templates/%(RecursiveDir)%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
