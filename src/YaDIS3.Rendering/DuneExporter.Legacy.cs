@@ -1,5 +1,3 @@
-using YaDIS3.Core;
-
 namespace YaDIS3.Rendering;
 
 public sealed partial class DuneExporter
@@ -67,7 +65,10 @@ public sealed partial class DuneExporter
                 );
             }
 
-            WriteMedia(plan, output);
+            if (!File.Exists(Path.Combine(output, "dune_folder.txt")))
+            {
+                WriteMedia(plan, output);
+            }
         }
 
         using (var renderer = new TemplateRenderer(template, options))
