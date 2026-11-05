@@ -205,6 +205,8 @@ public sealed class OnlineTreatmentMetadata(
     )
     {
         string date = Value(movie, "release_date");
+        // Le traitement applique ensuite LegacySortTitle avec
+        // les préférences courantes, comme RemoveArticle.
         return new XElement(
             "info",
             new XElement("source", "0"),
@@ -217,8 +219,6 @@ public sealed class OnlineTreatmentMetadata(
                 "original_title",
                 Value(movie, "original_title")
             ),
-            // Le traitement applique ensuite LegacySortTitle avec
-            // les préférences courantes, comme RemoveArticle.
             new XElement("sort_title", ""),
             new XElement("tagline", Value(movie, "tagline")),
             new XElement("plot", Value(movie, "overview")),
