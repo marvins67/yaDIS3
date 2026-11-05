@@ -46,12 +46,38 @@ internal static class LegacyProcessedMediaPublisher
             File.Copy(path, Path.Combine(output, name), true);
         }
 
+        var activeDirectories = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase
+        );
         foreach (string directory in Directory.EnumerateDirectories(source))
         {
             string name = Path.GetFileName(directory);
             if (!name.StartsWith('_'))
             {
+                activeDirectories.Add(name);
                 CopyImages(directory, Path.Combine(output, name));
+            }
+        }
+
+        foreach (string directory in Directory.EnumerateDirectories(output))
+        {
+            if (!activeDirectories.Contains(Path.GetFileName(directory)))
+            {
+                Directory.Delete(directory, true);
+            }
+        }
+
+        foreach (string file in Directory.EnumerateFiles(output))
+        {
+            string name = Path.GetFileName(file);
+            string extension = Path.GetExtension(file);
+            if (
+                (extension.Equals(".aai", StringComparison.OrdinalIgnoreCase)
+                    || extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase))
+                && !File.Exists(Path.Combine(source, name))
+            )
+            {
+                File.Delete(file);
             }
         }
     }
