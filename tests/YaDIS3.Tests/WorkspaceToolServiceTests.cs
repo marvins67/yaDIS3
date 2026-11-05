@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using YaDIS3.Core;
 using Xunit;
+using YaDIS3.Core;
 
 namespace YaDIS3.Tests;
 
