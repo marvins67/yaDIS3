@@ -452,6 +452,34 @@
             />
           </StackPanel>
           <Button.Flyout>
+            <MenuFlyout>
+              <MenuItem
+                Header="{DynamicResource Text.75}"
+                Click="ResetDuneInterface"
+                IsEnabled="{Binding HasWorkspace}"
+              />
+              <MenuItem
+                Header="{DynamicResource Text.76}"
+                Click="FlushImageCache"
+                IsEnabled="{Binding HasWorkspace}"
+              />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+        <Button
+          Classes="toolbar"
+          Width="54"
+          ToolTip.Tip="{DynamicResource Text.304}"
+        >
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Image
+              Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png"
+              Width="24"
+              Height="24"
+            />
+            <TextBlock Text="▾" VerticalAlignment="Center" FontSize="9" />
+          </StackPanel>
+          <Button.Flyout>
             <Flyout>
               <StackPanel Spacing="6" Width="250">
                 <Button

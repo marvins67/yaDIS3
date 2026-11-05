@@ -152,6 +152,78 @@ public sealed partial class MainWindow : Window
         );
     }
 
+    private async void FlushImageCache(
+        object? sender,
+        RoutedEventArgs eventArgs
+    )
+    {
+        if (!Model.HasWorkspace)
+        {
+            return;
+        }
+
+        await Model.RunAsync(Model.FlushImageCacheAsync);
+        await ShowToolResultAsync("76", false);
+    }
+
+    private async void ResetDuneInterface(
+        object? sender,
+        RoutedEventArgs eventArgs
+    )
+    {
+        if (!Model.HasWorkspace)
+        {
+            return;
+        }
+
+        await Model.RunAsync(Model.ResetDuneInterfaceAsync);
+        await ShowToolResultAsync("75", true);
+    }
+
+    private async Task ShowToolResultAsync(
+        string titleId,
+        bool requiresReprocessing
+    )
+    {
+        string message = Model.Texts.GetString("77") + ".";
+        if (requiresReprocessing)
+        {
+            message += Environment.NewLine
+                + Environment.NewLine
+                + Model.Texts.GetString("78") + ".";
+        }
+
+        Window dialog = new()
+        {
+            Title = Model.Texts.GetString(titleId),
+            Width = 440,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        Button close = new()
+        {
+            Content = Model.Texts.GetString("34"),
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        close.Click += (_, _) => dialog.Close();
+        dialog.Content = new StackPanel
+        {
+            Margin = new Avalonia.Thickness(16),
+            Spacing = 16,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = message,
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                },
+                close,
+            },
+        };
+        await dialog.ShowDialog(this);
+    }
+
     private async void ShowAbout(
         object? sender,
         RoutedEventArgs eventArgs
