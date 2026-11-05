@@ -494,6 +494,11 @@ public sealed partial class DuneExporter(
                 workspace,
                 cancellationToken
             );
+            LegacyProcessedMediaPublisher.Publish(
+                media,
+                workspace,
+                target
+            );
 
             string? selected =
                 episodeKey is not null
