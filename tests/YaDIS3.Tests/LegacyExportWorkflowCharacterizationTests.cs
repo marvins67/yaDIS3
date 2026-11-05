@@ -1,6 +1,5 @@
 using System.Text;
 using Xunit;
-using YaDIS3.Core;
 using YaDIS3.Rendering;
 
 namespace YaDIS3.Tests;
