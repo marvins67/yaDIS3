@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Xunit;
 using YaDIS3.Rendering;
@@ -95,7 +96,7 @@ public sealed class LegacyExportWorkflowCharacterizationTests
             ExportFixture.MovieName
         );
         Directory.CreateDirectory(movieDirectory);
-        File.WriteAllBytes(Path.Combine(movieDirectory, "part1.mkv"), []);
+        File.WriteAllBytes(Path.Combine(movieDirectory, "part1-é.mkv"), []);
         File.WriteAllBytes(Path.Combine(movieDirectory, "part2.mkv"), []);
 
         string metadata = Path.Combine(
@@ -118,9 +119,17 @@ public sealed class LegacyExportWorkflowCharacterizationTests
 
         string playlist = Path.Combine(movieDirectory, "playlist.m3u");
         Assert.True(File.Exists(playlist));
+        Encoding encoding = Encoding.UTF8;
+        if (OperatingSystem.IsWindows())
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            encoding = Encoding.GetEncoding(
+                CultureInfo.CurrentCulture.TextInfo.ANSICodePage
+            );
+        }
         Assert.Equal(
-            "part1.mkv\r\npart2.mkv\r\n",
-            File.ReadAllText(playlist, Encoding.UTF8)
+            encoding.GetBytes("part1-é.mkv\r\npart2.mkv\r\n"),
+            File.ReadAllBytes(playlist)
         );
     }
 }
