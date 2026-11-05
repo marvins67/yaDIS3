@@ -670,7 +670,7 @@ public sealed partial class ConfigurationViewModel
         "Aperçu du thème indisponible : {PreviewPath}"
     )]
     private partial void TemplatePreviewUnavailable(
-        string path,
+        string previewPath,
         Exception exception
     );
 
