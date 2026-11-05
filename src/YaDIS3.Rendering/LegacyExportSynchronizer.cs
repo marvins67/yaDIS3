@@ -65,7 +65,7 @@ public sealed class LegacyExportSynchronizer
             )
             {
                 remaining.Remove(name);
-                SynchronizeDirectory(path, target, cancellationToken);
+                Synchronize(path, target, cancellationToken);
             }
         }
 
