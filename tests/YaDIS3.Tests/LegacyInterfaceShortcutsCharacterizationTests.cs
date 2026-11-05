@@ -123,14 +123,15 @@ public sealed class LegacyInterfaceShortcutsCharacterizationTests
             folder,
             StringComparison.Ordinal
         );
-        Assert.True(
+        Assert.Equal(
+            enabled,
             File.Exists(
                 Path.Combine(
                     result.Directory,
                     "05_03_Favoris",
                     "dune_folder.txt"
                 )
-            ) == enabled
+            )
         );
     }
 
