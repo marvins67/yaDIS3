@@ -90,10 +90,6 @@ public sealed class LegacyInterfaceMenusCharacterizationTests
             Directory.Exists(
                 Path.Combine(result.Directory, "00", "05")
             )
-            || disabledFolder == "02"
-                && Directory.Exists(
-                    Path.Combine(result.Directory, "00", "03")
-                )
         );
     }
 
