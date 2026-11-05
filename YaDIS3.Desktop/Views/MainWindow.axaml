@@ -1,0 +1,1627 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:vm="using:YaDIS3.Desktop.ViewModels"
+  xmlns:core="using:YaDIS3.Core"
+  xmlns:render="using:YaDIS3.Rendering"
+  x:Class="YaDIS3.Desktop.Views.MainWindow"
+  x:DataType="vm:MainWindowViewModel"
+  Title="yaDIS3"
+  Width="1007"
+  Height="693"
+  MinWidth="927"
+  MinHeight="693"
+  FontFamily="Segoe UI, Arial"
+  FontSize="12"
+  Icon="avares://yaDIS3.Desktop/Assets/Icons/yadis.ico"
+>
+  <Window.Resources>
+    <DataTemplate
+      x:Key="ArtworkChoiceTemplate"
+      x:DataType="vm:ArtworkChoiceViewModel"
+    >
+      <Button
+        Classes="artwork"
+        Classes.chosen="{Binding IsSelected}"
+        Command="{Binding SelectCommand}"
+        ToolTip.Tip="{Binding Hint}"
+        Padding="5"
+      >
+        <Grid Width="{Binding ImageWidth}" Height="168">
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/download_image_small.png"
+            IsVisible="{Binding ShowLoading}"
+            Width="32"
+            Height="32"
+          />
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/delete_image_small.png"
+            IsVisible="{Binding ShowError}"
+            Width="32"
+            Height="32"
+          />
+          <Image Source="{Binding Thumbnail}" Stretch="Fill" />
+        </Grid>
+      </Button>
+    </DataTemplate>
+    <ControlTheme
+      x:Key="StateMenuItemTheme"
+      TargetType="MenuItem"
+      BasedOn="{StaticResource {x:Type MenuItem}}"
+      x:DataType="vm:LibraryFilterItem"
+    >
+      <Setter Property="Header" Value="{Binding Label}" />
+      <Setter
+        Property="Command"
+        Value="{Binding SelectCommand}"
+      />
+    </ControlTheme>
+  </Window.Resources>
+  <Window.Styles>
+    <Style Selector="Button.artwork">
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="#AAAAAA" />
+    </Style>
+    <Style Selector="Button.artwork.chosen">
+      <Setter Property="BorderBrush" Value="#2779C5" />
+    </Style>
+    <Style Selector="Button.toolbar, SplitButton.toolbar">
+      <Setter Property="Height" Value="36" />
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="6,3" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="BorderBrush" Value="#C6C6C6" />
+      <Setter Property="Background">
+        <LinearGradientBrush
+          StartPoint="0%,0%"
+          EndPoint="0%,100%"
+        >
+          <GradientStop Color="#FFFFFF" Offset="0" />
+          <GradientStop Color="#F4F4F4" Offset="1" />
+        </LinearGradientBrush>
+      </Setter>
+    </Style>
+    <Style
+      Selector="SplitButton.toolbar /template/ Button#PART_SecondaryButton"
+    >
+      <Setter Property="Width" Value="18" />
+      <Setter Property="MinWidth" Value="18" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ComboBox.toolbarFilter">
+      <Setter Property="Height" Value="36" />
+      <Setter Property="Padding" Value="32,2,0,2" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="BorderBrush" Value="#C6C6C6" />
+      <Setter Property="Background" Value="White" />
+    </Style>
+    <Style Selector="ListBoxItem">
+      <Setter Property="Height" Value="19" />
+      <Setter Property="MinHeight" Value="19" />
+      <Setter Property="Padding" Value="4,0" />
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="Foreground" Value="Black" />
+      <Setter Property="MinHeight" Value="23" />
+      <Setter Property="Padding" Value="6,3" />
+      <Setter Property="Background" Value="#F0F0F0" />
+      <Setter Property="BorderBrush" Value="#D6D6D6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            Padding="{TemplateBinding Padding}"
+          >
+            <ContentPresenter
+              Content="{TemplateBinding Header}"
+              ContentTemplate="{TemplateBinding HeaderTemplate}"
+              VerticalAlignment="Center"
+              HorizontalAlignment="Center"
+            />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="TabItem:selected">
+      <Setter Property="Background" Value="#FAFAFA" />
+      <Setter Property="BorderThickness" Value="1,1,1,0" />
+    </Style>
+    <Style Selector="TextBox.legacyField">
+      <Setter Property="Height" Value="23" />
+      <Setter Property="MinHeight" Value="23" />
+      <Setter Property="Padding" Value="3,1" />
+    </Style>
+    <Style
+      Selector="TextBox:disabled /template/ Border#PART_BorderElement"
+    >
+      <Setter Property="Background" Value="#F0F0F0" />
+      <Setter Property="BorderBrush" Value="#E5E5E5" />
+    </Style>
+    <Style Selector="TextBlock.fieldLabel:disabled">
+      <Setter Property="Foreground" Value="#A0A0A0" />
+    </Style>
+    <Style Selector="TextBox:disabled">
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+    <Style
+      Selector="Button.toolbar:disabled /template/ ContentPresenter#PART_ContentPresenter"
+    >
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style
+      Selector="SplitButton.toolbar:disabled /template/ Button /template/ ContentPresenter#PART_ContentPresenter"
+    >
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style
+      Selector="SplitButton.toolbar:disabled /template/ Button"
+    >
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style
+      Selector="CheckBox.legacyFilter /template/ Border#NormalRectangle"
+    >
+      <Setter Property="Width" Value="13" />
+      <Setter Property="Height" Value="13" />
+    </Style>
+  </Window.Styles>
+  <Grid Margin="8,0,8,0" RowDefinitions="49,*,6,242,6,22">
+    <Grid
+      x:Name="MainToolbar"
+      ColumnDefinitions="*,Auto"
+      Margin="0,4,0,9"
+    >
+      <ScrollViewer
+        HorizontalScrollBarVisibility="Hidden"
+        VerticalScrollBarVisibility="Disabled"
+      >
+        <StackPanel
+          Orientation="Horizontal"
+          Spacing="6"
+          IsEnabled="{Binding !IsBusy}"
+        >
+          <Button
+            x:Name="ConfigureButton"
+            ToolTip.Tip="{DynamicResource Text.132}"
+            Classes="toolbar"
+            MinWidth="104"
+            Click="ShowConfiguration"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/tools.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="{DynamicResource Text.10}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+          </Button>
+          <SplitButton
+            Classes="toolbar"
+            MinWidth="98"
+            Command="{Binding ProcessCommand}"
+            ToolTip.Tip="{DynamicResource Text.133}"
+            IsEnabled="{Binding CanProcessSelection}"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="{Binding CanProcessSelection, Converter={StaticResource ToolbarIconConverter}, ConverterParameter=process}"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="{DynamicResource Text.11}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+            <SplitButton.Flyout>
+              <MenuFlyout>
+                <MenuItem
+                  Header="{DynamicResource Text.62.Ellipsis}"
+                  Click="ShowTvdbSearch"
+                  IsEnabled="{Binding IsSeries}"
+                />
+                <MenuItem
+                  Header="{DynamicResource Text.88}"
+                  Command="{Binding ReloadInformationCommand}"
+                />
+                <MenuItem
+                  Header="{DynamicResource Text.205}"
+                  Command="{Binding ReloadTechnicalCommand}"
+                />
+                <MenuItem
+                  Header="{DynamicResource Text.184}"
+                  Command="{Binding ProcessAllEpisodesCommand}"
+                  IsVisible="{Binding IsSeries}"
+                />
+              </MenuFlyout>
+            </SplitButton.Flyout>
+          </SplitButton>
+          <Button
+            Classes="toolbar"
+            MinWidth="90"
+            Command="{Binding ExportCommand}"
+            ToolTip.Tip="{DynamicResource Text.135}"
+            IsEnabled="{Binding CanExport}"
+            x:Name="ExportButton"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="{Binding CanExport, Converter={StaticResource ToolbarIconConverter}, ConverterParameter=download_to_computer}"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="{DynamicResource Text.12}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+          </Button>
+          <Button
+            Classes="toolbar"
+            MinWidth="98"
+            Click="RefreshWorkspace"
+            ToolTip.Tip="{DynamicResource Text.137}"
+            IsEnabled="{Binding HasWorkspace}"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/refresh.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="{DynamicResource Text.162}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+          </Button>
+          <SplitButton
+            Classes="toolbar"
+            MinWidth="94"
+            Command="{Binding ToggleMediaFilterCommand}"
+            x:Name="MediaFilterButton"
+            ToolTip.Tip="{DynamicResource Text.130}"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/film.png"
+                Width="24"
+                Height="24"
+                IsVisible="{Binding !IsSeriesFilter}"
+              />
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/television.png"
+                Width="24"
+                Height="24"
+                IsVisible="{Binding IsSeriesFilter}"
+              />
+              <TextBlock
+                Text="{Binding MediaFilterLabel}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+            <SplitButton.Flyout>
+              <MenuFlyout>
+                <MenuItem
+                  Header="{DynamicResource Text.63}"
+                  Command="{Binding SelectMoviesCommand}"
+                />
+                <MenuItem
+                  Header="{DynamicResource Text.64}"
+                  Command="{Binding SelectSeriesCommand}"
+                />
+              </MenuFlyout>
+            </SplitButton.Flyout>
+          </SplitButton>
+          <SplitButton
+            x:Name="StateFilterButton"
+            ToolTip.Tip="{DynamicResource Text.131}"
+            Classes="toolbar"
+            MinWidth="89"
+            Command="{Binding CycleStateFilterCommand}"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Image
+                Source="avares://yaDIS3.Desktop/Assets/Icons/tag_green.png"
+                Width="24"
+                Height="24"
+              />
+              <TextBlock
+                Text="{Binding StateFilterLabel}"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+            <SplitButton.Flyout>
+              <MenuFlyout>
+                <MenuItem
+                  Header="{Binding StateFilters[0].Label}"
+                  Command="{Binding StateFilters[0].SelectCommand}"
+                />
+                <MenuItem
+                  Header="{Binding StateFilters[1].Label}"
+                  Command="{Binding StateFilters[1].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/accept_green.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Header="{Binding StateFilters[2].Label}"
+                  Command="{Binding StateFilters[2].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/accept_blue.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Header="{Binding StateFilters[3].Label}"
+                  Command="{Binding StateFilters[3].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/question_orange.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Header="{Binding StateFilters[4].Label}"
+                  Command="{Binding StateFilters[4].SelectCommand}"
+                >
+                  <MenuItem.Icon>
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/stop_round.png"
+                      Width="16"
+                      Height="16"
+                    />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem
+                  x:Name="SagaFilterItems"
+                  Header="{DynamicResource Text.185}"
+                  ItemsSource="{Binding SagaFilters}"
+                  IsVisible="{Binding ShowSagaFilters}"
+                  ItemContainerTheme="{StaticResource StateMenuItemTheme}"
+                />
+                <MenuItem
+                  x:Name="SelectionFilterItems"
+                  Header="{DynamicResource Text.59}"
+                  ItemsSource="{Binding SelectionFilters}"
+                  IsVisible="{Binding ShowSelectionFilters}"
+                  ItemContainerTheme="{StaticResource StateMenuItemTheme}"
+                />
+                <MenuItem
+                  x:Name="GenreFilterItems"
+                  Header="{DynamicResource Text.44}"
+                  ItemsSource="{Binding GenreFilters}"
+                  IsVisible="{Binding ShowGenreFilters}"
+                  ItemContainerTheme="{StaticResource StateMenuItemTheme}"
+                />
+              </MenuFlyout>
+            </SplitButton.Flyout>
+          </SplitButton>
+          <CheckBox
+            Content="{DynamicResource Text.33}"
+            IsChecked="{Binding InvertStateFilter, Mode=TwoWay}"
+            Margin="2,0,0,0"
+            VerticalAlignment="Center"
+            Classes="legacyFilter"
+            Padding="0"
+          />
+        </StackPanel>
+      </ScrollViewer>
+      <StackPanel
+        Grid.Column="1"
+        Orientation="Horizontal"
+        Spacing="6"
+        IsEnabled="{Binding !IsBusy}"
+        Margin="6,0,0,0"
+      >
+        <Button
+          Classes="toolbar"
+          Width="54"
+          ToolTip.Tip="{DynamicResource Text.136}"
+        >
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Image
+              Source="avares://yaDIS3.Desktop/Assets/Icons/computer_process.png"
+              Width="24"
+              Height="24"
+            />
+            <TextBlock
+              Text="▾"
+              VerticalAlignment="Center"
+              FontSize="9"
+            />
+          </StackPanel>
+          <Button.Flyout>
+            <MenuFlyout>
+              <MenuItem
+                Header="{DynamicResource Text.75}"
+                Click="ResetDuneInterface"
+                IsEnabled="{Binding HasWorkspace}"
+              />
+              <MenuItem
+                Header="{DynamicResource Text.76}"
+                Click="FlushImageCache"
+                IsEnabled="{Binding HasWorkspace}"
+              />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+        <Button
+          Classes="toolbar"
+          Width="54"
+          ToolTip.Tip="{DynamicResource Text.304}"
+        >
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Image
+              Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png"
+              Width="24"
+              Height="24"
+            />
+            <TextBlock Text="▾" VerticalAlignment="Center" FontSize="9" />
+          </StackPanel>
+          <Button.Flyout>
+            <Flyout>
+              <StackPanel Spacing="6" Width="250">
+                <Button
+                  Content="{DynamicResource Text.304.Ellipsis}"
+                  Click="OpenWorkspace"
+                />
+                <Button
+                  Content="{DynamicResource Text.305.Ellipsis}"
+                  Click="CreateWorkspace"
+                />
+                <Button
+                  Content="{DynamicResource Text.306.Ellipsis}"
+                  Click="AddManualSeries"
+                />
+                <Button
+                  Content="{DynamicResource Text.307.Ellipsis}"
+                  Click="ConfigureTvdb"
+                />
+                <Separator />
+                <Button
+                  Content="{DynamicResource Text.308}"
+                  Command="{Binding SaveCommand}"
+                  IsEnabled="{Binding HasChanges}"
+                />
+                <TextBlock
+                  Text="{DynamicResource Text.309.Colon}"
+                />
+                <TextBox
+                  Text="{Binding Filter, Mode=TwoWay}"
+                  PlaceholderText="{DynamicResource Text.310.Ellipsis}"
+                />
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
+        <SplitButton
+          x:Name="AboutButton"
+          Classes="toolbar"
+          Width="54"
+          Click="ShowAbout"
+          ToolTip.Tip="{DynamicResource Text.138.App}"
+        >
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/info_big.png"
+            Width="24"
+            Height="24"
+          />
+          <SplitButton.Flyout>
+            <MenuFlyout>
+              <MenuItem
+                Header="{DynamicResource Text.138.App}"
+                Click="ShowAbout"
+              />
+            </MenuFlyout>
+          </SplitButton.Flyout>
+        </SplitButton>
+      </StackPanel>
+    </Grid>
+    <Grid Grid.Row="1" ColumnDefinitions="254,8,*">
+      <ListBox
+        x:Name="LibraryList"
+        SelectionMode="Multiple"
+        SelectedItems="{Binding TreatmentSelection}"
+        ItemsSource="{Binding VisibleCards}"
+        SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
+        IsEnabled="{Binding !IsBusy}"
+        BorderBrush="#A5A5A5"
+        BorderThickness="1"
+        Background="White"
+      >
+        <ListBox.ContextMenu>
+          <ContextMenu>
+            <MenuItem
+              Header="{DynamicResource Text.62.Ellipsis}"
+              Click="ShowTvdbSearch"
+              IsEnabled="{Binding IsSeries}"
+            />
+          </ContextMenu>
+        </ListBox.ContextMenu>
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="core:MediaCard">
+            <Grid
+              ColumnDefinitions="18,*"
+              Height="19"
+              ToolTip.Tip="{Binding DisplayName}"
+            >
+              <Image
+                Width="16"
+                Height="16"
+                VerticalAlignment="Center"
+              >
+                <Image.Source>
+                  <MultiBinding
+                    Converter="{StaticResource LibraryStateConverter}"
+                    ConverterParameter="image"
+                  >
+                    <Binding Path="ProcessingState" />
+                  </MultiBinding>
+                </Image.Source>
+              </Image>
+              <TextBlock
+                Text="{Binding DisplayName}"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                TextTrimming="CharacterEllipsis"
+              />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <GridSplitter
+        Grid.Column="1"
+        ResizeDirection="Columns"
+        HorizontalAlignment="Stretch"
+        Background="Transparent"
+      />
+      <Border
+        x:Name="PreviewPanel"
+        Grid.Column="2"
+        BorderBrush="#777777"
+        BorderThickness="1"
+        Background="#B4B4B4"
+        Padding="0"
+      >
+        <Grid>
+          <Image
+            x:Name="DunePreview"
+            Source="{Binding RenderedPreview}"
+            Stretch="Uniform"
+          />
+          <Image
+            Source="avares://yaDIS3.Desktop/Assets/Icons/delete_image.png"
+            Width="64"
+            Height="64"
+            x:Name="EmptyPreview"
+            IsVisible="{Binding !HasRenderedPreview}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+          />
+        </Grid>
+      </Border>
+    </Grid>
+    <GridSplitter
+      Grid.Row="2"
+      ResizeDirection="Rows"
+      VerticalAlignment="Stretch"
+      HorizontalAlignment="Stretch"
+      Background="Transparent"
+    />
+    <TabControl
+      x:Name="EditorTabs"
+      SelectionChanged="EditorTabChanged"
+      Grid.Row="3"
+      IsEnabled="{Binding CanEditSelection}"
+      Background="#FAFAFA"
+      Padding="0"
+    >
+      <TabItem Header="{Binding MediaTabTitle}">
+        <Grid>
+          <Grid
+            x:Name="InformationPanel"
+            Margin="8,3"
+            ColumnDefinitions="406,6,*"
+            IsEnabled="{Binding HasCard}"
+            IsVisible="{Binding IsSeries}"
+          >
+            <Grid RowDefinitions="39,42,42,42,*">
+              <Grid ColumnDefinitions="282,6,56,6,56">
+                <StackPanel>
+                  <TextBlock
+                    Text="{DynamicResource Text.22.Colon}"
+                    Classes="fieldLabel"
+                  />
+                  <TextBox
+                    x:Name="TitleEditor"
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Title, Mode=TwoWay}"
+                  />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                  <TextBlock
+                    Text="{DynamicResource Text.24.Colon}"
+                    Classes="fieldLabel"
+                  />
+                  <TextBox
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Year, Mode=TwoWay}"
+                  />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                  <TextBlock
+                    Text="{DynamicResource Text.26.Colon}"
+                    Classes="fieldLabel"
+                  />
+                  <TextBox
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Rating, Mode=TwoWay}"
+                  />
+                </StackPanel>
+              </Grid>
+              <StackPanel Grid.Row="1">
+                <TextBlock
+                  Text="{DynamicResource Text.45.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Actors, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Row="2">
+                <TextBlock
+                  Text="{DynamicResource Text.44.Colon}"
+                  Classes="fieldLabel"
+                />
+                <Grid ColumnDefinitions="*,6,22">
+                  <TextBox
+                    Classes="legacyField"
+                    Text="{Binding EditableCard?.Genres, Mode=TwoWay}"
+                  />
+                  <Button
+                    Grid.Column="2"
+                    Width="22"
+                    Height="23"
+                    MinHeight="23"
+                    Padding="1"
+                    ToolTip.Tip="{DynamicResource Text.311}"
+                  >
+                    <Image
+                      Source="avares://yaDIS3.Desktop/Assets/Icons/accept_database.png"
+                      Width="16"
+                      Height="16"
+                    />
+                    <Button.Flyout>
+                      <Flyout
+                        Opening="PrepareGenres"
+                        Closed="ApplyGenres"
+                      >
+                        <ScrollViewer MaxHeight="360">
+                          <ItemsControl
+                            ItemsSource="{Binding GenreChoices}"
+                          >
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate
+                                x:DataType="vm:GenreChoice"
+                              >
+                                <CheckBox
+                                  Content="{Binding Name}"
+                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </ScrollViewer>
+                      </Flyout>
+                    </Button.Flyout>
+                  </Button>
+                </Grid>
+              </StackPanel>
+              <StackPanel Grid.Row="3">
+                <TextBlock
+                  Text="{DynamicResource Text.29.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Network, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </Grid>
+            <Grid Grid.Column="2" RowDefinitions="Auto,149,*">
+              <TextBlock
+                Text="{DynamicResource Text.32.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Grid.Row="1"
+                Text="{Binding EditableCard?.Plot, Mode=TwoWay}"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                VerticalContentAlignment="Top"
+                ScrollViewer.VerticalScrollBarVisibility="Visible"
+              />
+            </Grid>
+          </Grid>
+          <Grid
+            Margin="8,3"
+            ColumnDefinitions="406,6,*"
+            RowDefinitions="42,42,42,42,42,*"
+            IsVisible="{Binding !IsSeries}"
+            x:Name="MovieInformationPanel"
+          >
+            <Grid ColumnDefinitions="200,6,200">
+              <StackPanel>
+                <TextBlock
+                  Text="{DynamicResource Text.22.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Title, Mode=TwoWay}"
+                  x:Name="MovieTitleEditor"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock
+                  Text="{DynamicResource Text.23.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.OriginalTitle, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="200,6,200">
+              <StackPanel>
+                <TextBlock
+                  Text="{DynamicResource Text.189.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.SortTitle, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock
+                  Text="{DynamicResource Text.46.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Directors, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </Grid>
+            <StackPanel Grid.Row="2">
+              <TextBlock
+                Text="{DynamicResource Text.44.Colon}"
+                Classes="fieldLabel"
+              />
+              <Grid ColumnDefinitions="*,6,22">
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Genres, Mode=TwoWay}"
+                />
+                <Button
+                  Grid.Column="2"
+                  Width="22"
+                  Height="23"
+                  MinHeight="23"
+                  Padding="1"
+                  ToolTip.Tip="{DynamicResource Text.311}"
+                >
+                  <Image
+                    Source="avares://yaDIS3.Desktop/Assets/Icons/accept_database.png"
+                    Width="16"
+                    Height="16"
+                  />
+                  <Button.Flyout>
+                    <Flyout
+                      Opening="PrepareGenres"
+                      Closed="ApplyGenres"
+                    >
+                      <ScrollViewer MaxHeight="360">
+                        <ItemsControl
+                          ItemsSource="{Binding GenreChoices}"
+                        >
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate
+                              x:DataType="vm:GenreChoice"
+                            >
+                              <CheckBox
+                                Content="{Binding Name}"
+                                IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                              />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </ScrollViewer>
+                    </Flyout>
+                  </Button.Flyout>
+                </Button>
+              </Grid>
+            </StackPanel>
+            <StackPanel Grid.Row="3">
+              <TextBlock
+                Text="{DynamicResource Text.112.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.Studios, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <StackPanel Grid.Row="4">
+              <TextBlock
+                Text="{DynamicResource Text.110.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.Tagline, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <Grid
+              Grid.Column="2"
+              ColumnDefinitions="56,6,56,6,56,6,88,8,88,*"
+            >
+              <StackPanel Grid.Column="0">
+                <TextBlock
+                  Text="{DynamicResource Text.24.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Year, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock
+                  Text="{DynamicResource Text.25.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Runtime, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="4">
+                <TextBlock
+                  Text="{DynamicResource Text.26.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Rating, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="6">
+                <TextBlock
+                  Text="{DynamicResource Text.48.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Countries, Mode=TwoWay}"
+                />
+              </StackPanel>
+              <StackPanel Grid.Column="8">
+                <TextBlock
+                  Text="{DynamicResource Text.79.Colon}"
+                  Classes="fieldLabel"
+                />
+                <TextBox
+                  Classes="legacyField"
+                  Text="{Binding EditableCard?.Certification, Mode=TwoWay}"
+                />
+              </StackPanel>
+            </Grid>
+            <StackPanel Grid.Column="2" Grid.Row="1">
+              <TextBlock
+                Text="{DynamicResource Text.45.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.Actors, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <StackPanel
+              Grid.Column="2"
+              Grid.Row="2"
+              Grid.RowSpan="3"
+            >
+              <TextBlock
+                Text="{DynamicResource Text.32.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.Plot, Mode=TwoWay}"
+                Height="107"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                VerticalContentAlignment="Top"
+                ScrollViewer.VerticalScrollBarVisibility="Visible"
+              />
+            </StackPanel>
+          </Grid>
+        </Grid>
+      </TabItem>
+      <TabItem
+        Header="{DynamicResource Text.16}"
+        IsVisible="{Binding !IsSeries}"
+        x:Name="MediaTab"
+      >
+        <StackPanel
+          Margin="8"
+          Orientation="Horizontal"
+          Spacing="12"
+        >
+          <StackPanel Width="220">
+            <TextBlock Text="{DynamicResource Text.19}" />
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="{DynamicResource Text.36.Colon}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.VideoCodec, Mode=TwoWay}"
+                ItemsSource="{Binding VideoCodecChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="{DynamicResource Text.37.Colon}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.Resolution, Mode=TwoWay}"
+                ItemsSource="{Binding ResolutionChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="{DynamicResource Text.38.Colon}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.FrameRate, Mode=TwoWay}"
+                ItemsSource="{Binding FrameRateChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="{DynamicResource Text.39.Colon}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.AspectRatio, Mode=TwoWay}"
+                ItemsSource="{Binding AspectRatioChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="{DynamicResource Text.97.Colon}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                SelectedItem="{Binding EditableCard?.ContainerFormat, Mode=TwoWay}"
+                ItemsSource="{Binding ContainerFormatChoices}"
+              />
+            </Grid>
+          </StackPanel>
+          <StackPanel Width="220">
+            <TextBlock Text="{DynamicResource Text.20}" />
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="{DynamicResource Text.36.Colon}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.AudioCodec, Mode=TwoWay}"
+                ItemsSource="{Binding AudioCodecChoices}"
+              />
+            </Grid>
+            <Grid ColumnDefinitions="94,100" Height="36">
+              <TextBlock
+                Text="{DynamicResource Text.105.Colon}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                Margin="0,0,6,0"
+              />
+              <ComboBox
+                IsEditable="True"
+                Grid.Column="1"
+                MinHeight="23"
+                Height="23"
+                Text="{Binding EditableCard?.AudioChannels, Mode=TwoWay}"
+                ItemsSource="{Binding AudioChannelsChoices}"
+              />
+            </Grid>
+            <StackPanel>
+              <TextBlock
+                Text="{DynamicResource Text.27.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.AudioLanguages, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <TextBlock
+              Text="{DynamicResource Text.28}"
+              Margin="0,12,0,0"
+            />
+            <StackPanel>
+              <TextBlock
+                Text="{DynamicResource Text.27.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Classes="legacyField"
+                Text="{Binding EditableCard?.SubtitleLanguages, Mode=TwoWay}"
+              />
+            </StackPanel>
+          </StackPanel>
+          <Grid
+            ColumnDefinitions="94,100"
+            Height="36"
+            IsVisible="{Binding UseCases}"
+          >
+            <TextBlock
+              Text="{DynamicResource Text.52.Colon}"
+              VerticalAlignment="Center"
+              HorizontalAlignment="Right"
+              Margin="0,0,6,0"
+            />
+            <ComboBox
+              Grid.Column="1"
+              MinHeight="23"
+              Height="23"
+              SelectedItem="{Binding EditableCard?.CaseType, Mode=TwoWay}"
+              ItemsSource="{Binding CaseTypeChoices}"
+            />
+          </Grid>
+        </StackPanel>
+      </TabItem>
+      <TabItem
+        x:Name="PosterTab"
+        Header="{DynamicResource Text.17}"
+        IsVisible="{Binding !IsSeries}"
+      >
+        <Grid ColumnDefinitions="Auto,*" Margin="8">
+          <StackPanel Spacing="6" Margin="0,0,12,0">
+            <Button
+              Content="{DynamicResource Text.83.Ellipsis}"
+              Click="ImportPoster"
+              IsEnabled="{Binding HasCard}"
+            />
+            <Image
+              Source="{Binding Poster}"
+              Width="126"
+              Height="136"
+              Stretch="Uniform"
+            />
+          </StackPanel>
+          <ScrollViewer
+            Grid.Column="1"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Disabled"
+          >
+            <ItemsControl
+              x:Name="PosterCatalog"
+              ItemsSource="{Binding PosterChoices}"
+              ItemTemplate="{StaticResource ArtworkChoiceTemplate}"
+            >
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="12"
+                  />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </TabItem>
+      <TabItem
+        Header="{DynamicResource Text.14}"
+        IsVisible="{Binding IsSeries}"
+      >
+        <Grid RowDefinitions="Auto,*" Margin="8">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button
+              Content="{DynamicResource Text.83.Ellipsis}"
+              Click="ImportBanner"
+              IsEnabled="{Binding HasCard}"
+            />
+            <TextBlock
+              Text="{DynamicResource Text.312}"
+              Classes="muted"
+              VerticalAlignment="Center"
+            />
+          </StackPanel>
+          <Image
+            Grid.Row="1"
+            Source="{Binding Banner}"
+            Stretch="Uniform"
+            Margin="0,6,0,0"
+            HorizontalAlignment="Left"
+          />
+        </Grid>
+      </TabItem>
+      <TabItem
+        x:Name="FanartTab"
+        Header="{DynamicResource Text.18}"
+      >
+        <Grid>
+          <Grid
+            ColumnDefinitions="Auto,*"
+            Margin="8"
+            IsVisible="{Binding !IsSeries}"
+          >
+            <StackPanel Spacing="6" Margin="0,0,12,0">
+              <Button
+                Content="{DynamicResource Text.83.Ellipsis}"
+                Click="ImportFanart"
+                IsEnabled="{Binding HasCard}"
+              />
+              <Image
+                Source="{Binding Fanart}"
+                Width="300"
+                Height="136"
+                Stretch="Uniform"
+              />
+            </StackPanel>
+            <ScrollViewer
+              Grid.Column="1"
+              HorizontalScrollBarVisibility="Auto"
+              VerticalScrollBarVisibility="Disabled"
+            >
+              <ItemsControl
+                x:Name="FanartCatalog"
+                ItemsSource="{Binding FanartChoices}"
+                ItemTemplate="{StaticResource ArtworkChoiceTemplate}"
+              >
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel
+                      Orientation="Horizontal"
+                      Spacing="12"
+                    />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+          <Grid
+            RowDefinitions="Auto,*"
+            Margin="8"
+            IsVisible="{Binding IsSeries}"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button
+                Content="{DynamicResource Text.83.Ellipsis}"
+                Click="ImportFanart"
+                IsEnabled="{Binding HasCard}"
+              />
+              <TextBlock
+                Text="{DynamicResource Text.312}"
+                Classes="muted"
+                VerticalAlignment="Center"
+              />
+            </StackPanel>
+            <Image
+              Grid.Row="1"
+              Source="{Binding Fanart}"
+              Stretch="Uniform"
+              Margin="0,6,0,0"
+              HorizontalAlignment="Left"
+            />
+          </Grid>
+        </Grid>
+      </TabItem>
+      <TabItem
+        Header="{DynamicResource Text.302}"
+        IsVisible="{Binding IsSeries}"
+      >
+        <Grid Margin="8" RowDefinitions="Auto,*" RowSpacing="6">
+          <Grid
+            ColumnDefinitions="Auto,*,Auto"
+            ColumnSpacing="8"
+          >
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Button
+                Content="◀"
+                Command="{Binding PreviousEpisodeCommand}"
+                IsEnabled="{Binding HasEpisode}"
+              />
+              <Button
+                Content="▶"
+                Command="{Binding NextEpisodeCommand}"
+                IsEnabled="{Binding HasEpisode}"
+              />
+            </StackPanel>
+            <ComboBox
+              x:Name="EpisodeChoice"
+              Grid.Column="1"
+              ItemsSource="{Binding SelectedCard?.Episodes}"
+              SelectedItem="{Binding SelectedEpisode, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+            >
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="core:Episode">
+                  <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <StackPanel
+              Grid.Column="2"
+              Orientation="Horizontal"
+              Spacing="8"
+            >
+              <CheckBox
+                Content="{DynamicResource Text.313}"
+                IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}"
+                IsEnabled="{Binding HasEpisode}"
+              />
+              <Button
+                Content="{DynamicResource Text.314.Ellipsis}"
+                Click="ScanEpisodes"
+              />
+            </StackPanel>
+          </Grid>
+          <Grid
+            Grid.Row="1"
+            ColumnDefinitions="2*,12,3*,12,210"
+            IsEnabled="{Binding HasEpisode}"
+          >
+            <StackPanel Spacing="3">
+              <TextBlock
+                Text="{DynamicResource Text.315.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                x:Name="EpisodeTitleEditor"
+                Text="{Binding SelectedEpisode?.Title, Mode=TwoWay}"
+              />
+              <TextBlock
+                Text="{DynamicResource Text.316.Colon}"
+                Classes="fieldLabel"
+              />
+              <Grid ColumnDefinitions="*,65" ColumnSpacing="6">
+                <TextBox
+                  Text="{Binding SelectedEpisode?.Aired, Mode=TwoWay}"
+                />
+                <TextBox
+                  Grid.Column="1"
+                  Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}"
+                  PlaceholderText="{DynamicResource Text.26}"
+                />
+              </Grid>
+              <TextBlock
+                Text="{DynamicResource Text.46.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Text="{Binding SelectedEpisode?.Director, Mode=TwoWay}"
+              />
+              <TextBlock
+                Text="{Binding EpisodePosition}"
+                Classes="muted"
+              />
+            </StackPanel>
+            <Grid
+              Grid.Column="2"
+              RowDefinitions="Auto,*"
+              RowSpacing="3"
+            >
+              <TextBlock
+                Text="{DynamicResource Text.32.Colon}"
+                Classes="fieldLabel"
+              />
+              <TextBox
+                Grid.Row="1"
+                Text="{Binding SelectedEpisode?.Plot, Mode=TwoWay}"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                VerticalContentAlignment="Top"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+              />
+            </Grid>
+            <Grid Grid.Column="4" RowDefinitions="*,Auto">
+              <Image
+                Source="{Binding EpisodeImage}"
+                Stretch="Uniform"
+              />
+              <Button
+                Content="{DynamicResource Text.83.Ellipsis}"
+                Grid.Row="1"
+                Click="ImportEpisodeImage"
+                Margin="0,4,0,0"
+              />
+            </Grid>
+          </Grid>
+        </Grid>
+      </TabItem>
+      <TabItem
+        Header="{DynamicResource Text.317}"
+        IsVisible="False"
+        x:Name="TvdbSearchTab"
+      >
+        <Grid
+          Margin="10,16"
+          RowDefinitions="Auto,Auto,*,Auto,Auto"
+          RowSpacing="12"
+        >
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <Button
+              Content="{DynamicResource Text.307}"
+              Click="ConfigureTvdb"
+            />
+            <TextBlock
+              Text="{Binding CredentialsLabel}"
+              Classes="muted"
+              VerticalAlignment="Center"
+            />
+          </StackPanel>
+          <Grid
+            Grid.Row="1"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="8"
+          >
+            <TextBox
+              Text="{Binding Query, Mode=TwoWay}"
+              PlaceholderText="{DynamicResource Text.310.Ellipsis}"
+            />
+            <Button
+              Grid.Column="1"
+              Content="{DynamicResource Text.377}"
+              Command="{Binding SearchCommand}"
+            />
+          </Grid>
+          <ListBox
+            x:Name="TvdbResults"
+            Grid.Row="2"
+            ItemsSource="{Binding SearchResults}"
+            SelectedItem="{Binding SelectedMatch, Mode=TwoWay}"
+            SelectionChanged="SearchSelectionChanged"
+          >
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="core:SeriesMatch">
+                <StackPanel Margin="4,8" Spacing="6">
+                  <TextBlock
+                    Text="{Binding Label}"
+                    FontWeight="SemiBold"
+                  />
+                  <TextBlock
+                    Text="{Binding Overview}"
+                    TextWrapping="Wrap"
+                    MaxHeight="72"
+                  />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <Grid
+            Grid.Row="3"
+            ColumnDefinitions="Auto,*,Auto"
+            ColumnSpacing="12"
+          >
+            <TextBlock
+              Text="{DynamicResource Text.301}"
+              VerticalAlignment="Center"
+            />
+            <ComboBox
+              Grid.Column="1"
+              ItemsSource="{Binding Orders}"
+              SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+            >
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="core:EpisodeOrder">
+                  <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
+          <Button
+            Grid.Row="4"
+            Content="{DynamicResource Text.318}"
+            Command="{Binding ApplySeriesCommand}"
+            HorizontalAlignment="Left"
+          />
+        </Grid>
+      </TabItem>
+      <TabItem
+        Header="{DynamicResource Text.319}"
+        IsVisible="False"
+        x:Name="DuneSettingsTab"
+      >
+        <ScrollViewer>
+          <StackPanel Margin="10,16" Spacing="12">
+            <TextBlock
+              Text="{DynamicResource Text.320}"
+              Classes="section"
+            />
+            <Grid
+              ColumnDefinitions="*,Auto,Auto"
+              ColumnSpacing="8"
+            >
+              <ComboBox
+                ItemsSource="{Binding Templates}"
+                SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
+                HorizontalAlignment="Stretch"
+              >
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="render:DuneTemplate">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button
+                Grid.Column="1"
+                Content="{DynamicResource Text.321.Ellipsis}"
+                Click="ChooseTemplate"
+              />
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="16">
+              <CheckBox
+                Content="{DynamicResource Text.322}"
+                IsChecked="{Binding AaiBackgrounds, Mode=TwoWay}"
+              />
+              <CheckBox
+                Content="{DynamicResource Text.99}"
+                IsChecked="{Binding UseCases, Mode=TwoWay}"
+              />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <Button
+                Content="{DynamicResource Text.11}"
+                Command="{Binding ProcessCommand}"
+              />
+              <CheckBox
+                Content="{DynamicResource Text.323}"
+                IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}"
+                IsEnabled="{Binding HasEpisode}"
+              />
+            </StackPanel>
+            <TextBlock
+              Text="{DynamicResource Text.324}"
+              Classes="section"
+            />
+            <TextBlock
+              Text="{DynamicResource Text.325}"
+              TextWrapping="Wrap"
+              Classes="muted"
+            />
+            <TextBox
+              Text="{Binding PathMappings, Mode=OneWay}"
+              IsReadOnly="True"
+              AcceptsReturn="True"
+              TextWrapping="Wrap"
+              MinHeight="84"
+              PlaceholderText="Z:\Séries =&gt; smb://nas/Series&#10;/Volumes/Films =&gt; storage_label://MEDIAS/Films"
+            />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox
+                Text="{Binding ExportParentPath, Mode=TwoWay}"
+                PlaceholderText="{DynamicResource Text.326}"
+              />
+              <Button
+                Grid.Column="1"
+                Content="{DynamicResource Text.327.Ellipsis}"
+                Click="ChooseExportDestination"
+              />
+            </Grid>
+            <Button
+              Content="{DynamicResource Text.328}"
+              Command="{Binding ExportCommand}"
+              HorizontalAlignment="Left"
+            />
+            <TextBlock
+              Text="{DynamicResource Text.329}"
+              TextWrapping="Wrap"
+              Classes="muted"
+            />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+    <Grid
+      Grid.Row="5"
+      ColumnDefinitions="Auto,Auto,*,Auto"
+      ColumnSpacing="10"
+    >
+      <TextBlock
+        Text="{Binding VisibleCountLabel}"
+        VerticalAlignment="Center"
+      />
+      <ProgressBar
+        Grid.Column="1"
+        IsVisible="{Binding IsBusy}"
+        IsIndeterminate="True"
+        Width="70"
+        Height="5"
+        VerticalAlignment="Center"
+      />
+      <TextBlock
+        Text="{Binding Status}"
+        Grid.Column="2"
+        Classes="muted"
+        TextTrimming="CharacterEllipsis"
+        VerticalAlignment="Center"
+        ToolTip.Tip="{Binding Status}"
+      />
+      <Button
+        Content="{DynamicResource Text.90}"
+        Grid.Column="3"
+        Command="{Binding CancelCommand}"
+        IsVisible="{Binding IsBusy}"
+        Padding="6,0"
+      />
+    </Grid>
+  </Grid>
+</Window>
