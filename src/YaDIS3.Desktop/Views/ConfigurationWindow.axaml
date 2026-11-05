@@ -77,6 +77,11 @@
       <Setter Property="Height" Value="23" />
       <Setter Property="Padding" Value="3,1" />
     </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="Height" Value="28" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
     <Style Selector="CheckBox, RadioButton">
       <Setter Property="MinHeight" Value="19" />
       <Setter Property="Height" Value="19" />
