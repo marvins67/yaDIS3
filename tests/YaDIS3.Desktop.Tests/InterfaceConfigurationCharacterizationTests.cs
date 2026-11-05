@@ -410,6 +410,56 @@ public sealed class InterfaceConfigurationCharacterizationTests
         Assert.Equal("Accès refusé", draft.Message);
     }
 
+    [Fact]
+    public void Dispose_ModificationsNonAppliquees_LaisseOriginalInchange()
+    {
+        ConfigurationSnapshot original = InitialSnapshot();
+        using (ConfigurationViewModel draft = CreateDraft(original))
+        {
+            draft.UseCases = true;
+            draft.JpegQuality = 15;
+            draft.Selections[0].Enabled = false;
+            draft.ShortcutSelection = SelectionName;
+            draft.AddShortcut();
+        }
+
+        Assert.False(original.Settings.Cases);
+        Assert.Equal(90, original.Settings.JpegQuality);
+        Assert.Empty(original.Shortcuts);
+        Assert.Equal(
+            "yes",
+            Assert.Single(
+                original.Groups.Descendants("selection")
+            ).Attribute("enabled")?.Value
+        );
+    }
+
+    [Fact]
+    public async Task ApplyAsync_OperationAnnulee_NEnregistrePasLeBrouillon()
+    {
+        int saves = 0;
+        using ConfigurationViewModel draft = new(
+            InitialSnapshot(),
+            "/workspace",
+            [],
+            [],
+            (_, _, _) =>
+            {
+                saves++;
+                return Task.CompletedTask;
+            }
+        );
+        draft.UseCases = true;
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+
+        Assert.False(
+            await draft.ApplyAsync(cancellation.Token)
+        );
+        Assert.Equal(0, saves);
+        Assert.False(draft.IsBusy);
+    }
+
     private static ConfigurationSnapshot InitialSnapshot() =>
         new(
             new() { Categories = InitialCategories },
