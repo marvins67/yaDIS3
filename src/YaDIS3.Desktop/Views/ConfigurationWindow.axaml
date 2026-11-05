@@ -43,10 +43,10 @@
       <Setter Property="FontSize" Value="12" />
       <Setter Property="Template">
         <ControlTemplate>
-          <Grid RowDefinitions="12,*">
+          <Grid RowDefinitions="18,*">
             <Border
               Grid.RowSpan="2"
-              Margin="0,6,0,0"
+              Margin="0,9,0,0"
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="{TemplateBinding BorderThickness}"
             />
@@ -488,7 +488,7 @@
             </GroupBox>
             <GroupBox
               Header="{DynamicResource Text.94}"
-              Height="48"
+              Height="54"
             >
               <StackPanel Orientation="Horizontal" Spacing="16">
                 <RadioButton
