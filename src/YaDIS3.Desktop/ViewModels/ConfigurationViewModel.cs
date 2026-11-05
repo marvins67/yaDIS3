@@ -577,22 +577,16 @@ public sealed partial class ConfigurationViewModel
     private XDocument SelectedGroups()
     {
         XDocument groups = new(_groups);
-        foreach (
-            XElement selection in groups.Descendants("selection")
-        )
+        XElement[] selections = groups
+            .Descendants("selection")
+            .ToArray();
+        for (int index = 0; index < selections.Length; index++)
         {
-            ConfigurationChoice? choice =
-                Selections.FirstOrDefault(value =>
-                    value.Name
-                    == selection.Element("name")?.Value
-                );
-            if (choice is not null)
-            {
-                selection.SetAttributeValue(
-                    "enabled",
-                    choice.Enabled ? "yes" : "no"
-                );
-            }
+            // Chaque case correspond au nœud chargé, même en cas de noms identiques.
+            selections[index].SetAttributeValue(
+                "enabled",
+                Selections[index].Enabled ? "yes" : "no"
+            );
         }
         return groups;
     }
