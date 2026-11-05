@@ -154,6 +154,7 @@ public sealed partial class MainWindowViewModel
 
     private void InitializeDune()
     {
+        ExportCommand = new UiCommand(() => RunAsync(ExportDuneAsync));
         ProcessCommand = TreatmentCommand(TreatmentMode.Normal);
         ReloadInformationCommand = TreatmentCommand(
             TreatmentMode.ReloadInformation
