@@ -1,3 +1,7 @@
+# Garantit les fins de ligne attendues par .editorconfig sur Windows.
+*.cs text eol=lf
+*.axaml text eol=lf
+
 
 src/YaDIS.Rendering/Assets/** -text
 
