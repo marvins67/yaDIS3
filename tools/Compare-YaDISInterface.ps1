@@ -8,7 +8,9 @@ param(
     [string]$Yadis2,
 
     [Parameter(Mandatory = $true)]
-    [string]$Yadis3
+    [string]$Yadis3,
+
+    [switch]$ComparePixels
 )
 
 $ErrorActionPreference = 'Stop'
@@ -47,6 +49,53 @@ function Get-ComparableText {
     return $null
 }
 
+# Comparaison des pixels décodés JPG/PNG sur Windows.
+# Les AAI demeurent comparés octet par octet.
+function Get-PixelSignature {
+    param([string]$Path)
+
+    $original = $null
+    $normalized = $null
+    $graphics = $null
+    $sha = $null
+    $bits = $null
+    try {
+        $original = [System.Drawing.Bitmap]::new($Path)
+        $normalized = [System.Drawing.Bitmap]::new(
+            $original.Width,
+            $original.Height,
+            [System.Drawing.Imaging.PixelFormat]::Format32bppArgb
+        )
+        $graphics = [System.Drawing.Graphics]::FromImage($normalized)
+        $graphics.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
+        $graphics.DrawImageUnscaled($original, 0, 0)
+        $rectangle = [System.Drawing.Rectangle]::new(0, 0, $normalized.Width, $normalized.Height)
+        $bits = $normalized.LockBits(
+            $rectangle,
+            [System.Drawing.Imaging.ImageLockMode]::ReadOnly,
+            [System.Drawing.Imaging.PixelFormat]::Format32bppArgb
+        )
+        $bytes = [byte[]]::new([Math]::Abs($bits.Stride) * $bits.Height)
+        [System.Runtime.InteropServices.Marshal]::Copy(
+            $bits.Scan0, $bytes, 0, $bytes.Length
+        )
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        $hash = [BitConverter]::ToString($sha.ComputeHash($bytes)).Replace('-', '')
+        return "$($original.Width)x$($original.Height):$hash"
+    }
+    finally {
+        if ($null -ne $bits) { $normalized.UnlockBits($bits) }
+        if ($null -ne $sha) { $sha.Dispose() }
+        if ($null -ne $graphics) { $graphics.Dispose() }
+        if ($null -ne $normalized) { $normalized.Dispose() }
+        if ($null -ne $original) { $original.Dispose() }
+    }
+}
+
+if ($ComparePixels) {
+    Add-Type -AssemblyName System.Drawing
+}
+
 $left = Get-Manifest -Root $roots[0]
 $right = Get-Manifest -Root $roots[1]
 $allPaths = @(@($left.Keys) + @($right.Keys) | Sort-Object -Unique)
@@ -71,6 +120,22 @@ $rows = foreach ($relative in $allPaths) {
             if ($null -ne $textA -and $textA -ceq $textB) {
                 $status = 'Texte equivalent, octets differents'
             }
+            elseif ($ComparePixels -and [IO.Path]::GetExtension($a).ToLowerInvariant() -in @('.jpg', '.jpeg', '.png')) {
+                try {
+                    $pixelA = Get-PixelSignature -Path $a
+                    $pixelB = Get-PixelSignature -Path $b
+                    $status = if ($pixelA -ceq $pixelB) {
+                        'Pixels identiques, octets differents'
+                    }
+                    else {
+                        'Different'
+                    }
+                }
+                catch {
+                    Write-Warning "Impossible de comparer les pixels de $relative : $_"
+                    $status = 'Different'
+                }
+            }
             else {
                 $status = 'Different'
             }
@@ -89,7 +154,7 @@ $rows | Group-Object Resultat | Sort-Object Name |
     ForEach-Object { Write-Host "$($_.Name) : $($_.Count)" }
 
 Write-Host ''
-Write-Host 'Les differences JPEG/AAI sont binaires : cette comparaison ne prouve pas une equivalence pixel.'
-if (@($rows | Where-Object { $_.Resultat -notin @('Identique', 'Texte equivalent, octets differents') }).Count -gt 0) {
+Write-Host 'AAI : comparaison binaire uniquement. JPG/PNG : comparaison pixel si -ComparePixels est specifie.'
+if (@($rows | Where-Object { $_.Resultat -notin @('Identique', 'Texte equivalent, octets differents', 'Pixels identiques, octets differents') }).Count -gt 0) {
     exit 1
 }
