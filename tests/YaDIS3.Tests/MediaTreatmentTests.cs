@@ -1,3 +1,4 @@
+using SkiaSharp;
 using System.Xml.Linq;
 using Xunit;
 using YaDIS3.Core;
@@ -212,8 +213,12 @@ public sealed class MediaTreatmentTests
                 Path.Combine(card.DataDirectory, "preview.jpg")
             )
         );
-        byte[] marker = [1, 2, 3];
-        File.WriteAllBytes(icon, marker);
+        using (SKBitmap marked = AaiCodec.Load(icon))
+        {
+            marked.Erase(SKColors.Red);
+            AaiCodec.Save(marked, icon);
+        }
+        byte[] marker = File.ReadAllBytes(icon);
         Assert.True(
             await TreatAsync(fixture, repository, card, inputs)
         );
@@ -353,6 +358,115 @@ public sealed class MediaTreatmentTests
         await Assert.ThrowsAsync<DirectoryNotFoundException>(() =>
             preparation.PrepareAsync(card, TreatmentMode.Normal, CancellationToken.None));
         Assert.True(XNode.DeepEquals(before, card.Snapshot().Document.Root!.Element("info")));
+    }
+
+    [Fact]
+    public async Task TreatAsync_FondModifie_RecomposeApercuAvecIconeExistante()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, series: true);
+        TreatmentInputs inputs = new() { SeriesNotFound = true };
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        string preview = Path.Combine(card.DataDirectory, "preview.jpg");
+        byte[] oldPreview = File.ReadAllBytes(preview);
+        WriteRedImage(card.FanartPath);
+
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.False(oldPreview.SequenceEqual(File.ReadAllBytes(preview)));
+    }
+
+    [Fact]
+    public async Task TreatAsync_EchecRendu_ConserveApercuEtPermetReprise()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, series: true);
+        TreatmentInputs inputs = new() { SeriesNotFound = true };
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        string preview = Path.Combine(card.DataDirectory, "preview.jpg");
+        byte[] oldPreview = File.ReadAllBytes(preview);
+        File.WriteAllBytes(card.FanartPath, [1, 2, 3]);
+        await Assert.ThrowsAsync<InvalidDataException>(() =>
+            TreatAsync(fixture, repository, card, inputs));
+        Assert.Equal(oldPreview, File.ReadAllBytes(preview));
+        Assert.Equal("3", XDocument.Load(card.FilePath).Root!
+            .Element("item")!.Element("status")!.Value);
+
+        File.Delete(card.FanartPath);
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.Equal("1", XDocument.Load(card.FilePath).Root!
+            .Element("item")!.Element("status")!.Value);
+    }
+
+    [Fact]
+    public async Task TreatAsync_PremierEpisodeXml_ApercuSuitCetEpisode()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, series: true);
+        string source = Path.Combine(fixture.Root, "videos", card.FolderName);
+        string original = Path.Combine(source, "S01E01.mkv");
+        File.Move(original, Path.Combine(source, "S01E02.mkv"));
+        TreatmentInputs inputs = new() { SeriesNotFound = true };
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+
+        File.WriteAllBytes(original, []);
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        string cache = Path.Combine(fixture.Root, "interface-yaDIS3", new MediaContext(card).Id, "01");
+        string preview = Path.Combine(card.DataDirectory, "preview.jpg");
+        string second = Path.Combine(cache, "01_002_000", "preview.jpg");
+        Assert.Equal(File.ReadAllBytes(second), File.ReadAllBytes(preview));
+
+        string moved = Path.Combine(source, "Nouveau.S01E02.m4v");
+        File.Move(Path.Combine(source, "S01E02.mkv"), moved);
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.Equal(File.ReadAllBytes(second), File.ReadAllBytes(preview));
+
+        File.Delete(moved);
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.Equal(File.ReadAllBytes(Path.Combine(cache, "01_001_000", "preview.jpg")),
+            File.ReadAllBytes(preview));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TreatAsync_RetoucheEnregistree_RegenereIconeEpisode(bool artwork)
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, series: true);
+        TreatmentInputs inputs = new() { SeriesNotFound = true };
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        string icon = Path.Combine(fixture.Root, "interface-yaDIS3",
+            new MediaContext(card).Id, "01", "01_001_000", "icon.aai");
+        byte[] original = File.ReadAllBytes(icon);
+        Episode episode = Assert.Single(card.Episodes);
+        if (artwork)
+        {
+            string source = Path.Combine(fixture.Root, "manual.jpg");
+            WriteRedImage(source);
+            new ImageImporter(new CopyArtworkEncoder()).Import(
+                card, ArtworkKind.Episode, source, episode);
+        }
+        else
+        {
+            episode.Title = "Titre retouché";
+        }
+        await repository.SaveAsync(card);
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        Assert.False(original.SequenceEqual(File.ReadAllBytes(icon)));
+        Assert.False(card.NeedsEpisodeRerender);
+    }
+
+    private static void WriteRedImage(string path)
+    {
+        using SKBitmap bitmap = new(128, 72);
+        bitmap.Erase(SKColors.Red);
+        using SKImage image = SKImage.FromBitmap(bitmap);
+        using SKData jpeg = image.Encode(SKEncodedImageFormat.Jpeg, 90);
+        File.WriteAllBytes(path, jpeg.ToArray());
     }
 
     private static Task<bool> TreatAsync(

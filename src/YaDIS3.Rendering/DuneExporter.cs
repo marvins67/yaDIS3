@@ -466,8 +466,13 @@ public sealed partial class DuneExporter(
             );
             if (
                 useFirstEpisodePreview
-                && rendered.EpisodePreviews.Values.FirstOrDefault()
-                    is { } first
+                && media.Info.Element("episode") is { } firstEpisode
+                && rendered.EpisodePreviews.TryGetValue(
+                    MediaContext.ViewingSeason(firstEpisode)
+                        + "/"
+                        + MediaContext.EpisodeFolder(firstEpisode),
+                    out string? first
+                )
             )
             {
                 File.Copy(
@@ -568,15 +573,10 @@ public sealed partial class DuneExporter(
             string old = Path.Combine(target, key);
             string next = Path.Combine(stage, key);
             string icon = Path.Combine(old, "icon.aai");
-            string preview = Path.Combine(old, "preview.jpg");
-            if (File.Exists(icon) && File.Exists(preview))
+            if (File.Exists(icon))
             {
                 Directory.CreateDirectory(next);
                 File.Copy(icon, Path.Combine(next, "icon.aai"));
-                File.Copy(
-                    preview,
-                    Path.Combine(next, "preview.jpg")
-                );
             }
         }
     }

@@ -164,46 +164,11 @@ public sealed partial class TemplateRenderer
                     seasonDirectory,
                     MediaContext.EpisodeFolder(episode)
                 );
-                string cachedPreview = Path.Combine(
-                    output,
-                    "preview.jpg"
-                );
-                if (
-                    File.Exists(cachedPreview)
-                    && File.Exists(
-                        Path.Combine(output, "icon.aai")
-                    )
-                )
-                {
-                    episodePreviews[key] = cachedPreview;
-                    continue;
-                }
-                Directory.CreateDirectory(output);
                 XElement episodeSpec = _template.Node(
                     "tv/synopsis/episode/episodeicon"
                 );
-                XElement? area = episodeSpec.Element("area");
-                using SKBitmap thumbnail =
-                    CreateEpisodeThumbnail(media, episode);
-                using SKBitmap overlay = CreateBitmap(
-                    area.Int("width"),
-                    area.Int("height")
-                );
-                using (var canvas = new SKCanvas(overlay))
-                {
-                    DrawScene(
-                        canvas,
-                        episodeSpec,
-                        media,
-                        episode,
-                        framed,
-                        thumbnail
-                    );
-                }
-
-                AaiCodec.Save(
-                    overlay,
-                    Path.Combine(output, "icon.aai")
+                using SKBitmap overlay = LoadOrRenderEpisodeIcon(
+                    media, episode, framed, episodeSpec, output
                 );
                 using SKBitmap full = episodeBackground.Copy();
                 using (var canvas = new SKCanvas(full))
@@ -211,21 +176,56 @@ public sealed partial class TemplateRenderer
                     DrawImage(
                         canvas,
                         overlay,
-                        ReadRectangle(area)
+                        ReadRectangle(episodeSpec.Element("area"))
                     );
                 }
 
-                string episodePreview = Path.Combine(
-                    output,
-                    "preview.jpg"
-                );
-                SaveJpeg(
-                    full,
-                    episodePreview,
-                    _options.JpegQuality
-                );
-                episodePreviews[key] = episodePreview;
+                string preview = Path.Combine(output, "preview.jpg");
+                SaveJpeg(full, preview, _options.JpegQuality);
+                episodePreviews[key] = preview;
             }
+        }
+    }
+
+    private SKBitmap LoadOrRenderEpisodeIcon(
+        MediaContext media,
+        XElement episode,
+        SKBitmap framed,
+        XElement specification,
+        string output
+    )
+    {
+        string icon = Path.Combine(output, "icon.aai");
+        if (File.Exists(icon))
+        {
+            try
+            {
+                return AaiCodec.Load(icon);
+            }
+            catch (Exception exception)
+                when (exception is InvalidDataException or EndOfStreamException)
+            {
+                // Une icône incomplète du cache doit être redessinée.
+            }
+        }
+
+        Directory.CreateDirectory(output);
+        XElement? area = specification.Element("area");
+        using SKBitmap thumbnail = CreateEpisodeThumbnail(media, episode);
+        SKBitmap overlay = CreateBitmap(area.Int("width"), area.Int("height"));
+        try
+        {
+            using (var canvas = new SKCanvas(overlay))
+            {
+                DrawScene(canvas, specification, media, episode, framed, thumbnail);
+            }
+            AaiCodec.Save(overlay, icon);
+            return overlay;
+        }
+        catch
+        {
+            overlay.Dispose();
+            throw;
         }
     }
 }
