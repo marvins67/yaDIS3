@@ -71,6 +71,7 @@ public sealed partial class DuneExporter
             }
         }
 
+        PrepareLegacyMenus(source);
         try
         {
             using var renderer = new TemplateRenderer(template, options);
@@ -93,5 +94,34 @@ public sealed partial class DuneExporter
             plans.Sum(plan => plan.Episodes.Count),
             warnings
         );
+    }
+
+    private static void PrepareLegacyMenus(string root)
+    {
+        TryRemoveMenu(Path.Combine(root, "00", "03"));
+        TryRemoveMenu(Path.Combine(root, "00", "98"));
+        foreach (string pattern in new[] { "02_*", "05_*" })
+        {
+            foreach (string directory in Directory.GetDirectories(root, pattern))
+            {
+                TryRemoveMenu(directory);
+            }
+        }
+    }
+
+    private static void TryRemoveMenu(string directory)
+    {
+        try
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, true);
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException)
+        {
+            // ProcessForm ignore ces échecs pendant la préparation des menus.
+        }
     }
 }
