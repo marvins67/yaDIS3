@@ -5,10 +5,11 @@ namespace YaDIS3.Core;
 /// <summary>
 /// Reproduit les suppressions du menu Outils de yaDIS2.
 /// </summary>
-public sealed class WorkspaceToolService
+public sealed partial class WorkspaceToolService
 {
     private readonly ILogger _logger;
 
+    /// <summary>Initialise le service avec son journal d'erreurs.</summary>
     public WorkspaceToolService(ILogger logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -47,22 +48,14 @@ public sealed class WorkspaceToolService
                 }
                 catch (Exception exception) when (IsFileSystemError(exception))
                 {
-                    _logger.LogWarning(
-                        exception,
-                        "Impossible de supprimer le fichier {Path}",
-                        file
-                    );
+                    FileDeletionFailed(_logger, file, exception);
                 }
             }
         }
         catch (Exception exception) when (IsFileSystemError(exception))
         {
             // yaDIS2 affiche la confirmation même si l'énumération échoue.
-            _logger.LogWarning(
-                exception,
-                "Impossible d'énumérer les fichiers de {Path}",
-                directory
-            );
+            FileEnumerationFailed(_logger, directory, exception);
         }
     }
 
@@ -78,23 +71,59 @@ public sealed class WorkspaceToolService
                 }
                 catch (Exception exception) when (IsFileSystemError(exception))
                 {
-                    _logger.LogWarning(
-                        exception,
-                        "Impossible de supprimer le dossier {Path}",
-                        child
-                    );
+                    DirectoryDeletionFailed(_logger, child, exception);
                 }
             }
         }
         catch (Exception exception) when (IsFileSystemError(exception))
         {
-            _logger.LogWarning(
-                exception,
-                "Impossible d'énumérer les dossiers de {Path}",
-                directory
-            );
+            DirectoryEnumerationFailed(_logger, directory, exception);
         }
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Warning,
+        Message = "Impossible de supprimer le fichier {Path}"
+    )]
+    private static partial void FileDeletionFailed(
+        ILogger logger,
+        string path,
+        Exception exception
+    );
+
+    [LoggerMessage(
+        EventId = 2,
+        Level = LogLevel.Warning,
+        Message = "Impossible d'énumérer les fichiers de {Path}"
+    )]
+    private static partial void FileEnumerationFailed(
+        ILogger logger,
+        string path,
+        Exception exception
+    );
+
+    [LoggerMessage(
+        EventId = 3,
+        Level = LogLevel.Warning,
+        Message = "Impossible de supprimer le dossier {Path}"
+    )]
+    private static partial void DirectoryDeletionFailed(
+        ILogger logger,
+        string path,
+        Exception exception
+    );
+
+    [LoggerMessage(
+        EventId = 4,
+        Level = LogLevel.Warning,
+        Message = "Impossible d'énumérer les dossiers de {Path}"
+    )]
+    private static partial void DirectoryEnumerationFailed(
+        ILogger logger,
+        string path,
+        Exception exception
+    );
 
     private static bool IsFileSystemError(Exception exception) =>
         exception is IOException
