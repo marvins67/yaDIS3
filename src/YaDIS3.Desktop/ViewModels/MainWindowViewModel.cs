@@ -38,6 +38,8 @@ public sealed partial class MainWindowViewModel
 
     private MediaCard? _selectedCard;
 
+    private bool _manualMovieEdit;
+
     private Episode? _selectedEpisode;
 
     private SeriesMatch? _selectedMatch;
@@ -288,6 +290,7 @@ public sealed partial class MainWindowViewModel
             }
 
             _selectedCard = value;
+            _manualMovieEdit = false;
             Query = value?.Title ?? "";
             SearchResults.Clear();
             Orders.Clear();

@@ -441,6 +441,20 @@ public sealed partial class MediaCard
         return true;
     }
 
+    /// <summary>Prépare une fiche vierge pour la création manuelle.</summary>
+    public void BeginManualMovieEdit()
+    {
+        if (
+            IsSeries
+            || ProcessingState != MediaProcessingState.Unprocessed
+            || HasInformation
+        )
+        {
+            return;
+        }
+        Update(EnsureInfo);
+    }
+
     internal void MarkSaved(long atRevision, string hash)
     {
         SourceHash = hash;

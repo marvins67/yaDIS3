@@ -141,6 +141,15 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private void BeginManualMovieEdit(
+        object? sender,
+        RoutedEventArgs eventArgs
+    )
+    {
+        Model.BeginManualMovieEdit();
+        this.FindControl<TextBox>("MovieTitleEditor")?.Focus();
+    }
+
     private void OpenDataFolder(object? sender, RoutedEventArgs eventArgs)
     {
         if (Model.SelectedCard is { } card)

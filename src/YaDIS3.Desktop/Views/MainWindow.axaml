@@ -561,6 +561,7 @@
             <MenuItem
               Header="{DynamicResource Text.116}"
               InputGesture="Ctrl+M"
+              Click="BeginManualMovieEdit"
               IsVisible="{Binding ContextMenuState.ShowMovieGroups}"
               IsEnabled="{Binding ContextMenuState.CanCreateManually}"
             >

@@ -149,12 +149,38 @@ public sealed partial class MainWindowViewModel
     /// <summary>Désactive et vide l'éditeur sans fiche traitée.</summary>
     public MediaCard? EditableCard =>
         SelectedCard is { } card
-        && card.ProcessingState
-            is MediaProcessingState.Checked
+        && (
+            card.HasInformation
+            && card.ProcessingState is
+                MediaProcessingState.Checked
                 or MediaProcessingState.Unchecked
-        && card.HasInformation
+            || _manualMovieEdit
+                && !card.IsSeries
+                && card.ProcessingState ==
+                    MediaProcessingState.Unprocessed
+        )
             ? card
             : null;
+
+    /// <summary>Active l'édition manuelle des films non traités.</summary>
+    public void BeginManualMovieEdit()
+    {
+        MediaCard? card = SelectedCard;
+        if (
+            card is null
+            || card.IsSeries
+            || card.ProcessingState !=
+                MediaProcessingState.Unprocessed
+        )
+        {
+            return;
+        }
+
+        card.BeginManualMovieEdit();
+        _manualMovieEdit = true;
+        Notify(nameof(EditableCard));
+        Notify(nameof(CanEditSelection));
+    }
 
     /// <summary>Activation des onglets comme EnableEdit/DisableEdit.</summary>
     public bool CanEditSelection =>
