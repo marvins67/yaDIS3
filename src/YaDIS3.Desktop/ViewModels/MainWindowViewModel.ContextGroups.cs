@@ -17,7 +17,7 @@ public sealed partial class MainWindowViewModel
     public IReadOnlyList<GroupContextChoice> SelectionContextChoices =>
         ContextGroupChoices("selection", "167");
 
-    private IReadOnlyList<GroupContextChoice> ContextGroupChoices(
+    private GroupContextChoice[] ContextGroupChoices(
         string kind,
         string createLabel
     )
