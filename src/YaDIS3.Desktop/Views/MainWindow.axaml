@@ -45,6 +45,15 @@
       </Button>
     </DataTemplate>
     <ControlTheme
+      x:Key="GroupContextLeafTheme"
+      TargetType="MenuItem"
+      BasedOn="{StaticResource {x:Type MenuItem}}"
+      x:DataType="vm:GroupContextChoice"
+    >
+      <Setter Property="Header" Value="{Binding Label}" />
+      <Setter Property="Command" Value="{Binding SelectCommand}" />
+    </ControlTheme>
+    <ControlTheme
       x:Key="GroupContextActionTheme"
       TargetType="MenuItem"
       BasedOn="{StaticResource {x:Type MenuItem}}"
@@ -53,6 +62,11 @@
       <Setter Property="Header" Value="{Binding Label}" />
       <Setter Property="Command" Value="{Binding SelectCommand}" />
       <Setter Property="IsChecked" Value="{Binding IsChecked}" />
+      <Setter Property="ItemsSource" Value="{Binding Children}" />
+      <Setter
+        Property="ItemContainerTheme"
+        Value="{StaticResource GroupContextLeafTheme}"
+      />
     </ControlTheme>
     <ControlTheme
       x:Key="GroupContextItemTheme"
