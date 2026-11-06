@@ -197,3 +197,4 @@ public static class LegacyMovieGroups
             throw new ArgumentException("Caractère interdit.", nameof(name));
         }
     }
+}
