@@ -315,6 +315,9 @@ public sealed partial class MainWindowViewModel
                 : SelectedCard is null ? 0 : 1
         );
 
+    /// <summary>Bascule la vérification des titres sélectionnés.</summary>
+    public ICommand ToggleVerificationCommand { get; }
+
     /// <summary>
     /// Épisode en cours d'édition.
     /// </summary>
@@ -455,6 +458,9 @@ public sealed partial class MainWindowViewModel
         InitializeDune();
         TreatmentSelection.CollectionChanged += (_, _) =>
             Notify(nameof(ContextMenuState));
+        ToggleVerificationCommand = new UiCommand(() =>
+            RunAsync(ToggleVerificationAsync)
+        );
         SaveCommand = new UiCommand(() =>
             RunAsync(SaveAllAsync)
         );

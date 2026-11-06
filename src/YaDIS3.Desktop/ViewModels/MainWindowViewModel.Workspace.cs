@@ -151,6 +151,25 @@ public sealed partial class MainWindowViewModel
         Notify(nameof(VisibleCountLabel));
     }
 
+    private async Task ToggleVerificationAsync()
+    {
+        MediaCard[] selected =
+            TreatmentSelection.Count > 0
+                ? TreatmentSelection.Distinct().ToArray()
+                : SelectedCard is { } card ? [card] : [];
+
+        foreach (MediaCard card in selected)
+        {
+            if (card.ToggleVerification())
+            {
+                await _repository.SaveAsync(card, OperationToken);
+            }
+        }
+
+        RefreshFilter();
+        NotifyAll();
+    }
+
     /// <summary>
     /// Enregistre toutes les fiches modifiées du workspace
     /// courant.

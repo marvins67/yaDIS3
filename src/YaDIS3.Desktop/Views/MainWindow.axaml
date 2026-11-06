@@ -607,6 +607,7 @@
             <MenuItem
               Header="{DynamicResource Text.129}"
               InputGesture="Ctrl+T"
+              Command="{Binding ToggleVerificationCommand}"
               IsEnabled="{Binding ContextMenuState.CanToggleVerification}"
             >
               <MenuItem.Icon>

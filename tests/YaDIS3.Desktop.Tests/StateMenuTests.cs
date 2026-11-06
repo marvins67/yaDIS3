@@ -307,4 +307,46 @@ public sealed class StateMenuTests : IDisposable
     }
 
     public void Dispose() => Directory.Delete(_directory, true);
+
+    [Fact]
+    public async Task ToggleVerificationCommand_FilmTraite_ConserveLeStatut()
+    {
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        MediaCard card = model.Cards.Single(item =>
+            item.FolderName == "Wall·E.iso"
+        );
+        model.SelectedCard = card;
+        model.TreatmentSelection.Clear();
+        model.ToggleVerificationCommand.Execute(null);
+        await WaitForVerificationAsync(
+            card,
+            MediaProcessingState.Checked
+        );
+        Assert.Equal(
+            "0",
+            XDocument.Load(card.FilePath)
+                .Descendants("status").Single().Value
+        );
+    }
+
+    private static async Task WaitForVerificationAsync(
+        MediaCard card,
+        MediaProcessingState expected
+    )
+    {
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            if (card.ProcessingState == expected
+                && !card.IsDirty)
+            {
+                return;
+            }
+            await Task.Delay(10);
+        }
+
+        Assert.Fail("Le statut vérifié n'a pas été enregistré.");
+    }
 }

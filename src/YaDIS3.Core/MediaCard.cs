@@ -420,6 +420,27 @@ public sealed partial class MediaCard
         }
     }
 
+    /// <summary>Inverse uniquement les statuts 0 et 1, comme yaDIS2.</summary>
+    public bool ToggleVerification()
+    {
+        if (ProcessingState is not (
+            MediaProcessingState.Checked
+            or MediaProcessingState.Unchecked
+        ))
+        {
+            return false;
+        }
+
+        string next =
+            ProcessingState == MediaProcessingState.Checked
+                ? "1"
+                : "0";
+        Put(Header, "status", next);
+        _revision++;
+        Notify();
+        return true;
+    }
+
     internal void MarkSaved(long atRevision, string hash)
     {
         SourceHash = hash;
