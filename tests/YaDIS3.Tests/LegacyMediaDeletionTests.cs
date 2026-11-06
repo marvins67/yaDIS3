@@ -142,4 +142,27 @@ public sealed class LegacyMediaDeletionTests
         );
         Assert.True(File.Exists(movie.FilePath));
     }
+    [Fact]
+    public void Delete_FilmIndexe_RetireLesCriteresDeLInterface()
+    {
+        using ExportFixture fixture = new();
+        fixture.ProcessIndexes();
+        using WorkspaceRepository repository = new();
+        MediaCard movie = repository.Open(fixture.Root).Cards
+            .Single(card => !card.IsSeries);
+        string indexRoot = Path.Combine(fixture.Root, "interface", "00");
+        Assert.NotEmpty(Directory.EnumerateFiles(
+            indexRoot, "dune_folder.txt", SearchOption.AllDirectories
+        ));
+
+        LegacyMediaDeletionResult result = new LegacyMediaDeletion(
+            fixture.ConfigurationStore()
+        ).Delete(fixture.Root, [movie]);
+
+        Assert.Empty(result.Errors);
+        Assert.Empty(Directory.EnumerateFiles(
+            indexRoot, "dune_folder.txt", SearchOption.AllDirectories
+        ));
+    }
+
 }
