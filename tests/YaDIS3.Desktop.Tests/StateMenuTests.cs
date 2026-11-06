@@ -228,6 +228,35 @@ public sealed class StateMenuTests : IDisposable
     }
 
     [Fact]
+    public async Task SagaContextChoices_ModifierSaga_OuvreLaCommandeDediee()
+    {
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        model.SelectedCard = model.Cards.Single(card =>
+            card.FolderName == "Wall·E.iso"
+        );
+
+        string? requestedSaga = null;
+        model.SagaEditingRequested += name => requestedSaga = name;
+
+        GroupContextChoice saga = model.SagaContextChoices.Single(
+            choice => choice.Label == "Épopée d'Howl"
+        );
+        Assert.Empty(saga.Children);
+
+        GroupContextChoice edit = model.SagaContextChoices.Single(
+            choice => choice.Label == model.Texts.GetString("87")
+        );
+        GroupContextChoice entry = Assert.Single(edit.Children);
+        Assert.Equal("Épopée d'Howl", entry.Label);
+        entry.SelectCommand.Execute(null);
+
+        Assert.Equal("Épopée d'Howl", requestedSaga);
+    }
+
+    [Fact]
     public async Task GenreFilters_ChangementDeType_ReinitialiseLeGroupe()
     {
         using MainWindowViewModel model = new(
