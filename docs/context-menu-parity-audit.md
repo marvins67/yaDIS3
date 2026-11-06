@@ -32,7 +32,7 @@
 | Sagas | Clic direct = ajouter, déplacer ou retirer ; sous-menu par saga = éditer/supprimer | `LegacyMovieGroups`, `ContextGroups`, `StateMenuTests` | Comportement de menu confirmé manuellement ; éditeur différent |
 | Sélections | Clic direct, état tri-state pour sélection multiple, supprimer groupe vide | `LegacyMovieGroups`, `ContextGroups`, `LegacyMovieGroupsContextTests` | Logique couverte ; état indéterminé rendu via symbole plutôt que case native |
 | Basculer vérification | `item/status` 0↔1, sauvegarde `data.xml` ; multi-sélection | `MediaCard.ToggleVerification`, `ToggleVerificationAsync`, tests | Tests ciblés ; exceptions d'écriture non caractérisées |
-| Raccourcis | Ctrl+M, Suppr, Ctrl+T | Indication `InputGesture`; `ListBox.KeyBindings` pour Suppr | Suppr câblé ; Ctrl+M/Ctrl+T à tester depuis le clavier |
+| Raccourcis | Ctrl+M, Suppr, Ctrl+T | `InputGesture`, `ListBox.KeyBindings` pour les trois gestes, `BeginManualMovieEditCommand` | Les trois sont câblés ; focus à vérifier manuellement |
 
 ## Écarts confirmés corrigés pendant l'audit
 
@@ -60,9 +60,9 @@
 - **Sélections mixtes** : la logique bascule les appartenances,
   mais l'état indéterminé est indiqué par `◩` au lieu d'une case
   indéterminée native de WinForms.
-- **Raccourcis** : les `InputGesture` du menu ne garantissent pas
-  à eux seuls le déclenchement de Ctrl+M et Ctrl+T. Suppr dispose
-  d'un `KeyBinding` sur la liste.
+- **Raccourcis** : les trois touches sont reliées par `KeyBinding`
+  sur la liste, mais le comportement du focus clavier et des gestes
+  dans les éditeurs doit encore être vérifié dans Avalonia.
 - **Comparaison de workspaces réels** : aucun couple de workspaces
   yaDIS2/yaDIS3 de référence identique n'a été exécuté et comparé
   octet par octet durant cet audit. Les tests utilisent des

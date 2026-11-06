@@ -75,6 +75,31 @@ public sealed class StateMenuTests : IDisposable
     }
 
     [Fact]
+    public async Task BeginManualMovieEditCommand_FilmNonTraite_CreeFicheEditable()
+    {
+        string file = Path.Combine(
+            _directory, "data", "Wall·E.iso", "data.xml"
+        );
+        XDocument xml = XDocument.Load(file);
+        xml.Root!.Element("item")!.SetElementValue("status", "3");
+        xml.Root.Element("info")?.Remove();
+        xml.Save(file);
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        MediaCard card = model.Cards.Single(value =>
+            value.FolderName == "Wall·E.iso"
+        );
+        model.SelectedCard = card;
+
+        model.BeginManualMovieEditCommand.Execute(null);
+
+        Assert.True(card.HasInformation);
+        Assert.Same(card, model.EditableCard);
+    }
+
+    [Fact]
     public async Task CycleStateFilterCommand_Clic_ParcourtLesEtats()
     {
         using MainWindowViewModel model = new(
