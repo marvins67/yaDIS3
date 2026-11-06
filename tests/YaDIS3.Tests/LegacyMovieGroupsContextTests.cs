@@ -102,4 +102,78 @@ public sealed class LegacyMovieGroupsContextTests
             )
         );
     }
+
+    [Fact]
+    public void EditSaga_ModificationDesImagesEtOrdre_ConserveLesMembres()
+    {
+        XDocument groups = Groups();
+        LegacyMovieGroups.EditSaga(
+            groups, "Avant", "Nouvelle", "Nouv", "b.mkv",
+            "a.mkv", ["b.mkv", "a.mkv"]
+        );
+        XElement saga = groups.Descendants("saga").Single(x =>
+            x.Element("name")?.Value == "Nouvelle"
+        );
+        Assert.Equal("Nouv", saga.Element("sort_name")?.Value);
+        Assert.Equal("b.mkv", saga.Element("poster")?.Value);
+        Assert.Equal("a.mkv", saga.Element("fanart")?.Value);
+        Assert.Equal(
+            ["b.mkv", "a.mkv"],
+            saga.Elements("movie").Select(x => x.Value)
+        );
+    }
+
+    [Fact]
+    public void DeleteSaga_Existante_NeSupprimePasLesAutresGroupes()
+    {
+        XDocument groups = Groups();
+        LegacyMovieGroups.DeleteSaga(groups, "Avant");
+        Assert.Single(groups.Descendants("saga"));
+        Assert.Equal(
+            "Après",
+            groups.Descendants("saga").Single().Element("name")?.Value
+        );
+    }
+
+    [Fact]
+    public void DeleteSelection_Existante_NeModifiePasLesSagas()
+    {
+        XDocument groups = Groups();
+        LegacyMovieGroups.CreateSelection(groups, "Temp", ["a.mkv"]);
+        LegacyMovieGroups.DeleteSelection(groups, "Temp");
+        Assert.Empty(groups.Descendants("selection"));
+        Assert.Equal(2, groups.Descendants("saga").Count());
+    }
+
+    [Fact]
+    public void ToggleSelection_AppartenanceMixte_AlterneChaqueFilm()
+    {
+        XDocument groups = Groups();
+        LegacyMovieGroups.CreateSelection(groups, "Temp", ["a.mkv"]);
+        LegacyMovieGroups.ToggleSelection(
+            groups, "Temp", ["a.mkv", "b.mkv"]
+        );
+        XElement selection = Assert.Single(
+            groups.Descendants("selection")
+        );
+        Assert.Equal("b.mkv", selection.Element("movie")?.Value);
+        Assert.DoesNotContain(
+            selection.Elements("movie"), item => item.Value == "a.mkv"
+        );
+    }
+
+    [Fact]
+    public void EditSaga_NomInvalide_ConserveLeDocument()
+    {
+        XDocument groups = Groups();
+        XDocument original = new(groups);
+        Assert.Throws<ArgumentException>(() =>
+            LegacyMovieGroups.EditSaga(
+                groups, "Avant", "Interdit/nom", "Tri", "a.mkv",
+                "b.mkv", ["a.mkv", "b.mkv"]
+            )
+        );
+        Assert.True(XNode.DeepEquals(original, groups));
+    }
+
 }
