@@ -58,7 +58,7 @@ public sealed class SagaEditorWindow : Window
         Grid grid = new()
         {
             ColumnDefinitions = new ColumnDefinitions("180,127,300"),
-            RowDefinitions = new RowDefinitions("Auto,Auto,169,Auto"),
+            RowDefinitions = new RowDefinitions("Auto,Auto,Auto,169,Auto"),
             ColumnSpacing = 6,
             RowSpacing = 4,
             Margin = new Thickness(12, 8),
@@ -96,7 +96,7 @@ public sealed class SagaEditorWindow : Window
         };
         Add(pictures, posterButton, 1, 0);
         Add(pictures, fanartButton, 2, 0);
-        grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
         StackPanel actions = new()
         {
             Orientation = Orientation.Horizontal,
