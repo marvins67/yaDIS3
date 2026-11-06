@@ -159,6 +159,25 @@ public sealed class DuneConfigurationStore(
         WriteDocuments(documents);
     }
 
+    /// <summary>Enregistre les groupes sans modifier les autres réglages.</summary>
+    public void SaveGroups(string workspace, XDocument groups)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(workspace);
+        ArgumentNullException.ThrowIfNull(groups);
+        if (groups.Root?.Name != "groups")
+        {
+            throw new InvalidDataException("Racine groups.xml invalide.");
+        }
+
+        WriteDocuments(
+            new()
+            {
+                [Path.Combine(workspace, "groups.xml")] =
+                    XmlBytes(groups),
+            }
+        );
+    }
+
     /// <summary>
     /// Préserve les autres documents lors d'un traitement ou
     /// d'un export.
