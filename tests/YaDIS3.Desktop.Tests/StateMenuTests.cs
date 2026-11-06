@@ -169,6 +169,65 @@ public sealed class StateMenuTests : IDisposable
     }
 
     [Fact]
+    public async Task SagaContextChoices_ClicSurNom_AjoutePuisRetireLeFilm()
+    {
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        model.SelectedCard = model.Cards.Single(card =>
+            card.FolderName == "Wall·E.iso"
+        );
+        model.TreatmentSelection.Clear();
+
+        GroupContextChoice saga = model.SagaContextChoices.Single(
+            choice => choice.Label == "Épopée d'Howl"
+        );
+        Assert.Empty(saga.Children);
+        Assert.False(saga.IsChecked);
+
+        saga.SelectCommand.Execute(null);
+        await WaitForSagaMembershipAsync("Wall·E.iso", true);
+        Assert.True(model.SagaContextChoices.Single(
+            choice => choice.Label == "Épopée d'Howl"
+        ).IsChecked);
+
+        saga = model.SagaContextChoices.Single(
+            choice => choice.Label == "Épopée d'Howl"
+        );
+        saga.SelectCommand.Execute(null);
+        await WaitForSagaMembershipAsync("Wall·E.iso", false);
+        Assert.False(model.SagaContextChoices.Single(
+            choice => choice.Label == "Épopée d'Howl"
+        ).IsChecked);
+        Assert.Contains(
+            XDocument.Load(Path.Combine(_directory, "groups.xml"))
+                .Descendants("saga"),
+            entry => entry.Element("name")?.Value == "Épopée d'Howl"
+        );
+    }
+
+    private async Task WaitForSagaMembershipAsync(
+        string movie,
+        bool expected
+    )
+    {
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            bool exists = XDocument.Load(
+                Path.Combine(_directory, "groups.xml")
+            ).Descendants("saga").Elements("movie")
+                .Any(item => item.Value == movie);
+            if (exists == expected)
+            {
+                return;
+            }
+            await Task.Delay(20);
+        }
+        Assert.Fail("L'appartenance n'a pas été sauvegardée.");
+    }
+
+    [Fact]
     public async Task GenreFilters_ChangementDeType_ReinitialiseLeGroupe()
     {
         using MainWindowViewModel model = new(
