@@ -15,6 +15,8 @@ public sealed partial class MainWindow : Window
 {
     private bool _allowClose;
 
+    private MainWindowViewModel? _contextGroupModel;
+
     /// <summary>Application.Restart abandonne les brouillons de la fenêtre courante.</summary>
     internal void PrepareForRestart() => _allowClose = true;
 
@@ -32,6 +34,20 @@ public sealed partial class MainWindow : Window
         Closing += CheckClosing;
         Closed += (_, _) =>
             (DataContext as IDisposable)?.Dispose();
+        DataContextChanged += (_, _) =>
+        {
+            if (_contextGroupModel is not null)
+            {
+                _contextGroupModel.GroupCreationRequested -=
+                    RequestGroupCreation;
+            }
+            _contextGroupModel = DataContext as MainWindowViewModel;
+            if (_contextGroupModel is not null)
+            {
+                _contextGroupModel.GroupCreationRequested +=
+                    RequestGroupCreation;
+            }
+        };
     }
 
     private async void EditorTabChanged(
@@ -90,6 +106,40 @@ public sealed partial class MainWindow : Window
                 .SelectedIndex = tabIndex;
             await dialog.ShowDialog(this);
         });
+
+    private async void RequestGroupCreation(string kind)
+    {
+        string id = kind == "saga" ? "186" : "167";
+        Window dialog = new()
+        {
+            Title = Model.Texts.GetString(id),
+            Width = 360,
+            Height = 145,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        TextBox input = new()
+        {
+            Watermark = Model.Texts.GetString("169"),
+        };
+        Button create = new()
+        {
+            Content = Model.Texts.GetString("86"),
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        create.Click += (_, _) => dialog.Close(input.Text);
+        dialog.Content = new StackPanel
+        {
+            Margin = new Avalonia.Thickness(16),
+            Spacing = 12,
+            Children = { input, create },
+        };
+        string? name = await dialog.ShowDialog<string?>(this);
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            await Model.CreateContextGroupAsync(kind, name);
+        }
+    }
 
     private void OpenDataFolder(object? sender, RoutedEventArgs eventArgs)
     {

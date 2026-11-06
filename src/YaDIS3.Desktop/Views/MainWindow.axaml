@@ -45,6 +45,16 @@
       </Button>
     </DataTemplate>
     <ControlTheme
+      x:Key="GroupContextItemTheme"
+      TargetType="MenuItem"
+      BasedOn="{StaticResource {x:Type MenuItem}}"
+      x:DataType="vm:GroupContextChoice"
+    >
+      <Setter Property="Header" Value="{Binding Label}" />
+      <Setter Property="Command" Value="{Binding SelectCommand}" />
+      <Setter Property="IsChecked" Value="{Binding IsChecked}" />
+    </ControlTheme>
+    <ControlTheme
       x:Key="StateMenuItemTheme"
       TargetType="MenuItem"
       BasedOn="{StaticResource {x:Type MenuItem}}"
@@ -591,18 +601,16 @@
               Header="{DynamicResource Text.185}"
               IsVisible="{Binding ContextMenuState.ShowMovieGroups}"
               IsEnabled="{Binding ContextMenuState.CanEditSaga}"
-            >
-              <MenuItem Header="{DynamicResource Text.186}" IsEnabled="False" />
-              <Separator />
-            </MenuItem>
+              ItemsSource="{Binding SagaContextChoices}"
+              ItemContainerTheme="{StaticResource GroupContextItemTheme}"
+            />
             <MenuItem
               Header="{DynamicResource Text.59}"
               IsVisible="{Binding ContextMenuState.ShowMovieGroups}"
               IsEnabled="{Binding ContextMenuState.CanEditSelection}"
-            >
-              <MenuItem Header="{DynamicResource Text.167}" IsEnabled="False" />
-              <Separator />
-            </MenuItem>
+              ItemsSource="{Binding SelectionContextChoices}"
+              ItemContainerTheme="{StaticResource GroupContextItemTheme}"
+            />
             <Separator IsVisible="{Binding ContextMenuState.ShowMovieGroups}" />
             <MenuItem
               Header="{DynamicResource Text.129}"

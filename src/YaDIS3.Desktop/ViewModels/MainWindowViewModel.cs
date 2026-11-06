@@ -457,7 +457,11 @@ public sealed partial class MainWindowViewModel
         );
         InitializeDune();
         TreatmentSelection.CollectionChanged += (_, _) =>
+        {
             Notify(nameof(ContextMenuState));
+            Notify(nameof(SagaContextChoices));
+            Notify(nameof(SelectionContextChoices));
+        };
         ToggleVerificationCommand = new UiCommand(() =>
             RunAsync(ToggleVerificationAsync)
         );
