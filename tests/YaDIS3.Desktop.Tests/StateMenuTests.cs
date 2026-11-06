@@ -182,7 +182,7 @@ public sealed class StateMenuTests : IDisposable
         await model.RunAsync(
             () =>
             {
-                Assert.True(card.ToggleVerification());
+                card.MarkProcessed(new DateOnly(2026, 11, 6));
                 return Task.CompletedTask;
             },
             refreshFilter: false
