@@ -48,7 +48,8 @@ public sealed partial class MainWindowViewModel
 
     private async Task TreatSelectionAsync(
         TreatmentMode mode,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        MediaCard[]? targetCards = null
     )
     {
         DuneTemplate template =
@@ -61,11 +62,10 @@ public sealed partial class MainWindowViewModel
             ?? throw new InvalidOperationException(
                 Texts.GetString("340")
             );
-        MediaCard[] cards =
-            TreatmentSelection.Count > 0
+        MediaCard[] cards = targetCards
+            ?? (TreatmentSelection.Count > 0
                 ? TreatmentSelection.ToArray()
-            : SelectedCard is { } card ? [card]
-            : [];
+                : SelectedCard is { } card ? [card] : []);
         SaveDunePreferences();
         OnlineTreatmentMetadata metadata = new(
             _http,

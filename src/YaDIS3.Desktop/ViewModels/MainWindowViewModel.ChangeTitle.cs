@@ -1,4 +1,5 @@
 using YaDIS3.Core;
+using YaDIS3.Rendering;
 
 namespace YaDIS3.Desktop.ViewModels;
 
@@ -35,6 +36,11 @@ public sealed partial class MainWindowViewModel
                     "La série doit être identifiée par TVDB."
                 );
             }
+            // Comme ChangeForm.DoChange, retirer les anciens critères
+            // avant d'effacer l'identification et de retraiter le film.
+            new LegacyMovieTitleChangeCleanup().Remove(
+                card, OperationToken
+            );
             card.PrepareMovieTitleChange(match.Id);
             foreach (string path in Directory.EnumerateFiles(
                 card.DataDirectory, "*.jpg"
@@ -44,7 +50,8 @@ public sealed partial class MainWindowViewModel
             }
             await TreatSelectionAsync(
                 TreatmentMode.ReloadInformation,
-                OperationToken
+                OperationToken,
+                [card]
             );
         });
     /// <summary>Reprend l'identification TVDB après confirmation du dialogue.</summary>
@@ -64,7 +71,8 @@ public sealed partial class MainWindowViewModel
             }
             await TreatSelectionAsync(
                 TreatmentMode.ReloadInformation,
-                OperationToken
+                OperationToken,
+                [card]
             );
         });
 }
