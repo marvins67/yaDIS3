@@ -65,7 +65,7 @@ public sealed class SelectionBindingTests
     )
     {
         AddCard(directory, "Série", true);
-        AddCard(directory, "Film", false);
+        AddCard(directory, "(120) Coco (2017).mkv", false, "Film");
         using WorkspaceRepository repository = new();
         Workspace workspace = repository.Open(directory);
         using MainWindowViewModel model = new(
@@ -107,10 +107,10 @@ public sealed class SelectionBindingTests
             title.Text = "Série modifiée";
             Assert.Equal("Série modifiée", series.Title);
             VerifyEmptySelection(window, model);
-            model.SelectedCard = workspace.Cards.Single(card =>
-                !card.IsSeries
-            );
+            MediaCard movie = workspace.Cards.Single(card => !card.IsSeries);
+            model.SelectedCard = movie;
             Dispatcher.UIThread.RunJobs();
+            VerifyLibraryFileName(window, movie);
             Assert.Equal(
                 "Film",
                 window
@@ -290,6 +290,21 @@ public sealed class SelectionBindingTests
         );
         model.SelectMoviesCommand.Execute(null);
         Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void VerifyLibraryFileName(
+        MainWindow window,
+        MediaCard movie
+    )
+    {
+        ListBox library = window.FindControl<ListBox>("LibraryList")!;
+        Grid row = Assert.IsType<Grid>(library.ItemTemplate!.Build(movie));
+        row.DataContext = movie;
+        Dispatcher.UIThread.RunJobs();
+
+        const string FileName = "(120) Coco (2017).mkv";
+        Assert.Equal(FileName, Assert.Single(row.Children.OfType<TextBlock>()).Text);
+        Assert.Equal(FileName, ToolTip.GetTip(row));
     }
 
     private static void VerifyMainLayout(MainWindow window)
@@ -569,14 +584,15 @@ public sealed class SelectionBindingTests
     private static void AddCard(
         string directory,
         string name,
-        bool series
+        bool series,
+        string? title = null
     )
     {
         string path = Path.Combine(directory, "data", name);
         Directory.CreateDirectory(path);
         XElement info = new(
             "info",
-            new XElement("title", name),
+            new XElement("title", title ?? name),
             new XElement("genre", "Drame")
         );
         if (series)

@@ -687,7 +687,7 @@
             <Grid
               ColumnDefinitions="18,*"
               Height="19"
-              ToolTip.Tip="{Binding DisplayName}"
+              ToolTip.Tip="{Binding FolderName}"
             >
               <Image
                 Width="16"
@@ -704,7 +704,7 @@
                 </Image.Source>
               </Image>
               <TextBlock
-                Text="{Binding DisplayName}"
+                Text="{Binding FolderName}"
                 Grid.Column="1"
                 VerticalAlignment="Center"
                 TextTrimming="CharacterEllipsis"
