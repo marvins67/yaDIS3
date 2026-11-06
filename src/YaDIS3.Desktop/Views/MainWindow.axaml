@@ -515,13 +515,13 @@
           <ContextMenu>
             <MenuItem
               Header="{DynamicResource Text.127}"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanOpenFolders}"
             >
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png" Width="16" Height="16" />
               </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="{DynamicResource Text.128}" IsEnabled="False">
+            <MenuItem Header="{DynamicResource Text.128}" IsEnabled="{Binding ContextMenuState.CanOpenFolders}">
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png" Width="16" Height="16" />
               </MenuItem.Icon>
@@ -529,7 +529,7 @@
             <MenuItem
               Header="{DynamicResource Text.164}"
               IsVisible="{Binding ContextMenuState.ShowMovieInformation}"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanOpenInformation}"
             >
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/info.png" Width="16" Height="16" />
@@ -538,7 +538,7 @@
             <MenuItem
               Header="{DynamicResource Text.164}"
               IsVisible="{Binding ContextMenuState.ShowSeriesInformation}"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanOpenInformation}"
             >
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/info.png" Width="16" Height="16" />
@@ -549,13 +549,13 @@
               Header="{DynamicResource Text.116}"
               InputGesture="Ctrl+M"
               IsVisible="{Binding ContextMenuState.ShowMovieGroups}"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanCreateManually}"
             >
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/edit.png" Width="16" Height="16" />
               </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="{DynamicResource Text.62}" IsEnabled="False">
+            <MenuItem Header="{DynamicResource Text.62}" IsEnabled="{Binding ContextMenuState.CanChangeTitle}">
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/search_database.png" Width="16" Height="16" />
               </MenuItem.Icon>
@@ -577,7 +577,7 @@
             <MenuItem
               Header="{DynamicResource Text.61}"
               InputGesture="Delete"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanDelete}"
             >
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/delete.png" Width="16" Height="16" />
@@ -587,7 +587,7 @@
             <MenuItem
               Header="{DynamicResource Text.185}"
               IsVisible="{Binding ContextMenuState.ShowMovieGroups}"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanEditSaga}"
             >
               <MenuItem Header="{DynamicResource Text.186}" IsEnabled="False" />
               <Separator />
@@ -595,7 +595,7 @@
             <MenuItem
               Header="{DynamicResource Text.59}"
               IsVisible="{Binding ContextMenuState.ShowMovieGroups}"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanEditSelection}"
             >
               <MenuItem Header="{DynamicResource Text.167}" IsEnabled="False" />
               <Separator />
@@ -604,7 +604,7 @@
             <MenuItem
               Header="{DynamicResource Text.129}"
               InputGesture="Ctrl+T"
-              IsEnabled="False"
+              IsEnabled="{Binding ContextMenuState.CanToggleVerification}"
             >
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/accept.png" Width="16" Height="16" />

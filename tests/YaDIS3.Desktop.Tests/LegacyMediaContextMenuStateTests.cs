@@ -125,4 +125,46 @@ public sealed class LegacyMediaContextMenuStateTests
         Assert.False(state.CanReloadInformation);
         Assert.False(state.CanReloadTechnical);
     }
+
+    [Fact]
+    public void From_SerieNonTraitee_ConserveLesReglesHistoriques()
+    {
+        LegacyMediaContextMenuState state =
+            LegacyMediaContextMenuState.From(
+                true,
+                MediaProcessingState.Unprocessed,
+                1
+            );
+
+        Assert.True(state.ShowSeriesInformation);
+        Assert.False(state.ShowMovieGroups);
+        Assert.True(state.CanOpenFolders);
+        Assert.True(state.CanChangeTitle);
+        Assert.True(state.CanReloadInformation);
+        Assert.True(state.CanDelete);
+        Assert.False(state.CanOpenInformation);
+        Assert.False(state.CanCreateManually);
+        Assert.False(state.CanToggleVerification);
+    }
+
+    [Fact]
+    public void From_SeriesMultiples_ConserveLesActionsDeLot()
+    {
+        LegacyMediaContextMenuState state =
+            LegacyMediaContextMenuState.From(
+                true,
+                MediaProcessingState.Checked,
+                3
+            );
+
+        Assert.True(state.ShowSeriesInformation);
+        Assert.False(state.ShowMovieGroups);
+        Assert.False(state.CanOpenFolders);
+        Assert.False(state.CanOpenInformation);
+        Assert.False(state.CanChangeTitle);
+        Assert.True(state.CanReloadInformation);
+        Assert.True(state.CanReloadTechnical);
+        Assert.True(state.CanDelete);
+        Assert.True(state.CanToggleVerification);
+    }
 }
