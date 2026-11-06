@@ -119,6 +119,55 @@ public sealed class MediaTreatmentTests
     }
 
     [Fact]
+    public async Task TreatAsync_ChangementDeTitre_RecreeInformationEtRendu()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(
+            fixture, repository, series: false
+        );
+        TreatmentInputs inputs = new();
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        card.PrepareMovieTitleChange(235);
+        Assert.Null(
+            card.Snapshot().Document.Root!.Element("info")!
+                .Element("title")
+        );
+        Assert.True(await TreatAsync(
+            fixture, repository, card, inputs,
+            TreatmentMode.ReloadInformation
+        ));
+        Assert.Equal("Film identifié", card.Title);
+        Assert.Equal(2, inputs.MovieRequests);
+        Assert.True(File.Exists(Path.Combine(
+            card.DataDirectory, "preview.jpg"
+        )));
+    }
+
+    [Fact]
+    public async Task TreatAsync_RechargementTechnique_ConserveTitreEtApercu()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(
+            fixture, repository, series: false
+        );
+        TreatmentInputs inputs = new();
+        Assert.True(await TreatAsync(fixture, repository, card, inputs));
+        string preview = Path.Combine(card.DataDirectory, "preview.jpg");
+        Assert.True(File.Exists(preview));
+        card.Title = "Titre local";
+        Assert.True(await TreatAsync(
+            fixture, repository, card, inputs,
+            TreatmentMode.ReloadTechnicalInformation
+        ));
+        Assert.Equal("Titre local", card.Title);
+        Assert.Equal(1, inputs.MovieRequests);
+        Assert.Equal(2, inputs.TechnicalReads);
+        Assert.True(File.Exists(preview));
+    }
+
+    [Fact]
     public async Task TreatAsync_SerieIntrouvable_CreeUneFicheManuelleAvecEpisodesLocaux()
     {
         using ExportFixture fixture = new();
