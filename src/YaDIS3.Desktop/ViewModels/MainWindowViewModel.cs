@@ -321,6 +321,9 @@ public sealed partial class MainWindowViewModel
     /// <summary>Supprime les fiches sélectionnées et leurs rendus.</summary>
     public ICommand DeleteMediaCommand { get; }
 
+    /// <summary>Active la création manuelle du film sélectionné.</summary>
+    public ICommand BeginManualMovieEditCommand { get; }
+
     /// <summary>Bascule la vérification des titres sélectionnés.</summary>
     public ICommand ToggleVerificationCommand { get; }
 
@@ -471,6 +474,11 @@ public sealed partial class MainWindowViewModel
         DeleteMediaCommand = new UiCommand(() =>
             RunAsync(DeleteSelectedMediaAsync)
         );
+        BeginManualMovieEditCommand = new UiCommand(() =>
+        {
+            BeginManualMovieEdit();
+            return Task.CompletedTask;
+        });
         ToggleVerificationCommand = new UiCommand(() =>
             RunAsync(ToggleVerificationAsync)
         );
