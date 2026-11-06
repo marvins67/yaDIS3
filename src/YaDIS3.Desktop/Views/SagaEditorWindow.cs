@@ -60,8 +60,8 @@ public sealed class SagaEditorWindow : Window
             ColumnDefinitions = new ColumnDefinitions("180,127,300"),
             RowDefinitions = new RowDefinitions("Auto,Auto,169,Auto"),
             ColumnSpacing = 6,
-            RowSpacing = 6,
-            Margin = new Thickness(12),
+            RowSpacing = 4,
+            Margin = new Thickness(12, 8),
         };
         Add(grid, Label("Nom de la saga:"), 0, 0);
         Add(grid, Label("Nom pour le tri:"), 1, 0);
