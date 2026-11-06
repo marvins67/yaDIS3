@@ -141,6 +141,78 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async void ChangeContextTitle(
+        object? sender,
+        RoutedEventArgs eventArgs
+    )
+    {
+        if (Model.IsSeries)
+        {
+            await ShowUtilityDialog(
+                "TvdbSearchTab",
+                Model.Texts.GetString("62")
+            );
+            return;
+        }
+
+        Window dialog = new()
+        {
+            Title = Model.Texts.GetString("62"),
+            Width = 620,
+            Height = 470,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        TextBox query = new()
+        {
+            Text = Model.SelectedCard?.Title ?? "",
+        };
+        Button search = new()
+        {
+            Content = Model.Texts.GetString("114"),
+        };
+        ListBox results = new()
+        {
+            Height = 290,
+        };
+        Button apply = new()
+        {
+            Content = Model.Texts.GetString("115"),
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        search.Click += async (_, _) =>
+        {
+            try
+            {
+                results.ItemsSource = await Model.SearchMovieTitlesAsync(
+                    query.Text ?? ""
+                );
+            }
+            catch (Exception exception)
+            {
+                Model.Status = exception.Message;
+            }
+        };
+        apply.Click += (_, _) =>
+        {
+            if (results.SelectedItem is MovieTitleMatch match)
+            {
+                dialog.Close(match);
+            }
+        };
+        dialog.Content = new StackPanel
+        {
+            Margin = new Avalonia.Thickness(16),
+            Spacing = 10,
+            Children = { query, search, results, apply },
+        };
+        MovieTitleMatch? selected =
+            await dialog.ShowDialog<MovieTitleMatch?>(this);
+        if (selected is not null)
+        {
+            await Model.ChangeMovieTitleAsync(selected);
+        }
+    }
+
     private void BeginManualMovieEdit(
         object? sender,
         RoutedEventArgs eventArgs

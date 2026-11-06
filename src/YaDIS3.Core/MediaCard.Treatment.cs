@@ -50,6 +50,30 @@ public sealed partial class MediaCard
         RefreshEpisodes();
     }
 
+    /// <summary>Écarte l'ancienne identification avant retraitement.</summary>
+    public void PrepareMovieTitleChange(long movieId)
+    {
+        if (IsSeries || movieId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(movieId));
+        }
+
+        UpdateForTreatment(() =>
+        {
+            Info?.Remove();
+            Root.Add(new XElement(
+                "info",
+                new XElement(
+                    "id",
+                    movieId.ToString(
+                        System.Globalization.CultureInfo.InvariantCulture
+                    )
+                ),
+                new XElement("source", "0")
+            ));
+        });
+    }
+
     internal void ApplyMovieForTreatment(XElement info)
     {
         UpdateForTreatment(() =>

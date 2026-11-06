@@ -106,6 +106,28 @@ public sealed class OnlineTreatmentMetadata(
         return info;
     }
 
+    /// <summary>Recherche les films candidats au changement de titre.</summary>
+    public async Task<IReadOnlyList<MovieTitleMatch>> SearchMovieTitlesAsync(
+        string query,
+        CancellationToken cancellationToken
+    )
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+        using JsonDocument matches = await GetMovieJsonAsync(
+            $"search/movie?query={Uri.EscapeDataString(query)}&language={language}",
+            cancellationToken
+        );
+        return matches.RootElement.GetProperty("results")
+            .EnumerateArray()
+            .Where(item => item.TryGetProperty("id", out _))
+            .Select(item => new MovieTitleMatch(
+                item.GetProperty("id").GetInt64(),
+                Value(item, "title"),
+                Value(item, "release_date")
+            ))
+            .ToArray();
+    }
+
     private async Task<string?> FindMovieIdAsync(
         MediaCard card,
         CancellationToken cancellationToken
