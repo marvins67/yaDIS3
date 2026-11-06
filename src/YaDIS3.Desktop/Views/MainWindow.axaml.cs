@@ -120,7 +120,7 @@ public sealed partial class MainWindow : Window
         };
         TextBox input = new()
         {
-            Watermark = Model.Texts.GetString("169"),
+            PlaceholderText = Model.Texts.GetString("169"),
         };
         Button create = new()
         {

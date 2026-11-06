@@ -1,4 +1,3 @@
-using System.Windows.Input;
 using System.Xml.Linq;
 using YaDIS3.Core;
 
