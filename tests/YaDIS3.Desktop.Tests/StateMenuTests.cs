@@ -187,7 +187,7 @@ public sealed class StateMenuTests : IDisposable
         Assert.False(saga.IsChecked);
 
         saga.SelectCommand.Execute(null);
-        await WaitForSagaMembershipAsync("Wall·E.iso", true);
+        await WaitForSagaMembershipAsync(model, "Wall·E.iso", true);
         Assert.True(model.SagaContextChoices.Single(
             choice => choice.Label == "Épopée d'Howl"
         ).IsChecked);
@@ -196,7 +196,7 @@ public sealed class StateMenuTests : IDisposable
             choice => choice.Label == "Épopée d'Howl"
         );
         saga.SelectCommand.Execute(null);
-        await WaitForSagaMembershipAsync("Wall·E.iso", false);
+        await WaitForSagaMembershipAsync(model, "Wall·E.iso", false);
         Assert.False(model.SagaContextChoices.Single(
             choice => choice.Label == "Épopée d'Howl"
         ).IsChecked);
@@ -208,6 +208,7 @@ public sealed class StateMenuTests : IDisposable
     }
 
     private async Task WaitForSagaMembershipAsync(
+        MainWindowViewModel model,
         string movie,
         bool expected
     )
@@ -218,7 +219,7 @@ public sealed class StateMenuTests : IDisposable
                 Path.Combine(_directory, "groups.xml")
             ).Descendants("saga").Elements("movie")
                 .Any(item => item.Value == movie);
-            if (exists == expected)
+            if (exists == expected && !model.IsBusy)
             {
                 return;
             }
@@ -257,7 +258,7 @@ public sealed class StateMenuTests : IDisposable
         Assert.Equal("Épopée d'Howl", edited);
 
         saga.SelectCommand.Execute(null);
-        await WaitForSagaMembershipAsync("Wall·E.iso", true);
+        await WaitForSagaMembershipAsync(model, "Wall·E.iso", true);
     }
 
     [Fact]
