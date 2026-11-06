@@ -263,4 +263,21 @@ public sealed class LegacyEditorTests
                 .Element("status")!.Value
         );
     }
+
+    [Fact]
+    public void PrepareSeriesTitleChange_IdDifferent_RetireAnciennesDonnees()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = repository.Open(fixture.Root).Cards
+            .Single(media => media.IsSeries);
+        card.PrepareSeriesTitleChange(147);
+
+        XElement info = card.Snapshot().Document.Root!.Element("info")!;
+        Assert.Equal("147", info.Element("id")!.Value);
+        Assert.Null(info.Element("title"));
+        Assert.Empty(card.Episodes);
+        Assert.True(card.IsDirty);
+    }
+
 }
