@@ -27,7 +27,7 @@ internal sealed class MovieMetadataHandler(
                         StringComparison.Ordinal
                     )
                         ? "{\"results\":[{\"id\":42}]}"
-                        : uri.EndsWith("/images", StringComparison.Ordinal)
+                        : request.RequestUri.AbsolutePath.EndsWith("/images", StringComparison.Ordinal)
                             ? images
                             : movie,
                     Encoding.UTF8,

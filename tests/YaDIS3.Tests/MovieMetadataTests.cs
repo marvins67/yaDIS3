@@ -174,6 +174,38 @@ public sealed class MovieMetadataTests
         }
     }
 
+    [Fact]
+    public async Task PrepareAsync_FilmNonTraiteSansJeton_UtiliseLaCleHistorique()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, false);
+        using MovieMetadataHandler handler = new(
+            File.ReadAllText(FixturePath("movie.json"))
+        );
+        using HttpClient http = new(handler);
+        OnlineTreatmentMetadata metadata = new(
+            http,
+            null,
+            null,
+            "fr",
+            new ImageImporter(new UnusedJpegEncoder())
+        );
+        TreatmentPreparation preparation = new(
+            new ExportFileSystem(),
+            metadata,
+            new TreatmentInputs()
+        );
+
+        Assert.True(await preparation.PrepareAsync(
+            card, TreatmentMode.Normal, CancellationToken.None
+        ));
+        Assert.True(card.HasInformation);
+        Assert.Equal(3, handler.Requests.Count);
+        Assert.All(handler.Requests, uri =>
+            Assert.Contains("api_key=", uri, StringComparison.Ordinal));
+    }
+
     private static OnlineTreatmentMetadata Metadata(
         HttpClient http,
         string language

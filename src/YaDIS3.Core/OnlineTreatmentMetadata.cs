@@ -196,18 +196,23 @@ public sealed class OnlineTreatmentMetadata(
         CancellationToken cancellationToken
     )
     {
-        if (string.IsNullOrWhiteSpace(tmdbToken))
-        {
-            throw new InvalidOperationException(
-                "Renseignez YADIS_TMDB_TOKEN avec le jeton de lecture TMDB."
-            );
-        }
+        // yaDIS2 utilise sa clé API v3 sans configuration utilisateur.
+        // Conserver le jeton explicite en priorité pour les installations existantes.
+        const string legacyApiKey = "e1ea6c11abe48e4c9823f465d7e27efe";
+        bool useLegacyKey = string.IsNullOrWhiteSpace(tmdbToken);
+        string requestPath = useLegacyKey
+            ? path + (path.Contains('?', StringComparison.Ordinal) ? "&" : "?")
+                + "api_key=" + legacyApiKey
+            : path;
         using HttpRequestMessage request = new(
             HttpMethod.Get,
-            "https://api.themoviedb.org/3/" + path
+            "https://api.themoviedb.org/3/" + requestPath
         );
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue("Bearer", tmdbToken);
+        if (!useLegacyKey)
+        {
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", tmdbToken);
+        }
         using HttpResponseMessage response =
             await http.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
