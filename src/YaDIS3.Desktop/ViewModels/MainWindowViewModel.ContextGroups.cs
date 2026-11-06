@@ -39,29 +39,65 @@ public sealed partial class MainWindowViewModel
                 group => group.Element("name")!.Value,
                 StringComparer.CurrentCulture
             )
-            .Select(group =>
-            {
-                string name = group.Element("name")!.Value;
-                bool checkedItem = selected.Length > 0
-                    && selected.All(movie =>
-                        group.Elements("movie").Any(entry =>
-                            entry.Value == movie
-                        )
-                    );
-                return new GroupContextChoice(
-                    name,
-                    checkedItem,
-                    new UiCommand(() =>
-                        RunAsync(() =>
-                            ChangeContextGroupAsync(kind, name)
-                        )
-                    )
-                );
-            })
+            .Select(group => CreateGroupChoice(kind, group, selected))
             .ToArray();
-
         return [create, .. items];
     }
+
+    private GroupContextChoice CreateGroupChoice(
+        string kind,
+        XElement group,
+        string[] selected
+    )
+    {
+        string name = group.Element("name")!.Value;
+        int members = selected.Count(movie =>
+            group.Elements("movie").Any(entry => entry.Value == movie)
+        );
+        bool mixed = members > 0 && members < selected.Length;
+        GroupContextChoice toggle = new(
+            Texts.GetString("149"),
+            false,
+            new UiCommand(() =>
+                RunAsync(() => ChangeContextGroupAsync(kind, name))
+            )
+        );
+        GroupContextChoice remove = new(
+            Texts.GetString("61"),
+            false,
+            new UiCommand(() =>
+                RunAsync(() => DeleteContextGroupAsync(kind, name))
+            )
+        );
+        List<GroupContextChoice> children = [toggle];
+        if (kind == "saga")
+        {
+            children.Add(new GroupContextChoice(
+                Texts.GetString("87"),
+                false,
+                new UiCommand(() =>
+                {
+                    SagaEditingRequested?.Invoke(name);
+                    return Task.CompletedTask;
+                })
+            ));
+        }
+        children.Add(remove);
+        return new GroupContextChoice(
+            mixed ? "◩ " + name : name,
+            members > 0 && members == selected.Length,
+            new UiCommand(() =>
+                RunAsync(() => ChangeContextGroupAsync(kind, name))
+            )
+        )
+        {
+            IsIndeterminate = mixed,
+            Children = children,
+        };
+    }
+
+    /// <summary>Signale qu'une saga doit être éditée.</summary>
+    public event Action<string>? SagaEditingRequested;
 
     private string[] SelectedContextMovies() =>
         (
@@ -122,6 +158,85 @@ public sealed partial class MainWindowViewModel
             LegacyMovieGroups.ToggleSelection(groups, name, movies);
         }
         await SaveContextGroupsAsync(groups);
+    }
+
+    /// <summary>Donne les paramètres et les membres d'une saga.</summary>
+    public SagaContextDraft ReadSaga(string name)
+    {
+        XElement saga = _filterGroups.Descendants("saga")
+            .Single(item => item.Element("name")?.Value == name);
+        return new SagaContextDraft(
+            name,
+            saga.Element("sort_name")?.Value ?? name,
+            saga.Element("poster")?.Value ?? "",
+            saga.Element("fanart")?.Value ?? "",
+            LegacyMovieGroups.SagaMembers(_filterGroups, name)
+        );
+    }
+
+    /// <summary>Enregistre la modification avancée d'une saga.</summary>
+    public Task EditContextSagaAsync(
+        string previousName,
+        SagaContextDraft draft
+    ) =>
+        RunAsync(async () =>
+        {
+            XDocument groups = new(_filterGroups);
+            LegacyMovieGroups.EditSaga(
+                groups,
+                previousName,
+                draft.Name,
+                draft.SortName,
+                draft.Poster,
+                draft.Fanart,
+                draft.Members
+            );
+            await SaveContextGroupsAsync(groups);
+            CleanupSagaInterface(previousName);
+        });
+
+    private async Task DeleteContextGroupAsync(
+        string kind,
+        string name
+    )
+    {
+        XDocument groups = new(_filterGroups);
+        if (kind == "saga")
+        {
+            LegacyMovieGroups.DeleteSaga(groups, name);
+        }
+        else
+        {
+            LegacyMovieGroups.DeleteSelection(groups, name);
+        }
+        await SaveContextGroupsAsync(groups);
+        if (kind == "saga")
+        {
+            CleanupSagaInterface(name);
+        }
+    }
+
+    private void CleanupSagaInterface(string name)
+    {
+        if (_workspace is null)
+        {
+            return;
+        }
+        string root = Path.Combine(
+            _workspace.Directory, "interface", "00", "98"
+        );
+        string path = Path.GetFullPath(Path.Combine(root, name));
+        if (!path.StartsWith(
+            Path.GetFullPath(root) + Path.DirectorySeparatorChar,
+            StringComparison.OrdinalIgnoreCase
+        ))
+        {
+            throw new InvalidDataException("Chemin de saga invalide.");
+        }
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, true);
+        }
     }
 
     private async Task SaveContextGroupsAsync(XDocument groups)
