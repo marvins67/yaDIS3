@@ -123,8 +123,8 @@ public sealed partial class MediaCard
     /// <summary>Localise le média selon l'indicateur folder de yaDIS2.</summary>
     public string MediaFolderPath =>
         Header.Element("folder")?.Value == "yes"
-            ? SourceDirectory
-            : Path.Combine(SourceDirectory, FolderName);
+            ? Path.Combine(SourceDirectory, FolderName)
+            : SourceDirectory;
 
     /// <summary>Adresse de la fiche du film ou de la série.</summary>
     public string InformationUrl =>
