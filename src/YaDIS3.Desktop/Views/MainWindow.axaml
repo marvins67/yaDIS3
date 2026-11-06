@@ -152,6 +152,10 @@
       <Setter Property="MinHeight" Value="19" />
       <Setter Property="Padding" Value="4,0" />
     </Style>
+    <Style Selector="ListBox#LibraryList ListBoxItem:selected">
+      <Setter Property="Background" Value="#0078D7" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
     <Style Selector="TabItem">
       <Setter Property="Foreground" Value="Black" />
       <Setter Property="MinHeight" Value="23" />
