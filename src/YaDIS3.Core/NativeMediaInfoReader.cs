@@ -8,10 +8,10 @@ namespace YaDIS3.Core;
 internal static class NativeMediaInfoReader
 {
     private const string Library = "libmediainfo";
-    private const nuint General = 0;
-    private const nuint Video = 1;
-    private const nuint Audio = 2;
-    private const nuint Text = 3;
+    private const int General = 0;
+    private const int Video = 1;
+    private const int Audio = 2;
+    private const int Text = 3;
 
     /// <summary>Construit le XML technique historique depuis MediaInfoLib.</summary>
     internal static XElement Read(string file)
@@ -45,7 +45,7 @@ internal static class NativeMediaInfoReader
         XElement video = Track(handle, Video, 0,
             "Codec", "Format", "Width", "Height",
             "ScanType", "DisplayAspectRatio", "FrameRate");
-        if (GetStreamCount(handle, Video, -1) == 0)
+        if (GetStreamCount(handle, (nuint)Video, -1) == 0)
         {
             throw new InvalidDataException("Aucune piste vidéo détectée par MediaInfo.");
         }
@@ -60,12 +60,12 @@ internal static class NativeMediaInfoReader
 
         XElement root = new("MediaInfo",
             new XElement("media", general, video));
-        for (int index = 0; index < (int)GetStreamCount(handle, Audio, -1); index++)
+        for (int index = 0; index < (int)GetStreamCount(handle, (nuint)Audio, -1); index++)
         {
             root.Element("media")!.Add(Track(handle, Audio, index,
                 "Codec", "Format", "Format_Profile", "Channels", "Language"));
         }
-        for (int index = 0; index < (int)GetStreamCount(handle, Text, -1); index++)
+        for (int index = 0; index < (int)GetStreamCount(handle, (nuint)Text, -1); index++)
         {
             root.Element("media")!.Add(Track(handle, Text, index, "Language"));
         }
@@ -73,7 +73,7 @@ internal static class NativeMediaInfoReader
     }
 
     private static XElement Track(
-        IntPtr handle, nuint kind, int index, params string[] fields
+        IntPtr handle, int kind, int index, params string[] fields
     )
     {
         string type = kind switch
@@ -87,7 +87,7 @@ internal static class NativeMediaInfoReader
             new XAttribute("type", type),
             fields.Select(field => new XElement(field,
                 Marshal.PtrToStringUni(GetField(
-                    handle, kind, (nuint)index, field, 1, 0
+                    handle, (nuint)kind, (nuint)index, field, 1, 0
                 )) ?? "")));
     }
 
