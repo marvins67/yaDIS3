@@ -41,7 +41,7 @@ public sealed partial class MediaInfoReader(
         CancellationToken cancellationToken
     )
     {
-        ProcessStartInfo start = new(executable)
+        ProcessStartInfo start = new(ResolveExecutable())
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -82,6 +82,21 @@ public sealed partial class MediaInfoReader(
                 process.Kill(entireProcessTree: true);
             }
         }
+    }
+
+    private string ResolveExecutable()
+    {
+        if (executable != "mediainfo")
+        {
+            return executable;
+        }
+
+        // Le CLI peut être livré à côté de yaDIS3 sans modifier le PATH.
+        string name = OperatingSystem.IsWindows()
+            ? "MediaInfo.exe"
+            : "mediainfo";
+        string local = Path.Combine(AppContext.BaseDirectory, name);
+        return File.Exists(local) ? local : executable;
     }
 
     private static Process Start(ProcessStartInfo start)
