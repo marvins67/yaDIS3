@@ -452,7 +452,7 @@ public sealed partial class MediaCard
         {
             return;
         }
-        Update(EnsureInfo);
+        Update(() => EnsureInfo());
     }
 
     internal void MarkSaved(long atRevision, string hash)
