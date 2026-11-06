@@ -515,13 +515,14 @@
           <ContextMenu>
             <MenuItem
               Header="{DynamicResource Text.127}"
+              Click="OpenDataFolder"
               IsEnabled="{Binding ContextMenuState.CanOpenFolders}"
             >
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png" Width="16" Height="16" />
               </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="{DynamicResource Text.128}" IsEnabled="{Binding ContextMenuState.CanOpenFolders}">
+            <MenuItem Header="{DynamicResource Text.128}" Click="OpenMediaFolder" IsEnabled="{Binding ContextMenuState.CanOpenFolders}">
               <MenuItem.Icon>
                 <Image Source="avares://yaDIS3.Desktop/Assets/Icons/folder.png" Width="16" Height="16" />
               </MenuItem.Icon>
@@ -529,6 +530,7 @@
             <MenuItem
               Header="{DynamicResource Text.164}"
               IsVisible="{Binding ContextMenuState.ShowMovieInformation}"
+              Click="OpenInformationPage"
               IsEnabled="{Binding ContextMenuState.CanOpenInformation}"
             >
               <MenuItem.Icon>
@@ -538,6 +540,7 @@
             <MenuItem
               Header="{DynamicResource Text.164}"
               IsVisible="{Binding ContextMenuState.ShowSeriesInformation}"
+              Click="OpenInformationPage"
               IsEnabled="{Binding ContextMenuState.CanOpenInformation}"
             >
               <MenuItem.Icon>

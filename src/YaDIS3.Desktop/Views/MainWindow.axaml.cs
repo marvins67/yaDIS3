@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -89,6 +90,46 @@ public sealed partial class MainWindow : Window
                 .SelectedIndex = tabIndex;
             await dialog.ShowDialog(this);
         });
+
+    private void OpenDataFolder(object? sender, RoutedEventArgs eventArgs)
+    {
+        if (Model.SelectedCard is { } card)
+        {
+            OpenExternal(card.DataDirectory);
+        }
+    }
+
+    private void OpenMediaFolder(object? sender, RoutedEventArgs eventArgs)
+    {
+        if (Model.SelectedCard is { } card)
+        {
+            OpenExternal(card.MediaFolderPath);
+        }
+    }
+
+    private void OpenInformationPage(object? sender, RoutedEventArgs eventArgs)
+    {
+        if (Model.SelectedCard is { } card
+            && !string.IsNullOrWhiteSpace(card.InformationUrl))
+        {
+            OpenExternal(card.InformationUrl);
+        }
+    }
+
+    private void OpenExternal(string target)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(target)
+            {
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception exception)
+        {
+            Model.Status = exception.Message;
+        }
+    }
 
     private async void ShowTvdbSearch(
         object? sender,

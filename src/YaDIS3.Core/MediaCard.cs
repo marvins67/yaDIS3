@@ -120,6 +120,20 @@ public sealed partial class MediaCard
     internal string SourceDirectory =>
         Header.Element("path")?.Value ?? "";
 
+    /// <summary>Localise le média selon l'indicateur folder de yaDIS2.</summary>
+    public string MediaFolderPath =>
+        Header.Element("folder")?.Value == "yes"
+            ? SourceDirectory
+            : Path.Combine(SourceDirectory, FolderName);
+
+    /// <summary>Adresse de la fiche du film ou de la série.</summary>
+    public string InformationUrl =>
+        IsSeries
+            ? "http://thetvdb.com/?tab=series&id="
+                + TvdbId
+            : Read("url");
+
+
     private MediaProcessingState StoredProcessingState =>
         int.TryParse(
             Header.Element("status")?.Value,
