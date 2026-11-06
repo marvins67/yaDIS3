@@ -198,11 +198,11 @@ public sealed class OnlineTreatmentMetadata(
     {
         // yaDIS2 utilise sa clé API v3 sans configuration utilisateur.
         // Conserver le jeton explicite en priorité pour les installations existantes.
-        const string legacyApiKey = "e1ea6c11abe48e4c9823f465d7e27efe";
+        const string LegacyApiKey = "e1ea6c11abe48e4c9823f465d7e27efe";
         bool useLegacyKey = string.IsNullOrWhiteSpace(tmdbToken);
         string requestPath = useLegacyKey
             ? path + (path.Contains('?', StringComparison.Ordinal) ? "&" : "?")
-                + "api_key=" + legacyApiKey
+                + "api_key=" + LegacyApiKey
             : path;
         using HttpRequestMessage request = new(
             HttpMethod.Get,
