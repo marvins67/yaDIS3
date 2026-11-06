@@ -82,6 +82,7 @@ public sealed class SelectionBindingTests
             VerifyMainLayout(window);
             VerifyStateMenu(window, model, workspace.Cards[0]);
             VerifySettingsDialog(window, model);
+            VerifySagaArtworkGallery(directory);
             TextBox title = window.FindControl<TextBox>(
                 "TitleEditor"
             )!;
@@ -128,6 +129,53 @@ public sealed class SelectionBindingTests
         finally
         {
             window.Close();
+        }
+    }
+
+    private static void VerifySagaArtworkGallery(string workspace)
+    {
+        string member = "SagaTest.mkv";
+        string data = Path.Combine(workspace, "data", member);
+        Directory.CreateDirectory(data);
+        byte[] image = Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwC" +
+            "AAAAC0lEQVR42mP8/x8AAwMCAO+/j1sAAAAASUVORK5CYII="
+        );
+        File.WriteAllBytes(Path.Combine(data, "poster.jpg"), image);
+        File.WriteAllBytes(Path.Combine(data, "fanart.jpg"), image);
+        SagaContextDraft draft = new(
+            "Saga de test",
+            "Saga de test",
+            member,
+            member,
+            [member]
+        );
+        SagaEditorWindow editor = new(draft, workspace);
+        editor.Show();
+        try
+        {
+            Dispatcher.UIThread.RunJobs();
+            Grid root = Assert.IsType<Grid>(editor.Content);
+            Grid gallery = Assert.Single(root.Children.OfType<Grid>());
+            ListBox members = Assert.Single(
+                gallery.Children.OfType<ListBox>()
+            );
+            Assert.Equal(
+                member,
+                Assert.Single(members.ItemsSource!.OfType<string>())
+            );
+            Button[] buttons = gallery.Children.OfType<Button>()
+                .ToArray();
+            Assert.Equal(2, buttons.Length);
+            Assert.All(buttons, button =>
+            {
+                Image picture = Assert.IsType<Image>(button.Content);
+                Assert.NotNull(picture.Source);
+            });
+        }
+        finally
+        {
+            editor.Close();
         }
     }
 
