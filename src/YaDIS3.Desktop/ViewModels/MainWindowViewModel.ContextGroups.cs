@@ -252,7 +252,20 @@ public sealed partial class MainWindowViewModel
             ),
             OperationToken
         );
+        string[] removedSagas = _filterGroups
+            .Descendants("saga")
+            .Select(node => node.Element("name")?.Value ?? "")
+            .Except(
+                groups.Descendants("saga")
+                    .Select(node => node.Element("name")?.Value ?? ""),
+                StringComparer.Ordinal
+            )
+            .ToArray();
         _filterGroups = groups;
+        foreach (string name in removedSagas)
+        {
+            CleanupSagaInterface(name);
+        }
         RefreshStateMenu();
         Notify(nameof(SagaContextChoices));
         Notify(nameof(SelectionContextChoices));
