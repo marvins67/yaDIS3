@@ -303,6 +303,19 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>
+    /// États historiques des commandes contextuelles.
+    /// </summary>
+    public LegacyMediaContextMenuState ContextMenuState =>
+        LegacyMediaContextMenuState.From(
+            SelectedCard?.IsSeries ?? false,
+            SelectedCard?.ProcessingState
+                ?? MediaProcessingState.Unknown,
+            TreatmentSelection.Count > 0
+                ? TreatmentSelection.Count
+                : SelectedCard is null ? 0 : 1
+        );
+
+    /// <summary>
     /// Épisode en cours d'édition.
     /// </summary>
     public Episode? SelectedEpisode
@@ -440,6 +453,8 @@ public sealed partial class MainWindowViewModel
             CycleStateFilterAsync
         );
         InitializeDune();
+        TreatmentSelection.CollectionChanged += (_, _) =>
+            Notify(nameof(ContextMenuState));
         SaveCommand = new UiCommand(() =>
             RunAsync(SaveAllAsync)
         );
