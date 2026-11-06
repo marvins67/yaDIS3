@@ -74,8 +74,20 @@
       BasedOn="{StaticResource {x:Type MenuItem}}"
       x:DataType="vm:GroupContextChoice"
     >
-      <Setter Property="Header" Value="{Binding Label}" />
-      <Setter Property="Command" Value="{Binding SelectCommand}" />
+      <Setter Property="Header" Value="{Binding}" />
+      <Setter Property="HeaderTemplate">
+        <DataTemplate x:DataType="vm:GroupContextChoice">
+          <Button
+            Content="{Binding Label}"
+            Command="{Binding SelectCommand}"
+            Background="Transparent"
+            BorderThickness="0"
+            Padding="0"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Left"
+          />
+        </DataTemplate>
+      </Setter>
       <Setter Property="IsChecked" Value="{Binding IsChecked}" />
       <Setter Property="ToggleType" Value="{Binding ToggleType}" />
       <Setter Property="ItemsSource" Value="{Binding Children}" />

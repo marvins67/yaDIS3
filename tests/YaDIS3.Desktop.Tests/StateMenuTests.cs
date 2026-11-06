@@ -183,7 +183,7 @@ public sealed class StateMenuTests : IDisposable
         GroupContextChoice saga = model.SagaContextChoices.Single(
             choice => choice.Label == "Épopée d'Howl"
         );
-        Assert.Empty(saga.Children);
+        Assert.Equal(2, saga.Children.Count);
         Assert.False(saga.IsChecked);
 
         saga.SelectCommand.Execute(null);
@@ -228,6 +228,39 @@ public sealed class StateMenuTests : IDisposable
     }
 
     [Fact]
+    public async Task SagaContextChoices_SousMenuParSaga_ConserveClicDirectEtEdition()
+    {
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        model.SelectedCard = model.Cards.Single(card =>
+            card.FolderName == "Wall·E.iso"
+        );
+
+        GroupContextChoice saga = model.SagaContextChoices.Single(
+            choice => choice.Label == "Épopée d'Howl"
+        );
+        Assert.Equal(2, saga.Children.Count);
+        Assert.Equal(
+            model.Texts.GetString("87"),
+            saga.Children[0].Label
+        );
+        Assert.Equal(
+            model.Texts.GetString("61"),
+            saga.Children[1].Label
+        );
+
+        string? edited = null;
+        model.SagaEditingRequested += name => edited = name;
+        saga.Children[0].SelectCommand.Execute(null);
+        Assert.Equal("Épopée d'Howl", edited);
+
+        saga.SelectCommand.Execute(null);
+        await WaitForSagaMembershipAsync("Wall·E.iso", true);
+    }
+
+    [Fact]
     public async Task SagaContextChoices_ModifierSaga_OuvreLaCommandeDediee()
     {
         using MainWindowViewModel model = new(
@@ -244,14 +277,12 @@ public sealed class StateMenuTests : IDisposable
         GroupContextChoice saga = model.SagaContextChoices.Single(
             choice => choice.Label == "Épopée d'Howl"
         );
-        Assert.Empty(saga.Children);
-
-        GroupContextChoice edit = model.SagaContextChoices.Single(
-            choice => choice.Label == model.Texts.GetString("87")
+        Assert.Equal(2, saga.Children.Count);
+        Assert.Equal(
+            model.Texts.GetString("87"),
+            saga.Children[0].Label
         );
-        GroupContextChoice entry = Assert.Single(edit.Children);
-        Assert.Equal("Épopée d'Howl", entry.Label);
-        entry.SelectCommand.Execute(null);
+        saga.Children[0].SelectCommand.Execute(null);
 
         Assert.Equal("Épopée d'Howl", requestedSaga);
     }

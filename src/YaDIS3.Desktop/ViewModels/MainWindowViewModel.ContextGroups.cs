@@ -32,77 +32,50 @@ public sealed partial class MainWindowViewModel
                 return Task.CompletedTask;
             })
         );
-        string[] names = _filterGroups
-            .Descendants(kind)
-            .Select(group => group.Element("name")?.Value)
-            .OfType<string>()
-            .Order(StringComparer.CurrentCulture)
+        return _filterGroups.Descendants(kind)
+            .Where(group => group.Element("name") is not null)
+            .OrderBy(
+                group => group.Element("name")!.Value,
+                StringComparer.CurrentCulture
+            )
+            .Select(group =>
+                CreateGroupChoice(kind, group, selected)
+            )
+            .Prepend(create)
             .ToArray();
-        GroupContextChoice[] items = names
-            .Select(name => CreateGroupChoice(kind, name, selected))
-            .ToArray();
-        if (names.Length == 0)
-        {
-            return [create];
-        }
-
-        GroupContextChoice remove = new(
-            Texts.GetString("61"),
-            false,
-            new UiCommand(() => Task.CompletedTask)
-        )
-        {
-            Children = names.Select(name =>
-                new GroupContextChoice(
-                    name,
-                    false,
-                    new UiCommand(() =>
-                        RunAsync(() => DeleteContextGroupAsync(kind, name))
-                    )
-                )
-            ).ToArray(),
-        };
-        if (kind != "saga")
-        {
-            return [create, .. items, remove];
-        }
-
-        GroupContextChoice edit = new(
-            Texts.GetString("87"),
-            false,
-            new UiCommand(() => Task.CompletedTask)
-        )
-        {
-            Children = names.Select(name =>
-                new GroupContextChoice(
-                    name,
-                    false,
-                    new UiCommand(() =>
-                    {
-                        SagaEditingRequested?.Invoke(name);
-                        return Task.CompletedTask;
-                    })
-                )
-            ).ToArray(),
-        };
-        return [create, .. items, edit, remove];
     }
 
     private GroupContextChoice CreateGroupChoice(
         string kind,
-        string name,
+        XElement group,
         string[] selected
     )
     {
-        XElement group = _filterGroups.Descendants(kind)
-            .Single(item => item.Element("name")?.Value == name);
+        string name = group.Element("name")!.Value;
         int members = selected.Count(movie =>
             group.Elements("movie").Any(entry => entry.Value == movie)
         );
         bool mixed = members > 0 && members < selected.Length;
-
-        // Sans sous-menu, le clic sur le nom lance directement
-        // l'ajout, le déplacement ou le retrait comme Saga_MouseDown.
+        List<GroupContextChoice> actions = [];
+        if (kind == "saga")
+        {
+            actions.Add(new GroupContextChoice(
+                Texts.GetString("87"),
+                false,
+                new UiCommand(() =>
+                {
+                    SagaEditingRequested?.Invoke(name);
+                    return Task.CompletedTask;
+                })
+            ));
+        }
+        actions.Add(new GroupContextChoice(
+            Texts.GetString("61"),
+            false,
+            new UiCommand(() =>
+                RunAsync(() => DeleteContextGroupAsync(kind, name))
+            )
+        ));
         return new GroupContextChoice(
             mixed ? "◩ " + name : name,
             members > 0 && members == selected.Length,
@@ -113,6 +86,7 @@ public sealed partial class MainWindowViewModel
         {
             IsIndeterminate = mixed,
             ToggleType = Avalonia.Controls.MenuItemToggleType.CheckBox,
+            Children = actions,
         };
     }
 
