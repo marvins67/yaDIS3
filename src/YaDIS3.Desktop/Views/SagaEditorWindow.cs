@@ -126,6 +126,14 @@ public sealed class SagaEditorWindow : Window
             RefreshArtwork();
         };
         cancel.Click += (_, _) => Close(null);
+        KeyDown += (_, args) =>
+        {
+            if (args.Key == Key.Escape)
+            {
+                Close(null);
+                args.Handled = true;
+            }
+        };
         ok.Click += (_, _) =>
         {
             _state.Name = _name.Text ?? "";
