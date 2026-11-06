@@ -63,6 +63,7 @@
       <Setter Property="Header" Value="{Binding Label}" />
       <Setter Property="Command" Value="{Binding SelectCommand}" />
       <Setter Property="IsChecked" Value="{Binding IsChecked}" />
+      <Setter Property="ToggleType" Value="{Binding ToggleType}" />
       <Setter Property="ItemsSource" Value="{Binding Children}" />
       <Setter
         Property="ItemContainerTheme"

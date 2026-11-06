@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using System.Windows.Input;
 
 namespace YaDIS3.Desktop.ViewModels;
@@ -20,6 +21,10 @@ public sealed class GroupContextChoice(
 
     /// <summary>Actions supplémentaires accessibles par sous-menu.</summary>
     public IReadOnlyList<GroupContextChoice> Children { get; init; } = [];
+
+    /// <summary>Indique si l'entrée comporte une coche d'appartenance.</summary>
+    public MenuItemToggleType ToggleType { get; init; } =
+        MenuItemToggleType.None;
 
     /// <summary>Action associée à l'entrée.</summary>
     public ICommand SelectCommand { get; } = selectCommand;

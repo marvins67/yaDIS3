@@ -92,6 +92,7 @@ public sealed partial class MainWindowViewModel
         )
         {
             IsIndeterminate = mixed,
+            ToggleType = Avalonia.Controls.MenuItemToggleType.CheckBox,
             Children = children,
         };
     }
