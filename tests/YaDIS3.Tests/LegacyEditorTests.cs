@@ -169,4 +169,98 @@ public sealed class LegacyEditorTests
         Assert.Equal("", series.VideoCodec);
         Assert.False(series.IsDirty);
     }
+
+    [Theory]
+    [InlineData("yes", true)]
+    [InlineData("no", false)]
+    public void MediaFolderPath_TypeDeSource_RespecteYaDIS2(
+        string folder,
+        bool isDirectory
+    )
+    {
+        using ExportFixture fixture = new();
+        string file = Path.Combine(
+            fixture.Root, "data", ExportFixture.MovieName, "data.xml"
+        );
+        XDocument xml = XDocument.Load(file);
+        XElement item = xml.Root!.Element("item")!;
+        string source = Path.Combine(fixture.Root, "Films");
+        item.SetElementValue("path", source);
+        item.SetElementValue("folder", folder);
+        xml.Save(file);
+        using WorkspaceRepository repository = new();
+        using MediaCard card = repository.Open(fixture.Root).Cards
+            .Single(media => !media.IsSeries);
+
+        Assert.Equal(
+            isDirectory
+                ? Path.Combine(source, ExportFixture.MovieName)
+                : source,
+            card.MediaFolderPath
+        );
+    }
+
+    [Fact]
+    public void BeginManualMovieEdit_FicheNonTraitee_CreeUnBrouillon()
+    {
+        using ExportFixture fixture = new();
+        string file = Path.Combine(
+            fixture.Root, "data", ExportFixture.MovieName, "data.xml"
+        );
+        XDocument xml = XDocument.Load(file);
+        xml.Root!.Element("info")?.Remove();
+        xml.Root.Element("item")!.SetElementValue("status", "3");
+        xml.Save(file);
+        using WorkspaceRepository repository = new();
+        using MediaCard card = repository.Open(fixture.Root).Cards
+            .Single(media => !media.IsSeries);
+        card.BeginManualMovieEdit();
+
+        Assert.True(card.HasInformation);
+        Assert.True(card.IsDirty);
+        Assert.Equal(MediaProcessingState.Unprocessed, card.ProcessingState);
+    }
+
+    [Fact]
+    public void PrepareMovieTitleChange_NouvelIdentifiant_RetireLesAnciennesInfos()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = repository.Open(fixture.Root).Cards
+            .Single(media => !media.IsSeries);
+        card.PrepareMovieTitleChange(235);
+
+        XElement info = card.Snapshot().Document.Root!.Element("info")!;
+        Assert.Equal("235", info.Element("id")!.Value);
+        Assert.Equal("0", info.Element("source")!.Value);
+        Assert.Null(info.Element("plot"));
+    }
+
+    [Theory]
+    [InlineData("0", "1")]
+    [InlineData("1", "0")]
+    [InlineData("3", "3")]
+    public void ToggleVerification_StatutInitial_NeBasculeQueZeroEtUn(
+        string before,
+        string after
+    )
+    {
+        using ExportFixture fixture = new();
+        string file = Path.Combine(
+            fixture.Root, "data", ExportFixture.MovieName, "data.xml"
+        );
+        XDocument xml = XDocument.Load(file);
+        xml.Root!.Element("item")!.SetElementValue("status", before);
+        xml.Save(file);
+        using WorkspaceRepository repository = new();
+        using MediaCard card = repository.Open(fixture.Root).Cards
+            .Single(media => !media.IsSeries);
+
+        Assert.Equal(before != "3", card.ToggleVerification());
+        Assert.Equal(
+            after,
+            card.Snapshot().Document.Root!.Element("item")!
+                .Element("status")!.Value
+        );
+    }
 }
