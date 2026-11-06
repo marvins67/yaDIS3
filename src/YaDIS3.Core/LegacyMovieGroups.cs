@@ -130,6 +130,66 @@ public static class LegacyMovieGroups
         EnsureContainer(groups, "selections").Add(selection);
     }
 
+    /// <summary>Supprime une saga, même si elle contient des films.</summary>
+    public static void DeleteSaga(XDocument groups, string name)
+    {
+        XElement saga = FindGroup(groups, "saga", name)
+            ?? throw new InvalidOperationException("Saga introuvable.");
+        saga.Remove();
+    }
+
+    /// <summary>Supprime une sélection avec ses appartenances.</summary>
+    public static void DeleteSelection(XDocument groups, string name)
+    {
+        XElement selection = FindGroup(groups, "selection", name)
+            ?? throw new InvalidOperationException("Sélection introuvable.");
+        selection.Remove();
+    }
+
+    /// <summary>Renomme une saga et modifie ses références sans perdre les membres.</summary>
+    public static void EditSaga(
+        XDocument groups,
+        string oldName,
+        string name,
+        string sortName,
+        string poster,
+        string fanart,
+        IReadOnlyList<string> movies
+    )
+    {
+        ValidateName(name);
+        XElement saga = FindGroup(groups, "saga", oldName)
+            ?? throw new InvalidOperationException("Saga introuvable.");
+        if (oldName != name
+            && FindGroup(groups, "saga", name) is not null)
+        {
+            throw new InvalidOperationException("Saga déjà existante.");
+        }
+        if (movies.Count == 0)
+        {
+            saga.Remove();
+            return;
+        }
+        if (!movies.Contains(poster) || !movies.Contains(fanart))
+        {
+            throw new ArgumentException("Illustration hors de la saga.");
+        }
+        saga.SetElementValue("name", name);
+        saga.SetElementValue("sort_name", sortName);
+        saga.SetElementValue("poster", poster);
+        saga.SetElementValue("fanart", fanart);
+        saga.Elements("movie").Remove();
+        saga.Add(movies.Select(movie => new XElement("movie", movie)));
+    }
+
+    /// <summary>Retourne les membres dans leur ordre historique.</summary>
+    public static string[] SagaMembers(XDocument groups, string name) =>
+        (FindGroup(groups, "saga", name)
+            ?? throw new InvalidOperationException("Saga introuvable."))
+        .Elements("movie")
+        .Select(movie => movie.Value)
+        .ToArray();
+
     private static XElement EnsureContainer(
         XDocument groups,
         string name
