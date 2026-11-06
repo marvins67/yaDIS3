@@ -22,6 +22,16 @@ public sealed partial class MediaInfoReader(
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
+            // yaDIS2 exploite MediaInfoLib directement. La bibliothèque native
+            // fournie par NuGet évite de demander MediaInfo.exe à l'utilisateur.
+            if (OperatingSystem.IsWindows()
+                && executable == "mediainfo")
+            {
+                return await Task.Run(
+                    () => NativeMediaInfoReader.Read(file),
+                    cancellationToken
+                );
+            }
             return await ReadCoreAsync(file, cancellationToken);
         }
         catch (Exception exception) when (exception is IOException
