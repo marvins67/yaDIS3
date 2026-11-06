@@ -74,6 +74,30 @@ public sealed partial class MediaCard
         });
     }
 
+    /// <summary>Réinitialise l'identification d'une série avant son nouveau traitement.</summary>
+    public void PrepareSeriesTitleChange(long seriesId)
+    {
+        if (!IsSeries || seriesId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(seriesId));
+        }
+
+        UpdateForTreatment(() =>
+        {
+            Info?.Remove();
+            Root.Add(new XElement(
+                "info",
+                new XElement(
+                    "id",
+                    seriesId.ToString(
+                        System.Globalization.CultureInfo.InvariantCulture
+                    )
+                )
+            ));
+        });
+        RefreshEpisodes();
+    }
+
     internal void ApplyMovieForTreatment(XElement info)
     {
         UpdateForTreatment(() =>

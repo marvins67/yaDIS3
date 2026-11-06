@@ -47,4 +47,24 @@ public sealed partial class MainWindowViewModel
                 OperationToken
             );
         });
+    /// <summary>Reprend l'identification TVDB après confirmation du dialogue.</summary>
+    public Task ChangeSeriesTitleAsync(long seriesId) =>
+        RunAsync(async () =>
+        {
+            MediaCard card = SelectedCard
+                ?? throw new InvalidOperationException(
+                    Texts.GetString("347")
+                );
+            card.PrepareSeriesTitleChange(seriesId);
+            foreach (string path in Directory.EnumerateFiles(
+                card.DataDirectory, "*.jpg"
+            ))
+            {
+                File.Delete(path);
+            }
+            await TreatSelectionAsync(
+                TreatmentMode.ReloadInformation,
+                OperationToken
+            );
+        });
 }

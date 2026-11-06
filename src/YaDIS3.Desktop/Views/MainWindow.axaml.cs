@@ -222,10 +222,17 @@ public sealed partial class MainWindow : Window
     {
         if (Model.IsSeries)
         {
+            string before = Model.SelectedCard?.TvdbId ?? "";
             await ShowUtilityDialog(
                 "TvdbSearchTab",
                 Model.Texts.GetString("62")
             );
+            if (Model.SelectedCard is { } series
+                && series.TvdbId != before
+                && long.TryParse(series.TvdbId, out long seriesId))
+            {
+                await Model.ChangeSeriesTitleAsync(seriesId);
+            }
             return;
         }
 
