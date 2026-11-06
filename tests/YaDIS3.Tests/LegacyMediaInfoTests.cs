@@ -62,6 +62,20 @@ public sealed class LegacyMediaInfoTests
     }
 
     [Fact]
+    public void NativeMediaInfoReader_FichierInexistant_BibliothequeDisponibleSousWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        Assert.Throws<InvalidDataException>(() =>
+            NativeMediaInfoReader.Read(
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".mkv")
+            ));
+    }
+
+    [Fact]
     public async Task ReadAsync_ExecutableAbsent_SignaleLEchecAuLieuDeMarquerLeFilmTraite()
     {
         InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(
