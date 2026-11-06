@@ -428,6 +428,32 @@ public sealed class StateMenuTests : IDisposable
     public void Dispose() => Directory.Delete(_directory, true);
 
     [Fact]
+    public async Task DeleteMediaCommand_FilmSelectionne_SupprimeFicheSansSource()
+    {
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        MediaCard card = model.Cards.Single(item =>
+            item.FolderName == "Wall·E.iso"
+        );
+        model.SelectedCard = card;
+        string source = Path.Combine(_directory, "Films", card.FolderName);
+        Assert.True(File.Exists(source));
+
+        model.DeleteMediaCommand.Execute(null);
+        for (int attempt = 0; attempt < 150
+            && model.Cards.Contains(card); attempt++)
+        {
+            await Task.Delay(20);
+        }
+
+        Assert.DoesNotContain(card, model.Cards);
+        Assert.False(File.Exists(card.FilePath));
+        Assert.True(File.Exists(source));
+    }
+
+    [Fact]
     public async Task ToggleVerificationCommand_FilmTraite_ConserveLeStatut()
     {
         using MainWindowViewModel model = new(
