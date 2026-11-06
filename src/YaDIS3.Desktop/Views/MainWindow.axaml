@@ -563,6 +563,12 @@
         BorderThickness="1"
         Background="White"
       >
+        <ListBox.KeyBindings>
+          <KeyBinding
+            Gesture="Delete"
+            Command="{Binding DeleteMediaCommand}"
+          />
+        </ListBox.KeyBindings>
         <ListBox.ContextMenu>
           <ContextMenu>
             <MenuItem
