@@ -9,6 +9,33 @@ namespace YaDIS3.Tests;
 public sealed class LegacyIndexSaveTests
 {
     [Fact]
+    public void ChangeTitle_AncienneIndexation_RetireLesCriteresAvantLaRecherche()
+    {
+        using ExportFixture fixture = new();
+        fixture.ProcessIndexes();
+        using WorkspaceRepository repository = new();
+        MediaCard card = repository.Open(fixture.Root).Cards
+            .Single(media => !media.IsSeries);
+        string indexes = Path.Combine(fixture.Root, "interface", "00");
+        Assert.NotEmpty(Directory.EnumerateFiles(
+            indexes, "dune_folder.txt", SearchOption.AllDirectories
+        ));
+
+        new LegacyMovieTitleChangeCleanup().Remove(card);
+        card.PrepareMovieTitleChange(235);
+
+        Assert.Empty(Directory.EnumerateFiles(
+            indexes, "dune_folder.txt", SearchOption.AllDirectories
+        ));
+        Assert.True(File.Exists(card.FilePath));
+        Assert.Equal(
+            "235",
+            card.Snapshot().Document.Root!.Element("info")!
+                .Element("id")!.Value
+        );
+    }
+
+    [Fact]
     public async Task SaveAsync_FicheModifiee_RetireLesAnciensIndexAvantTraitement()
     {
         using ExportFixture fixture = new();
