@@ -66,6 +66,9 @@ public sealed class SagaEditorWindow : Window
         Add(grid, Label("Nom de la saga:"), 0, 0);
         Add(grid, Label("Nom pour le tri:"), 1, 0);
         Add(grid, _name, 0, 1);
+        _sortName.Width = 180;
+        _sortName.HorizontalAlignment = HorizontalAlignment.Left;
+        Grid.SetColumnSpan(_sortName, 2);
         Add(grid, _sortName, 1, 1);
         Add(grid, Label("Membres de la saga:"), 0, 2);
         Add(grid, Label("Jaquette:"), 1, 2);
