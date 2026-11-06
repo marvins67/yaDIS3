@@ -1,5 +1,5 @@
-using Avalonia.Controls;
 using System.Windows.Input;
+using Avalonia.Controls;
 
 namespace YaDIS3.Desktop.ViewModels;
 
