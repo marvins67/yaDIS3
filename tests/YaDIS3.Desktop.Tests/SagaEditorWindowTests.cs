@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media;
-using Avalonia.VisualTree;
 using Xunit;
 using YaDIS3.Desktop.ViewModels;
 using YaDIS3.Desktop.Views;
