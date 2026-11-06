@@ -99,6 +99,7 @@ public sealed class SagaEditorWindow : Window
         };
         Add(pictures, posterButton, 1, 0);
         Add(pictures, fanartButton, 2, 0);
+        grid.Children.Add(pictures);
 
         StackPanel actions = new()
         {
