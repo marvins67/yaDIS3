@@ -175,8 +175,16 @@ public sealed class StateMenuTests : IDisposable
             Path.Combine(_directory, "user.config")
         );
         await model.OpenAsync(_directory);
+        MediaCard card = model.Cards.Single(item =>
+            item.FolderName == "Wall·E.iso"
+        );
+        XDocument document = XDocument.Load(card.FilePath);
+        document.Root!.Element("item")!.SetElementValue("status", "3");
+        document.Save(card.FilePath);
+        // Recharger le workspace pour utiliser le nouvel état enregistré.
+        await model.OpenAsync(_directory);
         model.StateFilters[4].SelectCommand.Execute(null);
-        MediaCard card = Assert.Single(model.VisibleCards);
+        card = Assert.Single(model.VisibleCards);
         Assert.Same(card, model.SelectedCard);
 
         await model.RunAsync(
@@ -188,7 +196,7 @@ public sealed class StateMenuTests : IDisposable
             refreshFilter: false
         );
 
-        Assert.Equal(MediaProcessingState.Checked, card.ProcessingState);
+        Assert.Equal(MediaProcessingState.Unchecked, card.ProcessingState);
         Assert.Same(card, Assert.Single(model.VisibleCards));
         Assert.Same(card, model.SelectedCard);
 
@@ -268,13 +276,24 @@ public sealed class StateMenuTests : IDisposable
     {
         for (int attempt = 0; attempt < 100; attempt++)
         {
-            bool exists = XDocument.Load(
-                Path.Combine(_directory, "groups.xml")
-            ).Descendants("saga").Elements("movie")
-                .Any(item => item.Value == movie);
-            if (exists == expected && !model.IsBusy)
+            if (!model.IsBusy)
             {
-                return;
+                try
+                {
+                    bool exists = XDocument.Load(
+                        Path.Combine(_directory, "groups.xml")
+                    ).Descendants("saga").Elements("movie")
+                        .Any(item => item.Value == movie);
+                    if (exists == expected)
+                    {
+                        return;
+                    }
+                }
+                catch (IOException)
+                {
+                    // SaveGroups remplace groups.xml pendant le sondage.
+                    // Sous Windows, ce bref verrouillage doit être retenté.
+                }
             }
             await Task.Delay(20);
         }
