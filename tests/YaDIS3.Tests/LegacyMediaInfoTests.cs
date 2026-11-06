@@ -62,11 +62,12 @@ public sealed class LegacyMediaInfoTests
     }
 
     [Fact]
-    public async Task ReadAsync_ExecutableAbsent_RetourneLeBlocVideHistorique()
+    public async Task ReadAsync_ExecutableAbsent_SignaleLEchecAuLieuDeMarquerLeFilmTraite()
     {
-        XElement result = await new MediaInfoReader("absent-" + Guid.NewGuid())
-            .ReadAsync("film.mkv", CancellationToken.None);
-        Assert.Equal("", result.Element("source")!.Value);
-        Assert.Null(result.Element("duration"));
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => new MediaInfoReader("absent-" + Guid.NewGuid())
+                .ReadAsync("film.mkv", CancellationToken.None)
+        );
+        Assert.Contains("MediaInfo CLI", exception.Message, StringComparison.Ordinal);
     }
 }

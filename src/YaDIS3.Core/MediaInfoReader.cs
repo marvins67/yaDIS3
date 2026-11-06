@@ -28,7 +28,10 @@ public sealed partial class MediaInfoReader(
             or InvalidOperationException or XmlException)
         {
             AnalysisFailed(logger ?? NullLogger<MediaInfoReader>.Instance, exception);
-            return LegacyMediaInfo.Empty();
+            throw new InvalidOperationException(
+                "Analyse technique impossible : MediaInfo CLI doit être installé et accessible depuis yaDIS3.",
+                exception
+            );
         }
     }
 

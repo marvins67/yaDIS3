@@ -125,8 +125,10 @@ public sealed class TreatmentPreparation(
             card,
             cancellationToken
         );
-        bool readDuration = card.TreatmentInfo!.Element("mediainfo") is null
-            || mode == TreatmentMode.ReloadTechnicalInformation;
+        bool readDuration = NeedsTechnicalAnalysis(
+            card.TreatmentInfo!,
+            mode
+        );
         await ReadTrackAsync(
             card,
             card.TreatmentInfo!,
@@ -200,6 +202,23 @@ public sealed class TreatmentPreparation(
         }
     }
 
+    // Un bloc MediaInfo créé après un échec ne contient aucun codec.
+    // Le conserver empêcherait tout traitement ultérieur de le compléter.
+    private static bool NeedsTechnicalAnalysis(
+        XElement node,
+        TreatmentMode mode
+    )
+    {
+        XElement? info = node.Element("mediainfo");
+        return mode == TreatmentMode.ReloadTechnicalInformation
+            || info is null
+            || (string.IsNullOrWhiteSpace(
+                info.Element("video")?.Element("codec")?.Value
+            ) && string.IsNullOrWhiteSpace(
+                info.Element("format")?.Value
+            ));
+    }
+
     private async Task ReadTrackAsync(
         MediaCard card,
         XElement node,
@@ -208,10 +227,7 @@ public sealed class TreatmentPreparation(
         CancellationToken cancellationToken
     )
     {
-        if (
-            node.Element("mediainfo") is not null
-            && mode != TreatmentMode.ReloadTechnicalInformation
-        )
+        if (!NeedsTechnicalAnalysis(node, mode))
         {
             return;
         }
