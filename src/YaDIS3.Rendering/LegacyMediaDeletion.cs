@@ -39,7 +39,7 @@ public sealed class LegacyMediaDeletion(
                 deleted.Add(card.FilePath);
             }
             catch (Exception error)
-                when (error is IOException or UnauthorizedAccessException)
+                when (error is not OperationCanceledException)
             {
                 errors.Add(card.FolderName + " (données) : " + error.Message);
             }
@@ -71,9 +71,7 @@ public sealed class LegacyMediaDeletion(
                 }
             }
             catch (Exception error)
-                when (error is IOException
-                    or UnauthorizedAccessException
-                    or InvalidDataException)
+                when (error is not OperationCanceledException)
             {
                 errors.Add(card.FolderName + " (interface) : " + error.Message);
             }
