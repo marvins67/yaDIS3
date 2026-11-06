@@ -633,6 +633,7 @@
             <MenuItem
               Header="{DynamicResource Text.61}"
               InputGesture="Delete"
+              Command="{Binding DeleteMediaCommand}"
               IsEnabled="{Binding ContextMenuState.CanDelete}"
             >
               <MenuItem.Icon>

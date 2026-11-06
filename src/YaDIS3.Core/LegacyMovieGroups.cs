@@ -130,6 +130,43 @@ public static class LegacyMovieGroups
         EnsureContainer(groups, "selections").Add(selection);
     }
 
+    /// <summary>
+    /// Retire un film de ses groupes, y compris les groupes devenus vides.
+    /// </summary>
+    public static string[] RemoveMovie(XDocument groups, string movie)
+    {
+        ArgumentNullException.ThrowIfNull(groups);
+        ArgumentException.ThrowIfNullOrWhiteSpace(movie);
+        List<string> removedSagas = [];
+        foreach (XElement saga in groups.Descendants("saga").ToArray())
+        {
+            foreach (XElement member in saga.Elements("movie")
+                .Where(item => item.Value == movie).ToArray())
+            {
+                RemoveFromSaga(saga, member);
+            }
+            if (saga.Parent is null)
+            {
+                string name = saga.Element("name")?.Value ?? "";
+                if (name.Length > 0)
+                {
+                    removedSagas.Add(name);
+                }
+            }
+        }
+        foreach (XElement selection in groups
+            .Descendants("selection").ToArray())
+        {
+            selection.Elements("movie")
+                .Where(item => item.Value == movie).Remove();
+            if (!selection.Elements("movie").Any())
+            {
+                selection.Remove();
+            }
+        }
+        return removedSagas.ToArray();
+    }
+
     /// <summary>Supprime une saga, même si elle contient des films.</summary>
     public static void DeleteSaga(XDocument groups, string name)
     {

@@ -318,6 +318,9 @@ public sealed partial class MainWindowViewModel
                 : SelectedCard is null ? 0 : 1
         );
 
+    /// <summary>Supprime les fiches sélectionnées et leurs rendus.</summary>
+    public ICommand DeleteMediaCommand { get; }
+
     /// <summary>Bascule la vérification des titres sélectionnés.</summary>
     public ICommand ToggleVerificationCommand { get; }
 
@@ -465,6 +468,9 @@ public sealed partial class MainWindowViewModel
             Notify(nameof(SagaContextChoices));
             Notify(nameof(SelectionContextChoices));
         };
+        DeleteMediaCommand = new UiCommand(() =>
+            RunAsync(DeleteSelectedMediaAsync)
+        );
         ToggleVerificationCommand = new UiCommand(() =>
             RunAsync(ToggleVerificationAsync)
         );
