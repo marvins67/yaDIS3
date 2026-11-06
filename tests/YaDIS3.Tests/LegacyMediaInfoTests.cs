@@ -62,16 +62,17 @@ public sealed class LegacyMediaInfoTests
     }
 
     [Fact]
-    public void NativeMediaInfoReader_FichierInexistant_BibliothequeDisponibleSousWindows()
+    public async Task ReadAsync_FichierInexistant_BibliothequeDisponibleSousWindows()
     {
         if (!OperatingSystem.IsWindows())
         {
             return;
         }
 
-        Assert.Throws<InvalidDataException>(() =>
-            NativeMediaInfoReader.Read(
-                Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".mkv")
+        await Assert.ThrowsAsync<InvalidDataException>(() =>
+            new MediaInfoReader().ReadAsync(
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".mkv"),
+                CancellationToken.None
             ));
     }
 
