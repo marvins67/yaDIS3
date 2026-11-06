@@ -154,6 +154,11 @@ public sealed partial class MainWindowViewModel
         await SaveContextGroupsAsync(groups);
     }
 
+    /// <summary>Chemin du workspace utilisé pour les images des sagas.</summary>
+    public string CurrentWorkspaceDirectory =>
+        _workspace?.Directory
+        ?? throw new InvalidOperationException(Texts.GetString("340"));
+
     /// <summary>Donne les paramètres et les membres d'une saga.</summary>
     public SagaContextDraft ReadSaga(string name)
     {
