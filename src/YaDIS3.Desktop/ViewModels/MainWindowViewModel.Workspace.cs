@@ -156,7 +156,7 @@ public sealed partial class MainWindowViewModel
         MediaCard[] selected =
             TreatmentSelection.Count > 0
                 ? TreatmentSelection.Distinct().ToArray()
-                : SelectedCard is { } card ? [card] : [];
+                : SelectedCard is { } currentCard ? [currentCard] : [];
 
         foreach (MediaCard card in selected)
         {
