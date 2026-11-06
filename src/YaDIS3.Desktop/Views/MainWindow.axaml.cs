@@ -40,12 +40,16 @@ public sealed partial class MainWindow : Window
             {
                 _contextGroupModel.GroupCreationRequested -=
                     RequestGroupCreation;
+                _contextGroupModel.SagaEditingRequested -=
+                    RequestSagaEditing;
             }
             _contextGroupModel = DataContext as MainWindowViewModel;
             if (_contextGroupModel is not null)
             {
                 _contextGroupModel.GroupCreationRequested +=
                     RequestGroupCreation;
+                _contextGroupModel.SagaEditingRequested +=
+                    RequestSagaEditing;
             }
         };
     }
@@ -138,6 +142,76 @@ public sealed partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(name))
         {
             await Model.CreateContextGroupAsync(kind, name);
+        }
+    }
+
+    private async void RequestSagaEditing(string name)
+    {
+        SagaContextDraft original = Model.ReadSaga(name);
+        Window dialog = new()
+        {
+            Title = Model.Texts.GetString("87") + " : " + name,
+            Width = 470,
+            Height = 530,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        TextBox title = new() { Text = original.Name };
+        TextBox sort = new() { Text = original.SortName };
+        TextBox poster = new() { Text = original.Poster };
+        TextBox fanart = new() { Text = original.Fanart };
+        TextBox members = new()
+        {
+            Text = string.Join(Environment.NewLine, original.Members),
+            AcceptsReturn = true,
+            Height = 170,
+        };
+        Button save = new()
+        {
+            Content = Model.Texts.GetString("89"),
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        save.Click += (_, _) =>
+        {
+            string[] films = (members.Text ?? "")
+                .Split(
+                    ['\r', '\n'],
+                    StringSplitOptions.RemoveEmptyEntries
+                )
+                .Select(value => value.Trim())
+                .Where(value => value.Length > 0)
+                .ToArray();
+            dialog.Close(new SagaContextDraft(
+                title.Text ?? "",
+                sort.Text ?? "",
+                poster.Text ?? "",
+                fanart.Text ?? "",
+                films
+            ));
+        };
+        dialog.Content = new StackPanel
+        {
+            Margin = new Avalonia.Thickness(16),
+            Spacing = 8,
+            Children =
+            {
+                new TextBlock { Text = Model.Texts.GetString("192") },
+                title,
+                new TextBlock { Text = Model.Texts.GetString("193") },
+                sort,
+                new TextBlock { Text = Model.Texts.GetString("17") },
+                poster,
+                new TextBlock { Text = Model.Texts.GetString("18") },
+                fanart,
+                new TextBlock { Text = Model.Texts.GetString("191") },
+                members,
+                save,
+            },
+        };
+        SagaContextDraft? result =
+            await dialog.ShowDialog<SagaContextDraft?>(this);
+        if (result is not null)
+        {
+            await Model.EditContextSagaAsync(name, result);
         }
     }
 
