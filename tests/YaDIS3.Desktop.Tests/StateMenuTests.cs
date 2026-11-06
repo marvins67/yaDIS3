@@ -169,6 +169,34 @@ public sealed class StateMenuTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_TraitementSousFiltreNonTraites_ConserveLaFicheVisible()
+    {
+        using MainWindowViewModel model = new(
+            Path.Combine(_directory, "user.config")
+        );
+        await model.OpenAsync(_directory);
+        model.StateFilters[4].SelectCommand.Execute(null);
+        MediaCard card = Assert.Single(model.VisibleCards);
+        Assert.Same(card, model.SelectedCard);
+
+        await model.RunAsync(
+            () =>
+            {
+                Assert.True(card.ToggleVerification());
+                return Task.CompletedTask;
+            },
+            refreshFilter: false
+        );
+
+        Assert.Equal(MediaProcessingState.Checked, card.ProcessingState);
+        Assert.Same(card, Assert.Single(model.VisibleCards));
+        Assert.Same(card, model.SelectedCard);
+
+        model.StateFilters[4].SelectCommand.Execute(null);
+        Assert.Empty(model.VisibleCards);
+    }
+
+    [Fact]
     public async Task GroupFilters_ChoixEtClicPrincipal_ReprendYaDis2()
     {
         using MainWindowViewModel model = new(

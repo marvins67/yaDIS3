@@ -34,8 +34,9 @@ public sealed partial class MainWindowViewModel
 
     private UiCommand TreatmentCommand(TreatmentMode mode) =>
         new(() =>
-            RunAsync(() =>
-                TreatSelectionAsync(mode, OperationToken)
+            RunAsync(
+                () => TreatSelectionAsync(mode, OperationToken),
+                refreshFilter: false
             )
         );
 

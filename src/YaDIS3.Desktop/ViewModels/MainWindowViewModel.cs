@@ -503,7 +503,7 @@ public sealed partial class MainWindowViewModel
     /// Exécute une opération et présente ses erreurs dans la
     /// barre d'état.
     /// </summary>
-    public async Task RunAsync(Func<Task> action)
+    public async Task RunAsync(Func<Task> action, bool refreshFilter = true)
     {
         if (IsBusy)
         {
@@ -532,7 +532,10 @@ public sealed partial class MainWindowViewModel
             _activeOperation.Dispose();
             _activeOperation = null;
             IsBusy = false;
-            RefreshFilter();
+            if (refreshFilter)
+            {
+                RefreshFilter();
+            }
             NotifyAll();
         }
     }
