@@ -320,6 +320,69 @@ public sealed class LegacyExportIntegrationTests
         Assert.Contains("item.1.caption=01", definition, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("Alien", new[] { "Alien 1.mkv", "Alien 2.mkv", "Alien 3.mkv", "Alien 4.mkv" })]
+    [InlineData("Batman", new[] { "Batman 3.mkv", "Batman 1.mkv", "Batman 2.mkv" })]
+    [InlineData("Star Wars", new[] { "Episode 4.mkv", "Episode 5.mkv", "Episode 1.mkv" })]
+    public void Export_SagaCustomOrder_UsesXmlOrderNotTitleOrChronology(
+        string name,
+        string[] members
+    )
+    {
+        using ExportFixture fixture = new();
+        SaveSagas(fixture, Saga(name, members));
+        ExportFixture.Exporter().Export(fixture.Cards(), fixture.Destination);
+        AssertSagaOrder(fixture, name, members);
+    }
+
+    [Fact]
+    public void Export_SagaOrderEditedAndExportedAgain_PreservesUpdatedOrder()
+    {
+        using ExportFixture fixture = new();
+        DuneExporter exporter = ExportFixture.Exporter();
+        string[] initial = ["Alien 1.mkv", "Alien 3.mkv",
+            "Alien 4.mkv", "Alien 2.mkv"];
+        string[] reordered = ["Alien 1.mkv", "Alien 2.mkv",
+            "Alien 3.mkv", "Alien 4.mkv"];
+        SaveSagas(fixture,
+            Saga("Alien", initial),
+            Saga("X-Men", ["X3.mkv", "X1.mkv", "X2.mkv"]));
+        exporter.Export(fixture.Cards(), fixture.Destination);
+        AssertSagaOrder(fixture, "Alien", initial);
+        AssertSagaOrder(fixture, "X-Men",
+            ["X3.mkv", "X1.mkv", "X2.mkv"]);
+
+        SaveSagas(fixture,
+            Saga("Alien", reordered),
+            Saga("X-Men", ["X3.mkv", "X1.mkv", "X2.mkv"]));
+        exporter.Export(fixture.Cards(), fixture.Destination);
+        AssertSagaOrder(fixture, "Alien", reordered);
+        AssertSagaOrder(fixture, "X-Men",
+            ["X3.mkv", "X1.mkv", "X2.mkv"]);
+        exporter.Export(fixture.Cards(), fixture.Destination);
+        AssertSagaOrder(fixture, "Alien", reordered);
+    }
+
+    private static void AssertSagaOrder(
+        ExportFixture fixture,
+        string name,
+        string[] members
+    )
+    {
+        string definition = File.ReadAllText(
+            Path.Combine(fixture.Destination, "00", "98", name,
+                "dune_folder.txt"));
+        for (int index = 0; index < members.Length; index++)
+        {
+            Assert.Contains(
+                $"item.{index}.media_url=../../99/{members[index]}",
+                definition, StringComparison.Ordinal);
+            Assert.Contains(
+                $"item.{index}.caption={index:00}",
+                definition, StringComparison.Ordinal);
+        }
+    }
+
     [Fact]
     public void Export_InvalidSaga_DoesNotPreventFollowingSaga()
     {
