@@ -73,7 +73,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        IReadOnlyList<MediaCard> cards = Model.VisibleCards;
+        System.Collections.ObjectModel.ObservableCollection<MediaCard> cards = Model.VisibleCards;
         int position = _libraryTypeAhead.Find(
             cards.Select(card => card.FolderName).ToArray(),
             text[0],
