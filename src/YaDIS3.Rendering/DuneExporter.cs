@@ -496,11 +496,6 @@ public sealed partial class DuneExporter(
             );
             if (!options.BasicMode)
             {
-                LegacyProcessedMediaPublisher.Publish(
-                    media,
-                    workspace,
-                    target
-                );
                 var legacyExporter = new DuneExporter(
                     template,
                     options,
@@ -511,17 +506,9 @@ public sealed partial class DuneExporter(
                     media,
                     warnings
                 );
-                legacyExporter.WriteMedia(
-                    plan,
-                    Path.Combine(
-                        workspace,
-                        "interface",
-                        Relative(media).Replace(
-                            '/',
-                            Path.DirectorySeparatorChar
-                        )
-                    )
-                );
+                // Publier la définition avec le rendu, jamais avant ses images.
+                legacyExporter.WriteMedia(plan, target);
+                LegacyProcessedMediaPublisher.Publish(media, workspace, target);
             }
 
             string? selected =

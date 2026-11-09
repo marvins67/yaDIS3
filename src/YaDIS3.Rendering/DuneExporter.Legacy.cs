@@ -45,30 +45,12 @@ public sealed partial class DuneExporter
         MediaPlaybackPlan[] plans = media
             .Select(card => Plan(card, warnings))
             .ToArray();
+        // L'export ne traite pas les médias : seules les fiches publiées
+        // par Traiter (ou un cache complet) peuvent fournir leurs images.
         foreach (MediaPlaybackPlan plan in plans)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            string relative = Relative(plan.Media)
-                .Replace('/', Path.DirectorySeparatorChar);
-            string output = Path.Combine(source, relative);
-            string cache = Path.Combine(
-                workspace,
-                "interface-yaDIS3",
-                plan.Media.Id
-            );
-            if (!Directory.Exists(output) && Directory.Exists(cache))
-            {
-                LegacyProcessedMediaPublisher.Publish(
-                    plan.Media,
-                    workspace,
-                    cache
-                );
-            }
-
-            if (!File.Exists(Path.Combine(output, "dune_folder.txt")))
-            {
-                WriteMedia(plan, output);
-            }
+            RestoreProcessedMedia(plan.Media, workspace, source, warnings);
         }
 
         PrepareLegacyMenus(source);
@@ -86,6 +68,7 @@ public sealed partial class DuneExporter
         new LegacyExportSynchronizer().Synchronize(
             source,
             destination,
+            warnings,
             cancellationToken
         );
         return new(
@@ -95,6 +78,61 @@ public sealed partial class DuneExporter
             warnings
         );
     }
+
+    private static void RestoreProcessedMedia(
+        MediaContext media,
+        string workspace,
+        string source,
+        List<string> warnings
+    )
+    {
+        string output = Path.Combine(
+            source,
+            Relative(media).Replace('/', Path.DirectorySeparatorChar)
+        );
+        string cache = Path.Combine(workspace, "interface-yaDIS3", media.Id);
+        if (media.IsSeries)
+        {
+            return;
+        }
+        if (CompleteMovie(output))
+        {
+            return;
+        }
+        if (CompleteMovie(cache))
+        {
+            LegacyProcessedMediaPublisher.Publish(media, workspace, cache);
+            return;
+        }
+        QuarantineEmptyMovie(output);
+        warnings.Add($"Fiche à traiter pour générer ses images : {media.Title}");
+    }
+
+    private static void QuarantineEmptyMovie(string output)
+    {
+        if (!Directory.Exists(output)
+            || File.Exists(Path.Combine(output, "icon.aai"))
+            || File.Exists(Path.Combine(output, "background.jpg"))
+            || File.Exists(Path.Combine(output, "background.aai")))
+        {
+            return;
+        }
+        // Conserver les fichiers pour diagnostic, sans synchroniser une
+        // coquille produite par un ancien export vers la Dune.
+        string parent = Path.GetDirectoryName(output)!;
+        string hidden = Path.Combine(parent, "_" + Path.GetFileName(output));
+        if (Directory.Exists(hidden) || File.Exists(hidden))
+        {
+            throw new IOException($"Fiche incomplète déjà mise à l'écart : {hidden}");
+        }
+        Directory.Move(output, hidden);
+    }
+
+    private static bool CompleteMovie(string directory) =>
+        File.Exists(Path.Combine(directory, "dune_folder.txt"))
+        && File.Exists(Path.Combine(directory, "icon.aai"))
+        && (File.Exists(Path.Combine(directory, "background.jpg"))
+            || File.Exists(Path.Combine(directory, "background.aai")));
 
     private static void PrepareLegacyMenus(string root)
     {

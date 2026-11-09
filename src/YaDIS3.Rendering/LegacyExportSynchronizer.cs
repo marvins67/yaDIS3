@@ -12,6 +12,14 @@ public sealed class LegacyExportSynchronizer
         string source,
         string destination,
         CancellationToken cancellationToken = default
+    ) => Synchronize(source, destination, null, cancellationToken);
+
+    /// <summary>Collecte les erreurs tout en poursuivant la synchronisation yaDIS2.</summary>
+    public void Synchronize(
+        string source,
+        string destination,
+        ICollection<string>? errors,
+        CancellationToken cancellationToken = default
     )
     {
         if (cancellationToken.IsCancellationRequested)
@@ -21,18 +29,19 @@ public sealed class LegacyExportSynchronizer
 
         try
         {
-            SynchronizeDirectory(source, destination, cancellationToken);
+            SynchronizeDirectory(source, destination, errors, cancellationToken);
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException)
         {
-            // SyncInterface abandonne le niveau courant sur erreur.
+            errors?.Add($"Synchronisation de {source} vers {destination} : {exception.Message}");
         }
     }
 
     private void SynchronizeDirectory(
         string source,
         string destination,
+        ICollection<string>? errors,
         CancellationToken cancellationToken
     )
     {
@@ -57,7 +66,7 @@ public sealed class LegacyExportSynchronizer
             if (File.Exists(path))
             {
                 remaining.Remove(name);
-                CopyWhenChanged(path, target);
+                CopyWhenChanged(path, target, errors);
             }
             else if (
                 Directory.Exists(path)
@@ -65,7 +74,7 @@ public sealed class LegacyExportSynchronizer
             )
             {
                 remaining.Remove(name);
-                Synchronize(path, target, cancellationToken);
+                Synchronize(path, target, errors, cancellationToken);
             }
         }
 
@@ -73,7 +82,7 @@ public sealed class LegacyExportSynchronizer
         {
             if (File.Exists(path))
             {
-                TryDeleteFile(path);
+                TryDeleteFile(path, errors);
             }
             else if (Directory.Exists(path))
             {
@@ -82,7 +91,7 @@ public sealed class LegacyExportSynchronizer
         }
     }
 
-    private static void CopyWhenChanged(string source, string destination)
+    private static void CopyWhenChanged(string source, string destination, ICollection<string>? errors)
     {
         if (File.Exists(destination))
         {
@@ -111,11 +120,11 @@ public sealed class LegacyExportSynchronizer
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException)
         {
-            // La copie suivante continue malgré l'échec courant dans yaDIS2.
+            errors?.Add($"Copie de {source} vers {destination} : {exception.Message}");
         }
     }
 
-    private static void TryDeleteFile(string path)
+    private static void TryDeleteFile(string path, ICollection<string>? errors)
     {
         try
         {
@@ -128,7 +137,7 @@ public sealed class LegacyExportSynchronizer
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException)
         {
-            // SyncInterface ignore les erreurs de suppression d'un fichier.
+            errors?.Add($"Suppression de {path} : {exception.Message}");
         }
     }
 }
