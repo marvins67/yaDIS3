@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
@@ -267,7 +268,21 @@ public sealed partial class MainWindow : Window
         Window dialog = CreateTitleDialog();
         TextBox query = new() { Text = Model.SelectedCard?.Title ?? "" };
         ListBox results = CreateTitleResults();
-        ComboBox orders = new() { MinWidth = 150 };
+        ComboBox orders = new()
+        {
+            Width = 282,
+            IsEnabled = false,
+            ItemTemplate = new FuncDataTemplate<EpisodeOrder>(
+                (order, _) => new TextBlock { Text = order?.Name }
+            ),
+        };
+        void ShowOrderMessage(string message)
+        {
+            orders.IsEnabled = false;
+            orders.ItemsSource = new[] { message };
+            orders.SelectedIndex = 0;
+        }
+        ShowOrderMessage("Sélectionnez une série dans les résultats");
         Button apply = CreateTitleApplyButton();
         Dictionary<ListBoxItem, SeriesMatch> candidates = [];
 
@@ -276,7 +291,7 @@ public sealed partial class MainWindow : Window
             apply.IsEnabled = false;
             candidates.Clear();
             results.ItemsSource = null;
-            orders.ItemsSource = null;
+            ShowOrderMessage("Sélectionnez une série dans les résultats");
             Model.Query = query.Text ?? "";
             if (string.IsNullOrWhiteSpace(Model.Query))
             {
@@ -305,35 +320,48 @@ public sealed partial class MainWindow : Window
         results.SelectionChanged += async (_, _) =>
         {
             apply.IsEnabled = false;
-            orders.ItemsSource = null;
+            ShowOrderMessage("Sélectionnez une série dans les résultats");
             if (results.SelectedItem is ListBoxItem item
                 && candidates.TryGetValue(item, out SeriesMatch? match))
             {
+                ShowOrderMessage("Chargement des ordres TVDB…");
                 Model.SelectedMatch = match;
                 try
                 {
                     await Model.LoadOrdersAsync();
                     if (ReferenceEquals(results.SelectedItem, item))
                     {
+                        if (Model.Orders.Count == 0)
+                        {
+                            ShowOrderMessage("Ordres indisponibles — voir tvdb-v4.log");
+                            return;
+                        }
                         orders.ItemsSource = Model.Orders;
                         orders.SelectedItem = Model.SelectedOrder;
+                        orders.IsEnabled = true;
                         apply.IsEnabled = orders.SelectedItem is EpisodeOrder;
                     }
                 }
                 catch (Exception exception)
                 {
+                    if (ReferenceEquals(results.SelectedItem, item))
+                    {
+                        ShowOrderMessage("Ordres indisponibles — voir tvdb-v4.log");
+                    }
                     Model.Status = exception.Message;
                 }
             }
         };
         orders.SelectionChanged += (_, _) =>
             apply.IsEnabled = results.SelectedItem is ListBoxItem
+                && orders.IsEnabled
                 && orders.SelectedItem is EpisodeOrder;
 
         void Accept()
         {
             if (results.SelectedItem is ListBoxItem item
                 && candidates.TryGetValue(item, out SeriesMatch? match)
+                && orders.IsEnabled
                 && orders.SelectedItem is EpisodeOrder order)
             {
                 dialog.Close((match.Id, order.Code));
@@ -436,6 +464,14 @@ public sealed partial class MainWindow : Window
         {
             Grid.SetColumn(orders, 2);
             searchRow.Children.Add(orders);
+            TextBlock orderLabel = new()
+            {
+                Text = "Ordre des épisodes (TVDB) :",
+                FontSize = 12,
+                Margin = new Avalonia.Thickness(8, 0, 0, 0),
+            };
+            Grid.SetColumn(orderLabel, 2);
+            footer.Children.Add(orderLabel);
         }
         Grid.SetRow(searchRow, 1);
         footer.Children.Add(searchRow);
