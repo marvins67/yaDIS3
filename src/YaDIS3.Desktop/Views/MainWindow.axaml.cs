@@ -425,7 +425,7 @@ public sealed partial class MainWindow : Window
 
         Grid footer = new()
         {
-            ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+            ColumnDefinitions = new ColumnDefinitions("230,*,Auto"),
             RowDefinitions = new RowDefinitions("Auto,Auto"),
             RowSpacing = 3,
             ColumnSpacing = 8,
@@ -470,10 +470,11 @@ public sealed partial class MainWindow : Window
                 FontSize = 12,
                 Margin = new Avalonia.Thickness(8, 0, 0, 0),
             };
-            Grid.SetColumn(orderLabel, 2);
+            Grid.SetColumn(orderLabel, 1);
             footer.Children.Add(orderLabel);
         }
         Grid.SetRow(searchRow, 1);
+        Grid.SetColumnSpan(searchRow, 2);
         footer.Children.Add(searchRow);
 
         StackPanel actions = new()
@@ -492,7 +493,7 @@ public sealed partial class MainWindow : Window
         cancel.Click += (_, _) => dialog.Close();
         actions.Children.Add(cancel);
         Grid.SetRow(actions, 1);
-        Grid.SetColumn(actions, 1);
+        Grid.SetColumn(actions, 2);
         footer.Children.Add(actions);
         Grid.SetRow(footer, 1);
         layout.Children.Add(footer);
