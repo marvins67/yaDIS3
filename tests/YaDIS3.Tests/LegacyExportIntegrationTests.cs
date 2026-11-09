@@ -285,7 +285,7 @@ public sealed class LegacyExportIntegrationTests
         {
             string directory = Path.Combine(root, saga.Element("name")!.Value);
             Assert.True(File.Exists(Path.Combine(directory, "dune_folder.txt")));
-            Assert.True(File.Exists(Path.Combine(directory, "background.aai")));
+            Assert.True(File.Exists(Path.Combine(directory, "background.jpg")));
         }
 
         string listing = File.ReadAllText(
