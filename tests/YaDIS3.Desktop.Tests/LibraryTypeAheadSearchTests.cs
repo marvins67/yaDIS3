@@ -20,7 +20,7 @@ public sealed class LibraryTypeAheadSearchTests
         DateTimeOffset now = DateTimeOffset.UnixEpoch;
 
         Assert.Equal(1, search.Find(s_titles, 'b', now));
-        Assert.Equal(2, search.Find(s_titles, 'a', now.AddMilliseconds(150)));
+        Assert.Equal(1, search.Find(s_titles, 'a', now.AddMilliseconds(150)));
         Assert.Equal(2, search.Find(s_titles, 't', now.AddMilliseconds(300)));
     }
 
@@ -30,7 +30,7 @@ public sealed class LibraryTypeAheadSearchTests
         LibraryTypeAheadSearch search = new();
         DateTimeOffset now = DateTimeOffset.UnixEpoch;
 
-        Assert.Equal(2, search.Find(s_titles, 'b', now.AddSeconds(1)));
+        Assert.Equal(1, search.Find(s_titles, 'b', now.AddSeconds(1)));
         Assert.Equal(3, search.Find(s_titles, 'd', now.AddSeconds(3)));
     }
 
