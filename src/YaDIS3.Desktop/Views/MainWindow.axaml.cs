@@ -333,7 +333,7 @@ public sealed partial class MainWindow : Window
                     {
                         if (Model.Orders.Count == 0)
                         {
-                            ShowOrderMessage("Ordres indisponibles — voir tvdb-v4.log");
+                            ShowOrderMessage("TVDB n’a indiqué aucun ordre disponible pour cette série.");
                             return;
                         }
                         orders.ItemsSource = Model.Orders;
@@ -346,7 +346,7 @@ public sealed partial class MainWindow : Window
                 {
                     if (ReferenceEquals(results.SelectedItem, item))
                     {
-                        ShowOrderMessage("Ordres indisponibles — voir tvdb-v4.log");
+                        ShowOrderMessage("Ordres TVDB indisponibles : " + exception.Message);
                     }
                     Model.Status = exception.Message;
                 }
