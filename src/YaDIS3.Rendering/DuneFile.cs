@@ -141,6 +141,16 @@ internal sealed class DuneFile(
         );
     }
 
+    // ProcessForm recherche le nom de la saga suivi du séparateur dans toute la définition.
+    internal bool ContainsDefinitionSuffix(string value)
+    {
+        string marker = value + "|";
+        return _values.Any(entry =>
+            string.Concat(entry.Key, "=", entry.Value, "|")
+                .Contains(marker, StringComparison.Ordinal)
+        );
+    }
+
     /// <summary>
     /// Conserve les entrées existantes avec leur numérotation
     /// historique.

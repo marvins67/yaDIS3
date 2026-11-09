@@ -1,10 +1,13 @@
 using System.Xml.Linq;
+using Avalonia.Headless;
 using Xunit;
 using YaDIS3.Core;
 using YaDIS3.Desktop.ViewModels;
+using YaDIS3.Rendering;
 
 namespace YaDIS3.Desktop.Tests;
 
+[Collection("Avalonia UI")]
 public sealed class WorkspaceScanTests : IDisposable
 {
     private readonly string _root = Path.Combine(
@@ -95,6 +98,67 @@ public sealed class WorkspaceScanTests : IDisposable
             "Ajout depuis le Dune.mkv",
             Assert.Single(current.Cards).FolderName
         );
+    }
+
+    [Fact]
+    public async Task ProcessSelectedAsync_FilmRetraite_LePlaceEnFinDeCollectionDExport()
+    {
+        using HeadlessUnitTestSession session =
+            HeadlessUnitTestSession.StartNew(typeof(ArtworkCatalogTests));
+        await session.Dispatch(async () =>
+        {
+            await VerifyMovieOrderAfterTreatmentAsync();
+            return 0;
+        }, CancellationToken.None);
+    }
+
+    private async Task VerifyMovieOrderAfterTreatmentAsync()
+    {
+        string source = CreateWorkspace();
+        WriteProcessedMovie(source, "Z.mkv");
+        WriteProcessedMovie(source, "A.mkv");
+        using MainWindowViewModel model = new(
+            Path.Combine(_root, "user.config")
+        );
+        await model.OpenAsync(_root);
+        string assets = Path.Combine(AppContext.BaseDirectory, "Assets");
+        model.SelectedTemplate = DuneTemplate.Load(
+            Path.Combine(assets, "Templates", "Origins"),
+            Path.Combine(assets, "Images")
+        );
+        MediaCard[] exportOrder = model.Cards.ToArray();
+        MediaCard[] visibleOrder = model.VisibleCards.ToArray();
+        model.SelectedCard = exportOrder[0];
+
+        await model.ProcessSelectedAsync();
+
+        Assert.Equal(exportOrder.Reverse(), model.Cards);
+        Assert.Equal(visibleOrder, model.VisibleCards);
+    }
+
+    private void WriteProcessedMovie(string source, string filename)
+    {
+        File.WriteAllBytes(Path.Combine(source, filename), []);
+        string directory = Path.Combine(_root, "data", filename);
+        Directory.CreateDirectory(directory);
+        new XElement(
+            "data",
+            new XElement(
+                "item",
+                new XElement("filename", filename),
+                new XElement("path", source),
+                new XElement("dunepath", "smb://dune/Films"),
+                new XElement("folder", "no"),
+                new XElement("type", "0"),
+                new XElement("status", "1")
+            ),
+            new XElement(
+                "info",
+                new XElement("title", filename),
+                new XElement("sort_title", filename),
+                new XElement("mediainfo", new XElement("format", "Matroska"))
+            )
+        ).Save(Path.Combine(directory, "data.xml"));
     }
 
     private string CreateWorkspace()

@@ -112,9 +112,11 @@ internal sealed class ExportFixture : IDisposable
             Template(template),
             new RenderOptions()
         );
+        // Fixer l'ordre des traitements indépendamment de l'ordre d'export.
         foreach (
             MediaContext movie in Cards()
                 .Where(card => !card.IsSeries)
+                .OrderBy(card => card.DataDirectory, StringComparer.OrdinalIgnoreCase)
         )
         {
             store.Update(movie, Root);

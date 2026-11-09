@@ -142,6 +142,12 @@ public sealed partial class MainWindowViewModel
                     progress,
                     cancellationToken
                 );
+                int index = Cards.IndexOf(card);
+                if (rendered && index >= 0 && index < Cards.Count - 1)
+                {
+                    // ProcessForm retire puis réinsère la fiche traitée en fin de collection.
+                    Cards.Move(index, Cards.Count - 1);
+                }
                 completed += rendered ? 1 : 0;
                 skipped += rendered ? 0 : 1;
             }

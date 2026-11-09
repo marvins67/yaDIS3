@@ -88,11 +88,8 @@ public sealed class WorkspaceRepository
 
         var cards = new List<MediaCard>();
         var warnings = new List<string>();
-        foreach (
-            string folder in Directory
-                .EnumerateDirectories(data)
-                .Order(StringComparer.OrdinalIgnoreCase)
-        )
+        // MainForm charge la collection d'export dans l'ordre du système de fichiers.
+        foreach (string folder in Directory.EnumerateDirectories(data))
         {
             cancellationToken.ThrowIfCancellationRequested();
             string file = Path.Combine(folder, "data.xml");

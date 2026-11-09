@@ -139,7 +139,9 @@ public sealed partial class MainWindowViewModel
         MediaCard? previous = _selectedCard;
         VisibleCards.Clear();
         foreach (
-            MediaCard card in Cards.Where(MatchesLibraryFilters)
+            MediaCard card in Cards
+                .Where(MatchesLibraryFilters)
+                .OrderBy(card => card.DataDirectory, StringComparer.OrdinalIgnoreCase)
         )
         {
             VisibleCards.Add(card);

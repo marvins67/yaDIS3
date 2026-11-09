@@ -164,14 +164,7 @@ internal sealed partial class LegacyDuneCatalogWriter(
     {
         string directory = Output(root, "00/00");
         renderer.RenderMenu(directory, "movie");
-        WriteMovieListing(
-            movies,
-            groups,
-            root,
-            "00/00",
-            Background,
-            collapseSagas: true
-        );
+        WriteGeneralMovieListing(movies, groups, root, directory);
         if (Enabled(2))
         {
             WriteRecent(movies, groups, root);
@@ -187,6 +180,77 @@ internal sealed partial class LegacyDuneCatalogWriter(
         );
         WriteMovieMenu(renderer, root);
     }
+
+    private void WriteGeneralMovieListing(
+        IReadOnlyList<MediaContext> cards,
+        XElement groups,
+        string root,
+        string directory
+    )
+    {
+        DuneFile file = MovieListing(Background);
+        int index = 0;
+        foreach (MediaContext card in cards)
+        {
+            if (
+                card.Header.ValueAt("type") != "0"
+                || !int.TryParse(
+                    card.Header.ValueAt("status"),
+                    CultureInfo.InvariantCulture,
+                    out int status
+                )
+                || status == (int)MediaProcessingState.Unprocessed
+            )
+            {
+                continue;
+            }
+
+            if (WriteGeneralMovie(file, index, card, groups, root, directory))
+            {
+                index++;
+            }
+        }
+
+        file.Save(directory);
+    }
+
+    private bool WriteGeneralMovie(
+        DuneFile file,
+        int index,
+        MediaContext movie,
+        XElement groups,
+        string root,
+        string directory
+    )
+    {
+        string name = movie.Header.ValueAt("filename");
+        XElement? saga = FindSaga(groups, name);
+        string? sagaName = saga?.Element("name")?.Value;
+        if (sagaName is not null && file.ContainsDefinitionSuffix(sagaName))
+        {
+            // ProcessForm avance le compteur même si la saga est déjà représentée.
+            return true;
+        }
+
+        XElement? caption = saga is null
+            ? movie.Info.Element("sort_title")
+            : saga.Element("sort_name");
+        if (caption is null || (saga is not null && sagaName is null))
+        {
+            return false;
+        }
+
+        string target = sagaName is null
+            ? LegacyExportPaths.Media(name, false)
+            : "00/98/" + sagaName;
+        AddMovie(file, index, caption.Value, directory, Output(root, target));
+        return true;
+    }
+
+    private static XElement? FindSaga(XElement groups, string filename) =>
+        groups.Descendants("saga").FirstOrDefault(saga =>
+            saga.Elements("movie").Any(movie => movie.Value == filename)
+        );
 
     private void WriteMovieMenu(
         TemplateRenderer renderer,
@@ -256,13 +320,7 @@ internal sealed partial class LegacyDuneCatalogWriter(
         {
             string name = movie.Header.ValueAt("filename");
             XElement? saga = collapseSagas
-                ? groups
-                    .Descendants("saga")
-                    .FirstOrDefault(group =>
-                        group
-                            .Elements("movie")
-                            .Any(node => node.Value == name)
-                    )
+                ? FindSaga(groups, name)
                 : null;
             string target = saga is null
                 ? LegacyExportPaths.Media(name, false)
