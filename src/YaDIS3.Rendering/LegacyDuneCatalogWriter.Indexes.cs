@@ -252,7 +252,8 @@ internal sealed partial class LegacyDuneCatalogWriter
                     template.Node(
                         "menu/index/" + kind + "/area"
                     ),
-                    false
+                    false,
+                    selectedIcon: true
                 )
                 .Set(
                     "background_path",
@@ -263,7 +264,6 @@ internal sealed partial class LegacyDuneCatalogWriter
                                 : "background2.jpg"
                         )
                 )
-                .Set("icon_sel_path", "icon_sel.aai")
                 .Save(child);
             Label(
                 renderer,

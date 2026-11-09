@@ -9,7 +9,8 @@ internal sealed partial class LegacyDuneCatalogWriter
     private DuneFile Panel(
         XElement source,
         bool alphabet,
-        bool includeDigits = false
+        bool includeDigits = false,
+        bool selectedIcon = false
     )
     {
         XElement area = new(source);
@@ -41,6 +42,13 @@ internal sealed partial class LegacyDuneCatalogWriter
                     .Replace(
                         "|paint_icon_selection_box=no",
                         "",
+                        StringComparison.Ordinal
+                    )
+                    .Replace(
+                        "|icon_path=icon.aai|",
+                        selectedIcon
+                            ? "|icon_path=icon.aai|icon_sel_path=icon_sel.aai|"
+                            : "|icon_path=icon.aai|",
                         StringComparison.Ordinal
                     )
             )

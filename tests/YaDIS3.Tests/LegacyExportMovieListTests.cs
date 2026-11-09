@@ -138,6 +138,32 @@ public sealed class LegacyExportMovieListTests
         Assert.Contains("item.0.icon_sel_scale_factor=1", lines);
     }
 
+    [Fact]
+    public void Export_SelectionAvecSagaRepetee_ConserveLesIndicesHistoriques()
+    {
+        using ExportFixture fixture = new();
+        MediaContext[] movies =
+        [
+            Movie(fixture, "Premier.mkv", "Z premier"),
+            Movie(fixture, "Suite.mkv", "A suite"),
+            Movie(fixture, "Autre.mkv", "Titre de tri"),
+        ];
+        WriteSaga(fixture, "Saga", "Saga de tri", "Premier.mkv", "Suite.mkv");
+        XElement groups = XElement.Load(Path.Combine(fixture.Root, "groups.xml"));
+        groups.Add(new XElement("selections", new XElement("selection",
+            new XAttribute("enabled", "yes"), new XElement("name", "Choix"),
+            movies.Select(movie => new XElement("movie", movie.Header.Element("filename")!.Value)))));
+        groups.Save(Path.Combine(fixture.Root, "groups.xml"));
+
+        Export(fixture, movies);
+
+        string[] lines = File.ReadAllLines(Path.Combine(
+            fixture.Destination, "00", "01_Choix", "dune_folder.txt"));
+        Assert.Equal(["item.0.caption=Saga de tri", "item.2.caption=Titre de tri"], Captions(lines));
+        Assert.Contains("item.2.media_url=../99/Autre.mkv", lines);
+        Assert.DoesNotContain(lines, line => line.StartsWith("item.1.", StringComparison.Ordinal));
+    }
+
     private static MediaContext Movie(
         ExportFixture fixture,
         string filename,

@@ -327,8 +327,11 @@ internal sealed partial class LegacyDuneCatalogWriter(
             string target = saga is null
                 ? LegacyExportPaths.Media(name, false)
                 : "00/98/" + saga.Element("name")!.Value;
-            if (!included.Add(target))
+            if (saga is not null && !included.Add(target))
             {
+                // Le compteur de ProcessForm avance aussi pour les membres
+                // suivants d'une saga déjà représentée dans la sélection.
+                index++;
                 continue;
             }
 
