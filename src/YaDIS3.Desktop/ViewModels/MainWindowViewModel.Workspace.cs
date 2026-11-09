@@ -124,6 +124,8 @@ public sealed partial class MainWindowViewModel
     {
         Notify(nameof(CountLabel));
         Notify(nameof(HasChanges));
+        Notify(nameof(EpisodeCanSave));
+        Notify(nameof(EpisodePosition));
         Notify(nameof(ActorsText));
         Notify(nameof(GenresText));
         Notify(nameof(EditableCard));

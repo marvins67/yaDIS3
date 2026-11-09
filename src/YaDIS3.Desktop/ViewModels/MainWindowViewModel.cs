@@ -114,6 +114,9 @@ public sealed partial class MainWindowViewModel
     /// Commande d'enregistrement et de passage à l'épisode
     /// précédent.
     /// </summary>
+    /// <summary>Enregistrement de l'épisode sélectionné.</summary>
+    public ICommand SaveEpisodeCommand { get; }
+
     public ICommand PreviousEpisodeCommand { get; }
 
     /// <summary>
@@ -168,6 +171,21 @@ public sealed partial class MainWindowViewModel
     /// <summary>
     /// Position de l'épisode sélectionné dans la série.
     /// </summary>
+    /// <summary>Navigation vers l'épisode précédent possible.</summary>
+    public bool CanNavigatePreviousEpisode =>
+        SelectedCard is not null && SelectedEpisode is not null
+        && SelectedCard.Episodes.IndexOf(SelectedEpisode) > 0;
+
+    /// <summary>Navigation vers l'épisode suivant possible.</summary>
+    public bool CanNavigateNextEpisode =>
+        SelectedCard is not null && SelectedEpisode is not null
+        && SelectedCard.Episodes.IndexOf(SelectedEpisode) + 1
+            < SelectedCard.Episodes.Count;
+
+    /// <summary>La fiche de l'épisode contient des modifications.</summary>
+    public bool EpisodeCanSave =>
+        SelectedEpisode is not null && SelectedCard?.IsDirty == true;
+
     public string EpisodePosition =>
         SelectedCard is null || SelectedEpisode is null
             ? Texts.GetString("338")
@@ -340,6 +358,9 @@ public sealed partial class MainWindowViewModel
             Notify();
             Notify(nameof(HasEpisode));
             Notify(nameof(EpisodePosition));
+            Notify(nameof(CanNavigatePreviousEpisode));
+            Notify(nameof(CanNavigateNextEpisode));
+            Notify(nameof(EpisodeCanSave));
             RefreshRenderedPreview();
         }
     }
@@ -490,6 +511,9 @@ public sealed partial class MainWindowViewModel
         );
         ApplySeriesCommand = new UiCommand(() =>
             RunAsync(ApplySeriesAsync)
+        );
+        SaveEpisodeCommand = new UiCommand(() =>
+            RunAsync(SaveEpisodeAsync)
         );
         PreviousEpisodeCommand = new UiCommand(() =>
             RunAsync(() => NavigateAndSaveAsync(-1))

@@ -1414,120 +1414,107 @@
         Header="{DynamicResource Text.302}"
         IsVisible="{Binding IsSeries}"
       >
-        <Grid Margin="8" RowDefinitions="Auto,*" RowSpacing="6">
-          <Grid
-            ColumnDefinitions="Auto,*,Auto"
-            ColumnSpacing="8"
-          >
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <Button
-                Content="◀"
-                Command="{Binding PreviousEpisodeCommand}"
-                IsEnabled="{Binding HasEpisode}"
-              />
-              <Button
-                Content="▶"
-                Command="{Binding NextEpisodeCommand}"
-                IsEnabled="{Binding HasEpisode}"
-              />
-            </StackPanel>
-            <ComboBox
-              x:Name="EpisodeChoice"
+        <Grid Margin="8" RowDefinitions="31,*">
+          <Grid ColumnDefinitions="30,30,*,104" ColumnSpacing="4">
+            <Button
+              Content="◀"
+              Command="{Binding PreviousEpisodeCommand}"
+              IsEnabled="{Binding CanNavigatePreviousEpisode}"
+            />
+            <Button
               Grid.Column="1"
-              ItemsSource="{Binding SelectedCard?.Episodes}"
-              SelectedItem="{Binding SelectedEpisode, Mode=TwoWay}"
-              HorizontalAlignment="Stretch"
-            >
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="core:Episode">
-                  <TextBlock Text="{Binding Label}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-            <StackPanel
+              Content="▶"
+              Command="{Binding NextEpisodeCommand}"
+              IsEnabled="{Binding CanNavigateNextEpisode}"
+            />
+            <TextBlock
               Grid.Column="2"
-              Orientation="Horizontal"
-              Spacing="8"
-            >
-              <CheckBox
-                Content="{DynamicResource Text.313}"
-                IsChecked="{Binding ShowEpisodePreview, Mode=TwoWay}"
-                IsEnabled="{Binding HasEpisode}"
-              />
-              <Button
-                Content="{DynamicResource Text.314.Ellipsis}"
-                Click="ScanEpisodes"
-              />
-            </StackPanel>
+              Text="{Binding EpisodePosition}"
+              VerticalAlignment="Center"
+              Margin="8,0,0,0"
+              TextTrimming="CharacterEllipsis"
+            />
+            <Button
+              Grid.Column="3"
+              Content="Enregistrer"
+              Command="{Binding SaveEpisodeCommand}"
+              IsEnabled="{Binding EpisodeCanSave}"
+            />
           </Grid>
           <Grid
             Grid.Row="1"
-            ColumnDefinitions="2*,12,3*,12,210"
+            ColumnDefinitions="73*,5,27*"
             IsEnabled="{Binding HasEpisode}"
           >
-            <StackPanel Spacing="3">
-              <TextBlock
-                Text="{DynamicResource Text.315.Colon}"
-                Classes="fieldLabel"
-              />
-              <TextBox
-                x:Name="EpisodeTitleEditor"
-                Text="{Binding SelectedEpisode?.Title, Mode=TwoWay}"
-              />
-              <TextBlock
-                Text="{DynamicResource Text.316.Colon}"
-                Classes="fieldLabel"
-              />
-              <Grid ColumnDefinitions="*,65" ColumnSpacing="6">
-                <TextBox
-                  Text="{Binding SelectedEpisode?.Aired, Mode=TwoWay}"
-                />
+            <Grid Grid.Column="0" RowDefinitions="28,28,*">
+              <Grid ColumnDefinitions="45,*">
+                <TextBlock Text="Titre :" VerticalAlignment="Center" />
                 <TextBox
                   Grid.Column="1"
-                  Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}"
-                  PlaceholderText="{DynamicResource Text.26}"
+                  x:Name="EpisodeTitleEditor"
+                  Text="{Binding SelectedEpisode?.Title, Mode=TwoWay}"
+                  VerticalAlignment="Center"
                 />
               </Grid>
-              <TextBlock
-                Text="{DynamicResource Text.46.Colon}"
-                Classes="fieldLabel"
-              />
-              <TextBox
-                Text="{Binding SelectedEpisode?.Director, Mode=TwoWay}"
-              />
-              <TextBlock
-                Text="{Binding EpisodePosition}"
-                Classes="muted"
-              />
-            </StackPanel>
+              <Grid
+                Grid.Row="1"
+                ColumnDefinitions="59,103,35,46,73,*"
+              >
+                <TextBlock Text="Diffusion :" VerticalAlignment="Center" />
+                <TextBox
+                  Grid.Column="1"
+                  Text="{Binding SelectedEpisode?.Aired, Mode=TwoWay}"
+                  VerticalAlignment="Center"
+                />
+                <TextBlock
+                  Grid.Column="2"
+                  Text="Note :"
+                  VerticalAlignment="Center"
+                  Margin="3,0,0,0"
+                />
+                <TextBox
+                  Grid.Column="3"
+                  Text="{Binding SelectedEpisode?.Rating, Mode=TwoWay}"
+                  VerticalAlignment="Center"
+                />
+                <TextBlock
+                  Grid.Column="4"
+                  Text="Réalisation :"
+                  VerticalAlignment="Center"
+                  Margin="3,0,0,0"
+                />
+                <TextBox
+                  Grid.Column="5"
+                  Text="{Binding SelectedEpisode?.Director, Mode=TwoWay}"
+                  VerticalAlignment="Center"
+                />
+              </Grid>
+              <Grid Grid.Row="2" RowDefinitions="17,*">
+                <TextBlock Text="Résumé :" />
+                <TextBox
+                  Grid.Row="1"
+                  Text="{Binding SelectedEpisode?.Plot, Mode=TwoWay}"
+                  AcceptsReturn="True"
+                  TextWrapping="Wrap"
+                  VerticalContentAlignment="Top"
+                  ScrollViewer.VerticalScrollBarVisibility="Visible"
+                />
+              </Grid>
+            </Grid>
             <Grid
               Grid.Column="2"
-              RowDefinitions="Auto,*"
-              RowSpacing="3"
+              RowDefinitions="*,27"
+              Margin="5,0,0,0"
+              Background="#2D2D2D"
             >
-              <TextBlock
-                Text="{DynamicResource Text.32.Colon}"
-                Classes="fieldLabel"
-              />
-              <TextBox
-                Grid.Row="1"
-                Text="{Binding SelectedEpisode?.Plot, Mode=TwoWay}"
-                AcceptsReturn="True"
-                TextWrapping="Wrap"
-                VerticalContentAlignment="Top"
-                ScrollViewer.VerticalScrollBarVisibility="Auto"
-              />
-            </Grid>
-            <Grid Grid.Column="4" RowDefinitions="*,Auto">
               <Image
                 Source="{Binding EpisodeImage}"
                 Stretch="Uniform"
               />
               <Button
-                Content="{DynamicResource Text.83.Ellipsis}"
                 Grid.Row="1"
+                Content="Choisir une image…"
                 Click="ImportEpisodeImage"
-                Margin="0,4,0,0"
               />
             </Grid>
           </Grid>

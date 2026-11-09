@@ -33,6 +33,21 @@ public sealed partial class MainWindowViewModel
     /// <summary>
     /// Enregistre l'épisode avant de passer à l'épisode voisin.
     /// </summary>
+    /// <summary>Enregistre les modifications de l'épisode actif.</summary>
+    public async Task SaveEpisodeAsync()
+    {
+        if (SelectedCard is not { IsDirty: true } card
+            || SelectedEpisode is null)
+        {
+            return;
+        }
+
+        await new LegacyIndexedCardSaver(_repository).SaveAsync(card);
+        Notify(nameof(EpisodeCanSave));
+        Notify(nameof(EpisodePosition));
+        Status = "Enregistré — Traiter pour actualiser l'affichage";
+    }
+
     public async Task NavigateAndSaveAsync(int direction)
     {
         if (SelectedCard is null || SelectedEpisode is null)
