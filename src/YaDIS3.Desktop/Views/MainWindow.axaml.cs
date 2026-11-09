@@ -291,7 +291,7 @@ public sealed partial class MainWindow : Window
                 try
                 {
                     await Model.LoadOrdersAsync();
-                    if (results.SelectedItem == match)
+                    if (ReferenceEquals(results.SelectedItem, match))
                     {
                         orders.ItemsSource = Model.Orders;
                         orders.SelectedItem = Model.SelectedOrder;
