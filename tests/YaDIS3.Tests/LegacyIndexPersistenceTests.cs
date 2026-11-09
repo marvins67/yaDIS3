@@ -13,6 +13,9 @@ public sealed class LegacyIndexPersistenceTests
     public void Export_SansTraitement_NeReconstruitPasLesIndex()
     {
         using ExportFixture fixture = new();
+        // Une initiale préparée vérifie la reconstruction alphabétique ;
+        // les accents sont caractérisés séparément (CreateDF ne crée pas de dossier).
+        ChangeMovie(fixture, "Drame", "Ete d’Adèle");
         ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);
@@ -37,7 +40,7 @@ public sealed class LegacyIndexPersistenceTests
                     fixture.Destination,
                     "00",
                     "03",
-                    "É",
+                    "E",
                     "dune_folder.txt"
                 )
             )

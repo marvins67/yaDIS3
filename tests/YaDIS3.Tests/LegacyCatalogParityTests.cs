@@ -171,7 +171,7 @@ public sealed class LegacyCatalogParityTests
     }
 
     [Fact]
-    public void Export_AccentedSortTitle_PreservesLegacyAlphabetLetter()
+    public void Export_AccentedSortTitle_DoesNotCreateUnpreparedAlphabetDirectory()
     {
         using ExportFixture fixture = new();
         XDocument data = ReadMovie(fixture);
@@ -182,7 +182,7 @@ public sealed class LegacyCatalogParityTests
         ExportResult result = ExportFixture
             .Exporter()
             .Export(fixture.Cards(), fixture.Destination);
-        Assert.True(
+        Assert.False(
             File.Exists(
                 Path.Combine(
                     result.Directory,

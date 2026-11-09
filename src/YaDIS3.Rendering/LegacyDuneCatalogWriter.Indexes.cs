@@ -121,54 +121,100 @@ internal sealed partial class LegacyDuneCatalogWriter
             );
         }
 
-        // Sous Windows, yaDIS2 ajoute L et l au même dossier.
-        foreach (
-            IGrouping<string, MediaContext> group in movies
-                .Where(movie =>
-                    movie.Info.ValueAt("sort_title").Length > 0
-                )
-                .GroupBy(
-                    movie =>
-                        LegacyExportPaths.Alphabet(
-                            AlphabetCaption(movie, groups)
-                        ),
-                    StringComparer.OrdinalIgnoreCase
-                )
-        )
+        WriteAlphabetEntries(movies, groups, root);
+    }
+
+    private void WriteAlphabetEntries(
+        MediaContext[] movies,
+        XElement groups,
+        string root
+    )
+    {
+        Dictionary<string, DuneFile> listings = new(
+            StringComparer.OrdinalIgnoreCase
+        );
+        Dictionary<string, int> counts = new(
+            StringComparer.OrdinalIgnoreCase
+        );
+        foreach (MediaContext movie in movies)
         {
-            // CreateAlphabet crée d’abord les dossiers A à Z en majuscules.
-            string letter = group.Key[0] is >= 'a' and <= 'z'
-                ? group.Key.ToUpperInvariant()
-                : group.Key;
-            LegacyExportPaths.ValidateName(letter);
-            WriteMovieListing(
-                group,
-                groups,
+            string name = movie.Header.ValueAt("filename");
+            if (FindSaga(groups, name) is null)
+            {
+                AppendAlphabetEntry(
+                    movie.Info.ValueAt("sort_title"),
+                    LegacyExportPaths.Media(name, false),
+                    root,
+                    listings,
+                    counts
+                );
+            }
+        }
+
+        // ProcessForm ajoute ensuite toutes les sagas dans l'ordre XML,
+        // même si aucun de leurs membres ne figure dans la collection.
+        foreach (XElement saga in groups.Descendants("saga"))
+        {
+            AppendAlphabetEntry(
+                saga.ValueAt("sort_name"),
+                "00/98/" + saga.ValueAt("name"),
                 root,
-                "00/03/" + letter,
-                "../../00/" + Background,
-                true
+                listings,
+                counts
+            );
+        }
+
+        foreach (KeyValuePair<string, DuneFile> listing in listings)
+        {
+            listing.Value.Save(
+                Output(root, "00/03/" + listing.Key)
             );
         }
     }
 
-    private static string AlphabetCaption(
-        MediaContext movie,
-        XElement groups
+    private void AppendAlphabetEntry(
+        string caption,
+        string target,
+        string root,
+        Dictionary<string, DuneFile> listings,
+        Dictionary<string, int> counts
     )
     {
-        XElement? saga = groups
-            .Descendants("saga")
-            .FirstOrDefault(group =>
-                group
-                    .Elements("movie")
-                    .Any(node =>
-                        node.Value
-                        == movie.Header.ValueAt("filename")
-                    )
+        if (caption.Length == 0)
+        {
+            return;
+        }
+
+        string letter = LegacyExportPaths
+            .Alphabet(caption)
+            .ToUpperInvariant();
+        // CreateDF ne crée pas de dossier : seules les rubriques préparées
+        // par CreateAlphabet sont accessibles, sans normaliser les accents.
+        if (
+            letter != "0-9"
+            && (letter.Length != 1 || letter[0] is < 'A' or > 'Z')
+        )
+        {
+            return;
+        }
+
+        if (!listings.TryGetValue(letter, out DuneFile? file))
+        {
+            file = Document(
+                Definition(_definitions.IndexListing("../.."))
             );
-        return saga?.Element("sort_name")?.Value
-            ?? movie.Info.ValueAt("sort_title");
+            listings.Add(letter, file);
+            counts.Add(letter, 0);
+        }
+
+        AddMovie(
+            file,
+            counts[letter],
+            caption,
+            Output(root, "00/03/" + letter),
+            Output(root, target)
+        );
+        counts[letter]++;
     }
 
     private void WriteIndexMenus(
