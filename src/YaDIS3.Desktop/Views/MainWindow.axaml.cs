@@ -541,6 +541,7 @@ public sealed partial class MainWindow : Window
         {
             Content = row,
             Padding = new Avalonia.Thickness(0),
+            Margin = new Avalonia.Thickness(0, 0, 0, 10),
         };
         _ = LoadPosterAsync(poster, posterUrl);
         return item;
