@@ -253,7 +253,7 @@ public sealed partial class TemplateRenderer
     /// films.
     /// </summary>
     internal void RenderSagaBackground(
-        MediaContext poster,
+        MediaContext? poster,
         string title,
         bool useFanart,
         string directory
@@ -265,7 +265,9 @@ public sealed partial class TemplateRenderer
             true
         );
         using SKCanvas canvas = new(background);
-        using SKBitmap framed = CreateFramedArtwork(poster);
+        using SKBitmap? framed = poster is null
+            ? null
+            : CreateFramedArtwork(poster);
         XElement scene = new(
             _template.Node("movie/saga/iconview/background")
         );
@@ -287,7 +289,27 @@ public sealed partial class TemplateRenderer
                 .Remove();
         }
 
-        DrawScene(canvas, scene, poster, null, framed, null);
+        if (poster is null)
+        {
+            foreach (XElement image in scene.Elements("image")
+                .Where(node => ReadElementKind(node) == "static"))
+            {
+                DrawImage(
+                    canvas,
+                    ReadImage(_template.Asset(image.Value, true), true),
+                    ReadRectangle(image)
+                );
+            }
+            foreach (XElement text in scene.Elements("text")
+                .Where(node => ReadElementKind(node) == "static"))
+            {
+                DrawText(canvas, text, text.Value);
+            }
+        }
+        else
+        {
+            DrawScene(canvas, scene, poster, null, framed!, null);
+        }
         SaveBackground(
             background,
             Path.Combine(directory, "background")
@@ -298,6 +320,22 @@ public sealed partial class TemplateRenderer
         }
 
         _mediaImages.Clear();
+    }
+
+    /// <summary>
+    /// Ajoute l'estampille du template à l'icône du film choisi.
+    /// </summary>
+    internal void RenderSagaIcon(string source, string directory)
+    {
+        using SKBitmap icon = AaiCodec.Load(source);
+        using SKCanvas canvas = new(icon);
+        XElement stamp = _template.Node("movie/saga/stamp");
+        DrawImage(
+            canvas,
+            ReadImage(_template.Asset(stamp.Attr("image"), true), true),
+            ReadRectangle(stamp)
+        );
+        AaiCodec.Save(icon, Path.Combine(directory, "icon.aai"));
     }
 
     /// <summary>

@@ -78,49 +78,70 @@ internal sealed partial class LegacyDuneCatalogWriter
     {
         foreach (XElement saga in groups.Descendants("saga"))
         {
-            string name = saga.Element("name")!.Value;
-            LegacyExportPaths.ValidateName(name);
-            string relative = "00/98/" + name;
-            string directory = Output(root, relative);
-            renderer.RenderMenu(
-                directory,
-                "movie",
-                template.Node("movie/saga/iconview/area")
-            );
-            MediaContext[] members = saga.Elements("movie")
-                .SelectMany(node =>
-                    movies.Where(movie =>
-                        movie.Header.ValueAt("filename")
-                        == node.Value
-                    )
-                )
-                .ToArray();
-            WriteSagaDefinition(members, root, relative);
-            string poster = saga.Element("poster")?.Value ?? "";
-            CopySagaIcon(members, poster, root, directory);
-            MediaContext? posterMedia = members.FirstOrDefault(
-                movie =>
-                    movie.Header.ValueAt("filename") == poster
-            );
-            if (posterMedia is not null)
+            // ProcessForm isole les échecs de chaque saga : une image
+            // manquante ne doit pas supprimer les sagas suivantes.
+            try
             {
-                MediaContext? fanart = movies.FirstOrDefault(
-                    movie =>
-                        movie.Header.ValueAt("filename")
-                        == saga.Element("fanart")?.Value
-                );
-                renderer.RenderSagaBackground(
-                    fanart ?? posterMedia,
-                    name,
-                    fanart is not null,
-                    directory
-                );
+                WriteSaga(renderer, movies, saga, root);
+            }
+            catch (Exception exception)
+                when (exception is not OperationCanceledException)
+            {
+                // yaDIS2 continue l'export après une erreur propre à une saga.
             }
         }
     }
 
+    private void WriteSaga(
+        TemplateRenderer renderer,
+        MediaContext[] movies,
+        XElement saga,
+        string root
+    )
+    {
+        string name = saga.Element("name")!.Value;
+        LegacyExportPaths.ValidateName(name);
+        string relative = "00/98/" + name;
+        string directory = Output(root, relative);
+        renderer.RenderMenu(
+            directory,
+            "movie",
+            template.Node("movie/saga/iconview/area")
+        );
+        string[] members = saga.Elements("movie")
+            .Select(node => node.Value)
+            .ToArray();
+        WriteSagaDefinition(members, root, relative);
+        string poster = saga.Element("poster")?.Value ?? "";
+        if (members.Contains(poster, StringComparer.Ordinal))
+        {
+            string icon = Path.Combine(
+                Output(root, LegacyExportPaths.Media(poster, false)),
+                "icon.aai"
+            );
+            if (fileSystem.FileExists(icon))
+            {
+                renderer.RenderSagaIcon(icon, directory);
+            }
+        }
+
+        MediaContext? artwork = movies.FirstOrDefault(movie =>
+            movie.Header.ValueAt("filename")
+                == saga.Element("fanart")?.Value
+        );
+        MediaContext? posterMedia = movies.FirstOrDefault(movie =>
+            movie.Header.ValueAt("filename") == poster
+        );
+        renderer.RenderSagaBackground(
+            artwork ?? posterMedia,
+            name,
+            artwork is not null,
+            directory
+        );
+    }
+
     private void WriteSagaDefinition(
-        MediaContext[] members,
+        string[] members,
         string root,
         string relative
     )
@@ -134,7 +155,7 @@ internal sealed partial class LegacyDuneCatalogWriter
                 .ValueAt("columns"),
             CultureInfo.InvariantCulture
         );
-        if (members.Length > 0 && members.Length < columns)
+        if (members.Length < columns)
         {
             int width = (int)
                 Math.Round(
@@ -192,23 +213,14 @@ internal sealed partial class LegacyDuneCatalogWriter
         string directory = Output(root, relative);
         int index = 0;
         // ProcessForm numérote les films dans l’ordre XML de la saga.
-        foreach (MediaContext member in members)
+        foreach (string member in members)
         {
             AddMovie(
                 file,
                 index,
-                index.ToString(
-                    "00",
-                    CultureInfo.InvariantCulture
-                ),
+                index.ToString("00", CultureInfo.InvariantCulture),
                 directory,
-                Output(
-                    root,
-                    LegacyExportPaths.Media(
-                        member.Header.ValueAt("filename"),
-                        false
-                    )
-                )
+                Output(root, LegacyExportPaths.Media(member, false))
             );
             index++;
         }
@@ -216,29 +228,4 @@ internal sealed partial class LegacyDuneCatalogWriter
         file.Save(directory);
     }
 
-    private void CopySagaIcon(
-        MediaContext[] members,
-        string poster,
-        string root,
-        string directory
-    )
-    {
-        MediaContext? member = members.FirstOrDefault(movie =>
-            movie.Header.ValueAt("filename") == poster
-        );
-        if (member is not null)
-        {
-            fileSystem.CopyFile(
-                Path.Combine(
-                    Output(
-                        root,
-                        LegacyExportPaths.Media(poster, false)
-                    ),
-                    "icon.aai"
-                ),
-                Path.Combine(directory, "icon.aai"),
-                true
-            );
-        }
-    }
 }

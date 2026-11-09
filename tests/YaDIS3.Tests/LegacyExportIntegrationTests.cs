@@ -1,4 +1,5 @@
 using System.Text;
+using System.Xml.Linq;
 using Xunit;
 using YaDIS3.Core;
 using YaDIS3.Rendering;
@@ -262,5 +263,124 @@ public sealed class LegacyExportIntegrationTests
             .Export(fixture.Cards(), fixture.Destination);
         Assert.Equal(2, result.MediaCount);
         Assert.Equal(0, new FileInfo(path).Length);
+    }
+
+    [Fact]
+    public void Export_TwentyNineSagas_CreatesEveryLegacyFolder()
+    {
+        using ExportFixture fixture = new();
+        XElement[] sagas = Enumerable.Range(0, 29)
+            .Select(index => Saga(
+                $"Saga {index:00}",
+                index == 0 ? [ExportFixture.MovieName] : []
+            ))
+            .ToArray();
+        SaveSagas(fixture, sagas);
+
+        ExportResult result = ExportFixture.Exporter()
+            .Export(fixture.Cards(), fixture.Destination);
+        string root = Path.Combine(result.Directory, "00", "98");
+        Assert.Equal(29, Directory.GetDirectories(root).Length);
+        foreach (XElement saga in sagas)
+        {
+            string directory = Path.Combine(root, saga.Element("name")!.Value);
+            Assert.True(File.Exists(Path.Combine(directory, "dune_folder.txt")));
+            Assert.True(File.Exists(Path.Combine(directory, "background.aai")));
+        }
+
+        string listing = File.ReadAllText(
+            Path.Combine(result.Directory, "00", "00", "dune_folder.txt")
+        );
+        Assert.Contains("98/Saga 00", listing, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(root, "Saga 00", "icon.aai")));
+    }
+
+    [Fact]
+    public void Export_SagaMissingFilm_PreservesXmlMemberOrderAndLinks()
+    {
+        using ExportFixture fixture = new();
+        SaveSagas(fixture, Saga("Fantômes",
+            ["Missing.mkv", ExportFixture.MovieName]));
+
+        ExportResult result = ExportFixture.Exporter()
+            .Export(fixture.Cards(), fixture.Destination);
+        string definition = File.ReadAllText(
+            Path.Combine(result.Directory, "00", "98", "Fantômes",
+                "dune_folder.txt")
+        );
+        Assert.Contains(
+            "item.0.media_url=../../99/Missing.mkv",
+            definition, StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "item.1.media_url=../../99/" + ExportFixture.MovieName,
+            definition, StringComparison.Ordinal
+        );
+        Assert.Contains("item.0.caption=00", definition, StringComparison.Ordinal);
+        Assert.Contains("item.1.caption=01", definition, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Export_InvalidSaga_DoesNotPreventFollowingSaga()
+    {
+        using ExportFixture fixture = new();
+        SaveSagas(fixture,
+            Saga("Invalid/Name", []),
+            Saga("Valid", [ExportFixture.MovieName]));
+
+        ExportResult result = ExportFixture.Exporter()
+            .Export(fixture.Cards(), fixture.Destination);
+        Assert.True(File.Exists(
+            Path.Combine(result.Directory, "00", "98",
+                "Valid", "dune_folder.txt")
+        ));
+        Assert.False(Directory.Exists(
+            Path.Combine(result.Directory, "00", "98", "Invalid")
+        ));
+    }
+
+    [Fact]
+    public void Export_RenamedAndRemovedSagas_DeletesPreviousFolders()
+    {
+        using ExportFixture fixture = new();
+        DuneExporter exporter = ExportFixture.Exporter();
+        SaveSagas(fixture,
+            Saga("Ancienne", [ExportFixture.MovieName]),
+            Saga("Supprimée", []));
+        exporter.Export(fixture.Cards(), fixture.Destination);
+
+        SaveSagas(fixture,
+            Saga("Nouvelle", [ExportFixture.MovieName]));
+        exporter.Export(fixture.Cards(), fixture.Destination);
+
+        string root = Path.Combine(fixture.Destination, "00", "98");
+        string directory = Assert.Single(Directory.GetDirectories(root));
+        Assert.Equal("Nouvelle", Path.GetFileName(directory));
+        Assert.True(File.Exists(
+            Path.Combine(root, "Nouvelle", "dune_folder.txt")
+        ));
+    }
+
+    private static XElement Saga(string name, string[] members)
+    {
+        return new XElement("saga",
+            new XElement("name", name),
+            new XElement("sort_name", name),
+            new XElement("poster",
+                members.Contains(ExportFixture.MovieName,
+                    StringComparer.Ordinal) ? ExportFixture.MovieName : ""),
+            new XElement("fanart", ""),
+            members.Select(member => new XElement("movie", member))
+        );
+    }
+
+    private static void SaveSagas(
+        ExportFixture fixture,
+        params XElement[] sagas
+    )
+    {
+        new XDocument(new XElement("groups",
+            new XElement("sagas", sagas)))
+            .Save(Path.Combine(fixture.Root, "groups.xml"));
     }
 }
