@@ -56,13 +56,12 @@ public sealed partial class TemplateRenderer
             NormalizeFontName(text.Attr("font")),
             out SKTypeface? face
         );
+        // MeasureString emploie les avances ajustées aux pixels, pas une
+        // avance fractionnaire arrondie séparément pour chaque glyphe.
         using SKFont font = new(
             face ?? SKTypeface.Default,
             text.Float("size", 24) * 96 / 72
-        )
-        {
-            LinearMetrics = true,
-        };
+        );
         using SKPaint paint = new();
         string value =
             text.Attr("case") == "upper"
@@ -368,7 +367,7 @@ public sealed partial class TemplateRenderer
         int height =
             kind == "countries"
                 ? 64
-                : (int)Math.Ceiling(font.Spacing);
+                : (int)Math.Round(font.Spacing);
         Directory.CreateDirectory(directory);
         SaveIndexLabel(
             directory,
