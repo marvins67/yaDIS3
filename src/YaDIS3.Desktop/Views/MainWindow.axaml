@@ -558,6 +558,7 @@
     <Grid Grid.Row="1" ColumnDefinitions="254,8,*">
       <ListBox
         x:Name="LibraryList"
+        KeyDown="LibraryList_KeyDown"
         SelectionMode="Multiple"
         SelectedItems="{Binding TreatmentSelection}"
         ItemsSource="{Binding VisibleCards}"

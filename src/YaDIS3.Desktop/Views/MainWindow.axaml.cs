@@ -55,6 +55,41 @@ public sealed partial class MainWindow : Window
         };
     }
 
+    private readonly LibraryTypeAheadSearch _libraryTypeAhead = new();
+
+    private void LibraryList_KeyDown(
+        object? sender,
+        Avalonia.Input.KeyEventArgs eventArgs
+    )
+    {
+        if (sender is not ListBox list
+            || eventArgs.KeyModifiers is not (
+                Avalonia.Input.KeyModifiers.None
+                or Avalonia.Input.KeyModifiers.Shift
+            )
+            || eventArgs.KeySymbol is not { Length: 1 } text
+            || !char.IsLetterOrDigit(text[0]))
+        {
+            return;
+        }
+
+        IReadOnlyList<MediaCard> cards = Model.VisibleCards;
+        int position = _libraryTypeAhead.Find(
+            cards.Select(card => card.FolderName).ToArray(),
+            text[0],
+            TimeProvider.System.GetUtcNow()
+        );
+        if (position < 0)
+        {
+            return;
+        }
+
+        MediaCard selection = cards[position];
+        list.SelectedItem = selection;
+        list.ScrollIntoView(selection);
+        eventArgs.Handled = true;
+    }
+
     private async void EditorTabChanged(
         object? sender,
         SelectionChangedEventArgs eventArgs
