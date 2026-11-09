@@ -285,9 +285,11 @@ public sealed partial class MainWindow : Window
         ShowOrderMessage("Sélectionnez une série dans les résultats");
         Button apply = CreateTitleApplyButton();
         Dictionary<ListBoxItem, SeriesMatch> candidates = [];
+        int orderRequestVersion = 0;
 
         async Task FindAsync()
         {
+            ++orderRequestVersion;
             apply.IsEnabled = false;
             candidates.Clear();
             results.ItemsSource = null;
@@ -319,36 +321,45 @@ public sealed partial class MainWindow : Window
 
         results.SelectionChanged += async (_, _) =>
         {
+            int requestVersion = ++orderRequestVersion;
             apply.IsEnabled = false;
             ShowOrderMessage("Sélectionnez une série dans les résultats");
             if (results.SelectedItem is ListBoxItem item
                 && candidates.TryGetValue(item, out SeriesMatch? match))
             {
                 ShowOrderMessage("Chargement des ordres TVDB…");
-                Model.SelectedMatch = match;
                 try
                 {
-                    await Model.LoadOrdersAsync();
-                    if (ReferenceEquals(results.SelectedItem, item))
+                    IReadOnlyList<EpisodeOrder> available =
+                        await Model.GetSeriesOrdersAsync(match.Id);
+                    if (requestVersion != orderRequestVersion
+                        || !ReferenceEquals(results.SelectedItem, item))
                     {
-                        if (Model.Orders.Count == 0)
-                        {
-                            ShowOrderMessage("TVDB n’a indiqué aucun ordre disponible pour cette série.");
-                            return;
-                        }
-                        orders.ItemsSource = Model.Orders;
-                        orders.SelectedItem = Model.SelectedOrder;
-                        orders.IsEnabled = true;
-                        apply.IsEnabled = orders.SelectedItem is EpisodeOrder;
+                        return;
                     }
+                    if (available.Count == 0)
+                    {
+                        ShowOrderMessage("TVDB n’a indiqué aucun ordre disponible pour cette série.");
+                        return;
+                    }
+
+                    orders.ItemsSource = available;
+                    orders.SelectedItem = available.FirstOrDefault(order =>
+                        order.Code == Model.SelectedCard?.Order
+                    ) ?? available.FirstOrDefault(order =>
+                        order.Code == "official"
+                    ) ?? available[0];
+                    orders.IsEnabled = true;
+                    apply.IsEnabled = orders.SelectedItem is EpisodeOrder;
                 }
                 catch (Exception exception)
                 {
-                    if (ReferenceEquals(results.SelectedItem, item))
+                    if (requestVersion == orderRequestVersion
+                        && ReferenceEquals(results.SelectedItem, item))
                     {
                         ShowOrderMessage("Ordres TVDB indisponibles : " + exception.Message);
+                        Model.Status = exception.Message;
                     }
-                    Model.Status = exception.Message;
                 }
             }
         };

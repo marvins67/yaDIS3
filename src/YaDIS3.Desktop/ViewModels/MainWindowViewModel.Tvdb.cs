@@ -46,6 +46,16 @@ public sealed partial class MainWindowViewModel
                 : Texts.Format("374", found.Count);
     }
 
+    /// <summary>Récupère les ordres d'une série sans modifier l'état partagé.</summary>
+    public Task<IReadOnlyList<EpisodeOrder>> GetSeriesOrdersAsync(long seriesId)
+    {
+        TvdbClient api = _tvdb
+            ?? throw new InvalidOperationException(
+                "Chargez votre tvdb-v4.json avec Configuration TVDB."
+            );
+        return api.AvailableOrdersAsync(seriesId, OperationToken);
+    }
+
     /// <summary>
     /// Actualise les ordres d'épisodes proposés pour le résultat
     /// sélectionné.
