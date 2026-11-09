@@ -166,24 +166,7 @@ internal sealed partial class LegacyDuneCatalogWriter
         string root
     )
     {
-        List<(string Directory, string Caption)> top =
-        [
-            (Output(root, "00"), _texts["63"]),
-        ];
-        if (fileSystem.DirectoryExists(Output(root, "01")))
-        {
-            top.Add((Output(root, "01"), _texts["64"]));
-        }
-
-        top.AddRange(
-            fileSystem
-                .EnumerateDirectories(root, "05_*")
-                .Order(StringComparer.Ordinal)
-                .Select(path =>
-                    (path, Path.GetFileName(path)[6..])
-                )
-        );
-        renderer.RenderLegacyNavigation(top, "menu/main");
+        WriteTopNavigation(renderer, root);
         List<(string Directory, string Caption)> indexes = [];
         foreach (
             string path in fileSystem
@@ -221,6 +204,31 @@ internal sealed partial class LegacyDuneCatalogWriter
         }
 
         renderer.RenderLegacyNavigation(indexes, "menu/index");
+    }
+
+    private void WriteTopNavigation(
+        TemplateRenderer renderer,
+        string root
+    )
+    {
+        List<(string Directory, string Caption)> top =
+        [
+            (Output(root, "00"), _texts["63"]),
+        ];
+        if (fileSystem.DirectoryExists(Output(root, "01")))
+        {
+            top.Add((Output(root, "01"), _texts["64"]));
+        }
+
+        top.AddRange(
+            fileSystem
+                .EnumerateDirectories(root, "05_*")
+                .Order(StringComparer.Ordinal)
+                .Select(path =>
+                    (path, Path.GetFileName(path)[6..])
+                )
+        );
+        renderer.RenderLegacyNavigation(top, "menu/main");
     }
 
     private void ComposeBackgrounds(

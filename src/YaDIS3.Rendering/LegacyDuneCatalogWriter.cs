@@ -49,6 +49,17 @@ internal sealed partial class LegacyDuneCatalogWriter(
                 && card.Header.ValueAt("status") != "3"
             )
             .ToArray();
+        // Générer les raccourcis avant les index : une erreur de
+        // rendu ultérieure ne doit pas les faire disparaître.
+        WriteSelections(renderer, movies, groups, root);
+        WriteShortcuts(renderer, groups, shortcuts, root);
+        fileSystem.CreateDirectory(Output(root, "00"));
+        if (cards.Any(card => card.IsSeries))
+        {
+            fileSystem.CreateDirectory(Output(root, "01"));
+        }
+
+        WriteTopNavigation(renderer, root);
         WriteMovies(
             renderer,
             movies,
@@ -58,8 +69,6 @@ internal sealed partial class LegacyDuneCatalogWriter(
             cancellationToken
         );
         WriteSeries(renderer, cards, root);
-        WriteSelections(renderer, movies, groups, root);
-        WriteShortcuts(renderer, groups, shortcuts, root);
         WriteRoot(renderer, cards, groups, shortcuts, root);
     }
 
