@@ -203,12 +203,32 @@ internal sealed partial class LegacyDuneCatalogWriter(
             .Save(directory);
         for (int index = 0; index <= 11; index++)
         {
-            if (index != 1 && (index == 0 || Enabled(index)))
+            if (index == 1)
             {
-                fileSystem.CreateDirectory(
-                    Output(root, $"00/{index:00}")
-                );
+                continue;
             }
+
+            string directory = Output(root, $"00/{index:00}");
+            if (index == 0 || Enabled(index))
+            {
+                fileSystem.CreateDirectory(directory);
+                continue;
+            }
+
+            // yaDIS2 renomme les catégories désactivées pour que
+            // SyncInterface ne les publie pas dans la destination.
+            if (!fileSystem.DirectoryExists(directory))
+            {
+                continue;
+            }
+
+            string hidden = Output(root, $"00/_{index:00}");
+            if (fileSystem.DirectoryExists(hidden))
+            {
+                fileSystem.DeleteDirectory(hidden);
+            }
+
+            fileSystem.MoveDirectory(directory, hidden);
         }
     }
 
