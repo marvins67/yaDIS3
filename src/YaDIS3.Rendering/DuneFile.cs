@@ -142,14 +142,8 @@ internal sealed class DuneFile(
     }
 
     // ProcessForm recherche le nom de la saga suivi du séparateur dans toute la définition.
-    internal bool ContainsDefinitionSuffix(string value)
-    {
-        string marker = value + "|";
-        return _values.Any(entry =>
-            string.Concat(entry.Key, "=", entry.Value, "|")
-                .Contains(marker, StringComparison.Ordinal)
-        );
-    }
+    internal bool ContainsDefinitionSuffix(string value) =>
+        Content().Contains(value + "|", StringComparison.Ordinal);
 
     /// <summary>
     /// Conserve les entrées existantes avec leur numérotation
@@ -270,15 +264,15 @@ internal sealed class DuneFile(
     public void Save(string directory)
     {
         _fileSystem.CreateDirectory(directory);
-        string content = string.Join(
-            '|',
-            _values.Select(entry =>
-                entry.Key + "=" + entry.Value
-            )
-        );
         _fileSystem.WriteBytes(
             Path.Combine(directory, "dune_folder.txt"),
-            LegacyDuneEncoding.Encode(content, true)
+            LegacyDuneEncoding.Encode(Content(), true)
         );
     }
+
+    private string Content() =>
+        string.Join(
+            '|',
+            _values.Select(entry => entry.Key + "=" + entry.Value)
+        );
 }

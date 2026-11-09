@@ -188,7 +188,9 @@ internal sealed partial class LegacyDuneCatalogWriter(
         string directory
     )
     {
-        DuneFile file = MovieListing(Background);
+        // yaDIS2 dédoublonne avant que CreateDF choisisse le format du fond.
+        DuneFile file = Document(_definitions.MovieListing())
+            .Set("background_path", "background.aai");
         int index = 0;
         foreach (MediaContext card in cards)
         {
@@ -211,7 +213,7 @@ internal sealed partial class LegacyDuneCatalogWriter(
             }
         }
 
-        file.Save(directory);
+        file.Set("background_path", Background).Save(directory);
     }
 
     private bool WriteGeneralMovie(

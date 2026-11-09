@@ -100,6 +100,20 @@ public sealed class LegacyExportMovieListTests
     }
 
     [Theory]
+    [InlineData("jpg")]
+    [InlineData("background.jpg")]
+    public void Export_NomDeSagaAbsentDeLaDefinitionBrute_EcritLaSaga(
+        string name
+    )
+    {
+        using ExportFixture fixture = new();
+        MediaContext[] movies = [Movie(fixture, "Un film.mkv", "Un film")];
+        WriteSaga(fixture, name, "Nom de tri", "Un film.mkv");
+
+        Assert.Contains($"item.0.media_url=../98/{name}", Export(fixture, movies));
+    }
+
+    [Theory]
     [InlineData("Origins", 254, 350, false)]
     [InlineData("GLASS Revisited", 250, 333, true)]
     public void Export_ThemeActif_UtiliseSaGrilleEtSonCadre(
