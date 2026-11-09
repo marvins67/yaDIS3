@@ -450,7 +450,7 @@ public sealed partial class MainWindow : Window
         actions.Children.Add(apply);
         Button cancel = new()
         {
-            Content = Model.Texts.GetString("11"),
+            Content = Model.Texts.GetString("90"),
             MinWidth = 80,
         };
         cancel.Click += (_, _) => dialog.Close();
