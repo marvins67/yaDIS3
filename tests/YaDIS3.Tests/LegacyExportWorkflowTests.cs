@@ -111,7 +111,8 @@ public sealed class LegacyExportWorkflowTests
             Assert.Equal(
                 "media_url=../00/01_" + names[index]
                     + "|media_action=browse|icon_path=icon.aai|icon_valign=center",
-                definition.TrimStart('\uFEFF')
+                string.Join("|", definition.Split("\r\n").Skip(1)
+                    .Where(line => line.Length > 0))
             );
             Assert.True(
                 new FileInfo(

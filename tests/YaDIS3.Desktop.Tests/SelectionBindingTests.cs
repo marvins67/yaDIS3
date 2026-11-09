@@ -559,11 +559,11 @@ public sealed class SelectionBindingTests
                     .Text
             )
         );
-        Assert.Null(
-            window
-                .FindControl<ComboBox>("EpisodeChoice")!
-                .ItemsSource
-        );
+        // La navigation remplace l'ancien ComboBox EpisodeChoice.
+        Assert.False(model.CanNavigatePreviousEpisode);
+        Assert.False(model.CanNavigateNextEpisode);
+        Assert.False(model.EpisodeCanSave);
+        Assert.Null(model.SelectedEpisode);
         Assert.False(model.HasCard);
         Assert.False(model.HasEpisode);
     }
