@@ -55,14 +55,14 @@ public sealed partial class MainWindowViewModel
             );
         });
     /// <summary>Reprend l'identification TVDB après confirmation du dialogue.</summary>
-    public Task ChangeSeriesTitleAsync(long seriesId) =>
+    public Task ChangeSeriesTitleAsync(long seriesId, string? order = null) =>
         RunAsync(async () =>
         {
             MediaCard card = SelectedCard
                 ?? throw new InvalidOperationException(
                     Texts.GetString("347")
                 );
-            card.PrepareSeriesTitleChange(seriesId);
+            card.PrepareSeriesTitleChange(seriesId, order);
             foreach (string path in Directory.EnumerateFiles(
                 card.DataDirectory, "*.jpg"
             ))

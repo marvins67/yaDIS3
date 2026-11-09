@@ -165,57 +165,61 @@ public sealed partial class MainWindow : Window
         RoutedEventArgs eventArgs
     )
     {
-        if (Model.IsSeries)
+        if (Model.SelectedCard is null)
         {
-            string before = Model.SelectedCard?.TvdbId ?? "";
-            await ShowUtilityDialog(
-                "TvdbSearchTab",
-                Model.Texts.GetString("62")
-            );
-            if (Model.SelectedCard is { } series
-                && series.TvdbId != before
-                && long.TryParse(series.TvdbId, out long seriesId))
-            {
-                await Model.ChangeSeriesTitleAsync(seriesId);
-            }
             return;
         }
 
-        Window dialog = new()
+        if (Model.IsSeries)
         {
-            Title = Model.Texts.GetString("62"),
-            Width = 620,
-            Height = 470,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-        };
-        TextBox query = new()
+            await ChangeSeriesContextTitleAsync();
+        }
+        else
         {
-            Text = Model.SelectedCard?.Title ?? "",
-        };
-        Button search = new()
-        {
-            Content = Model.Texts.GetString("114"),
-        };
-        ListBox results = new()
-        {
-            Height = 290,
-        };
+            await ChangeMovieContextTitleAsync();
+        }
+    }
+
+    private async Task ChangeMovieContextTitleAsync()
+    {
+        Window dialog = CreateTitleDialog();
+        TextBox query = new() { Text = Model.SelectedCard?.Title ?? "" };
+        Button search = new() { Content = Model.Texts.GetString("114") };
+        ListBox results = new() { Height = 290 };
         Button apply = new()
         {
             Content = Model.Texts.GetString("115"),
+            IsEnabled = false,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        search.Click += async (_, _) =>
+        async Task FindAsync()
         {
+            apply.IsEnabled = false;
+            results.ItemsSource = null;
             try
             {
-                results.ItemsSource = await Model.SearchMovieTitlesAsync(
-                    query.Text ?? ""
-                );
+                results.ItemsSource = await Model.SearchMovieTitlesAsync(query.Text ?? "");
             }
             catch (Exception exception)
             {
                 Model.Status = exception.Message;
+            }
+        }
+        search.Click += async (_, _) => await FindAsync();
+        query.KeyDown += async (_, args) =>
+        {
+            if (args.Key == Avalonia.Input.Key.Enter)
+            {
+                await FindAsync();
+            }
+        };
+        results.SelectionChanged += (_, _) =>
+            apply.IsEnabled = results.SelectedItem is MovieTitleMatch;
+        results.DoubleTapped += (_, _) =>
+        {
+            if (results.SelectedItem is MovieTitleMatch match)
+            {
+                dialog.Close(match);
             }
         };
         apply.Click += (_, _) =>
@@ -231,6 +235,7 @@ public sealed partial class MainWindow : Window
             Spacing = 10,
             Children = { query, search, results, apply },
         };
+        dialog.Opened += async (_, _) => await FindAsync();
         MovieTitleMatch? selected =
             await dialog.ShowDialog<MovieTitleMatch?>(this);
         if (selected is not null)
@@ -238,6 +243,100 @@ public sealed partial class MainWindow : Window
             await Model.ChangeMovieTitleAsync(selected);
         }
     }
+
+    private async Task ChangeSeriesContextTitleAsync()
+    {
+        Window dialog = CreateTitleDialog();
+        TextBox query = new() { Text = Model.SelectedCard?.Title ?? "" };
+        Button search = new() { Content = Model.Texts.GetString("114") };
+        ListBox results = new() { Height = 250 };
+        ComboBox orders = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
+        Button apply = new()
+        {
+            Content = Model.Texts.GetString("115"),
+            IsEnabled = false,
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        async Task FindAsync()
+        {
+            apply.IsEnabled = false;
+            results.ItemsSource = null;
+            orders.ItemsSource = null;
+            Model.Query = query.Text ?? "";
+            try
+            {
+                await Model.SearchAsync();
+                results.ItemsSource = Model.SearchResults;
+            }
+            catch (Exception exception)
+            {
+                Model.Status = exception.Message;
+            }
+        }
+        search.Click += async (_, _) => await FindAsync();
+        query.KeyDown += async (_, args) =>
+        {
+            if (args.Key == Avalonia.Input.Key.Enter)
+            {
+                await FindAsync();
+            }
+        };
+        results.SelectionChanged += async (_, _) =>
+        {
+            apply.IsEnabled = false;
+            orders.ItemsSource = null;
+            if (results.SelectedItem is SeriesMatch match)
+            {
+                Model.SelectedMatch = match;
+                try
+                {
+                    await Model.LoadOrdersAsync();
+                    if (results.SelectedItem == match)
+                    {
+                        orders.ItemsSource = Model.Orders;
+                        orders.SelectedItem = Model.SelectedOrder;
+                        apply.IsEnabled = orders.SelectedItem is EpisodeOrder;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Model.Status = exception.Message;
+                }
+            }
+        };
+        orders.SelectionChanged += (_, _) =>
+            apply.IsEnabled = results.SelectedItem is SeriesMatch
+                && orders.SelectedItem is EpisodeOrder;
+        apply.Click += (_, _) =>
+        {
+            if (results.SelectedItem is SeriesMatch match
+                && orders.SelectedItem is EpisodeOrder order)
+            {
+                dialog.Close((match.Id, order.Code));
+            }
+        };
+        dialog.Content = new StackPanel
+        {
+            Margin = new Avalonia.Thickness(16),
+            Spacing = 10,
+            Children = { query, search, results, orders, apply },
+        };
+        dialog.Opened += async (_, _) => await FindAsync();
+        (long, string)? selected =
+            await dialog.ShowDialog<(long, string)?>(this);
+        if (selected is { } choice)
+        {
+            await Model.ChangeSeriesTitleAsync(choice.Item1, choice.Item2);
+        }
+    }
+
+    private Window CreateTitleDialog() => new()
+    {
+        Title = Model.Texts.GetString("62"),
+        Width = 620,
+        Height = 470,
+        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+    };
 
     private void BeginManualMovieEdit(
         object? sender,

@@ -75,7 +75,7 @@ public sealed partial class MediaCard
     }
 
     /// <summary>Réinitialise l'identification d'une série avant son nouveau traitement.</summary>
-    public void PrepareSeriesTitleChange(long seriesId)
+    public void PrepareSeriesTitleChange(long seriesId, string? order = null)
     {
         if (!IsSeries || seriesId <= 0)
         {
@@ -85,6 +85,10 @@ public sealed partial class MediaCard
         UpdateForTreatment(() =>
         {
             Info?.Remove();
+            if (order is not null)
+            {
+                Root.SetAttributeValue("tvdb_order", order);
+            }
             Root.Add(new XElement(
                 "info",
                 new XElement(
