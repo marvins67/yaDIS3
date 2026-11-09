@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -160,13 +161,22 @@ public sealed class SagaEditorWindow : Window
             }
         };
         DragDrop.SetAllowDrop(_members, true);
-        _members.PointerPressed += (_, args) =>
-        {
-            _dragIndex = MemberIndex(args.Source);
-            _pressed = args;
-            _pressPosition = args.GetPosition(_members);
-        };
-        _members.PointerMoved += async (_, args) =>
+        // Les éléments du ListBox gèrent eux-mêmes PointerPressed.
+        // Capturer aussi les événements déjà traités pour permettre le déplacement.
+        _members.AddHandler(
+            InputElement.PointerPressedEvent,
+            (_, args) =>
+            {
+                _dragIndex = MemberIndex(args.Source);
+                _pressed = _dragIndex >= 0 ? args : null;
+                _pressPosition = args.GetPosition(_members);
+            },
+            RoutingStrategies.Tunnel,
+            handledEventsToo: true
+        );
+        _members.AddHandler(
+            InputElement.PointerMovedEvent,
+            async (_, args) =>
         {
             if (_dragging || _pressed is null || _dragIndex < 0
                 || !args.GetCurrentPoint(_members)
@@ -198,19 +208,34 @@ public sealed class SagaEditorWindow : Window
             {
                 _dragging = false;
             }
-        };
-        _members.PointerReleased += (_, _) => _pressed = null;
+        },
+            RoutingStrategies.Bubble,
+            handledEventsToo: true
+        );
+        _members.AddHandler(
+            InputElement.PointerReleasedEvent,
+            (_, _) => _pressed = null,
+            RoutingStrategies.Bubble,
+            handledEventsToo: true
+        );
         DragDrop.AddDragOverHandler(_members, (_, args) =>
         {
-            args.DragEffects = args.DataTransfer.TryGetText() is null
-                ? DragDropEffects.None
-                : DragDropEffects.Move;
+            int destination = MemberIndexAt(args.GetPosition(_members));
+            bool valid = args.DataTransfer.TryGetText() is not null
+                && destination >= 0;
+            args.DragEffects = valid
+                ? DragDropEffects.Move
+                : DragDropEffects.None;
+            if (valid)
+            {
+                _members.SelectedIndex = destination;
+            }
         });
         DragDrop.AddDropHandler(_members, (_, args) =>
         {
             if (int.TryParse(args.DataTransfer.TryGetText(), out int source))
             {
-                int destination = MemberIndex(args.Source);
+                int destination = MemberIndexAt(args.GetPosition(_members));
                 if (destination >= 0)
                 {
                     _state.Move(source, destination);
@@ -254,6 +279,9 @@ public sealed class SagaEditorWindow : Window
             ? _state.Members.ToList().IndexOf(movie)
             : -1;
     }
+
+    private int MemberIndexAt(Point position) =>
+        MemberIndex(_members.InputHitTest(position));
 
     private void RefreshMembers()
     {
