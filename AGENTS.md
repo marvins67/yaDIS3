@@ -46,6 +46,5 @@ clarté à la concision ou à l'astuce.
 ## Méthode de travail
 - Petits changements, une intention par commit. Ne mélange pas refactor et nouvelle fonction.
 - Ne change pas le comportement quand on te demande un refactor.
-- Avant de conclure : `dotnet build`, `dotnet test` et `dotnet format --verify-no-changes`
-  doivent passer. Résume ce que tu as changé et signale tes hypothèses.
+- Résume ce que tu as changé et signale tes hypothèses.
 - Si une consigne est ambiguë, pose la question au lieu de deviner.
