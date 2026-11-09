@@ -1,3 +1,4 @@
+using Avalonia.Media.Imaging;
 using YaDIS3.Core;
 using YaDIS3.Rendering;
 
@@ -19,6 +20,41 @@ public sealed partial class MainWindowViewModel
             _importer
         );
         return metadata.SearchMovieTitlesAsync(title, OperationToken);
+    }
+
+    /// <summary>Recherche directement un film à partir d'un identifiant IMDb.</summary>
+    public Task<MovieTitleMatch?> FindMovieByImdbAsync(string imdbId)
+    {
+        OnlineTreatmentMetadata metadata = new(
+            _http,
+            _tvdb,
+            Environment.GetEnvironmentVariable("YADIS_TMDB_TOKEN"),
+            TemplateLanguage,
+            _importer
+        );
+        return metadata.FindMovieByImdbAsync(imdbId, OperationToken);
+    }
+
+    /// <summary>Charge la vignette d'un résultat sans modifier la fiche.</summary>
+    public async Task<Bitmap?> LoadTitlePosterAsync(string posterUrl)
+    {
+        if (string.IsNullOrWhiteSpace(posterUrl))
+        {
+            return null;
+        }
+        string url = posterUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            ? posterUrl
+            : "https://image.tmdb.org/t/p/w154" + posterUrl;
+        try
+        {
+            byte[] bytes = await _http.GetByteArrayAsync(url, OperationToken);
+            using MemoryStream data = new(bytes);
+            return new Bitmap(data);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
     }
 
     /// <summary>Retraite le film à partir d'un nouvel identifiant.</summary>

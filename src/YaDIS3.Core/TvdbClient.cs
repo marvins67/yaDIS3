@@ -196,7 +196,8 @@ public sealed partial class TvdbClient(
                     id,
                     name,
                     plot,
-                    ReadText(item, "year")
+                    ReadText(item, "year"),
+                    ReadText(item, "image_url")
                 )
             );
         }

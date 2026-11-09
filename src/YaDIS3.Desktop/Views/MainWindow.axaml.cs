@@ -184,58 +184,76 @@ public sealed partial class MainWindow : Window
     {
         Window dialog = CreateTitleDialog();
         TextBox query = new() { Text = Model.SelectedCard?.Title ?? "" };
-        Button search = new() { Content = Model.Texts.GetString("114") };
-        ListBox results = new() { Height = 290 };
-        Button apply = new()
-        {
-            Content = Model.Texts.GetString("115"),
-            IsEnabled = false,
-            HorizontalAlignment = HorizontalAlignment.Right,
-        };
+        ListBox results = CreateTitleResults();
+        Button apply = CreateTitleApplyButton();
+        Dictionary<ListBoxItem, MovieTitleMatch> candidates = [];
+
         async Task FindAsync()
         {
             apply.IsEnabled = false;
+            candidates.Clear();
             results.ItemsSource = null;
+            string searchText = query.Text?.Trim() ?? "";
+            if (searchText.Length == 0)
+            {
+                return;
+            }
             try
             {
-                results.ItemsSource = await Model.SearchMovieTitlesAsync(query.Text ?? "");
+                // Un identifiant IMDb applique directement la fiche, comme ChangeForm.
+                if (searchText.StartsWith("tt", StringComparison.OrdinalIgnoreCase))
+                {
+                    MovieTitleMatch? direct = await Model.FindMovieByImdbAsync(searchText);
+                    if (direct is not null)
+                    {
+                        dialog.Close(direct);
+                    }
+                    else
+                    {
+                        Model.Status = Model.Texts.GetString("142");
+                    }
+                    return;
+                }
+
+                IReadOnlyList<MovieTitleMatch> matches =
+                    await Model.SearchMovieTitlesAsync(searchText);
+                List<ListBoxItem> items = [];
+                foreach (MovieTitleMatch match in matches)
+                {
+                    ListBoxItem item = CreateTitleResultItem(
+                        match.Title,
+                        match.OriginalTitle,
+                        match.ReleaseDate,
+                        "",
+                        match.PosterPath
+                    );
+                    candidates.Add(item, match);
+                    items.Add(item);
+                }
+                results.ItemsSource = items;
             }
             catch (Exception exception)
             {
                 Model.Status = exception.Message;
             }
         }
-        search.Click += async (_, _) => await FindAsync();
-        query.KeyDown += async (_, args) =>
-        {
-            if (args.Key == Avalonia.Input.Key.Enter)
-            {
-                await FindAsync();
-            }
-        };
+
         results.SelectionChanged += (_, _) =>
-            apply.IsEnabled = results.SelectedItem is MovieTitleMatch;
-        results.DoubleTapped += (_, _) =>
+            apply.IsEnabled = results.SelectedItem is ListBoxItem item
+                && candidates.ContainsKey(item);
+        void Accept()
         {
-            if (results.SelectedItem is MovieTitleMatch match)
+            if (results.SelectedItem is ListBoxItem item
+                && candidates.TryGetValue(item, out MovieTitleMatch? match))
             {
                 dialog.Close(match);
             }
-        };
-        apply.Click += (_, _) =>
-        {
-            if (results.SelectedItem is MovieTitleMatch match)
-            {
-                dialog.Close(match);
-            }
-        };
-        dialog.Content = new StackPanel
-        {
-            Margin = new Avalonia.Thickness(16),
-            Spacing = 10,
-            Children = { query, search, results, apply },
-        };
+        }
+        results.DoubleTapped += (_, _) => Accept();
+        apply.Click += (_, _) => Accept();
+        dialog.Content = CreateTitleContent(dialog, results, query, apply, FindAsync);
         dialog.Opened += async (_, _) => await FindAsync();
+
         MovieTitleMatch? selected =
             await dialog.ShowDialog<MovieTitleMatch?>(this);
         if (selected is not null)
@@ -248,50 +266,54 @@ public sealed partial class MainWindow : Window
     {
         Window dialog = CreateTitleDialog();
         TextBox query = new() { Text = Model.SelectedCard?.Title ?? "" };
-        Button search = new() { Content = Model.Texts.GetString("114") };
-        ListBox results = new() { Height = 250 };
-        ComboBox orders = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
-        Button apply = new()
-        {
-            Content = Model.Texts.GetString("115"),
-            IsEnabled = false,
-            HorizontalAlignment = HorizontalAlignment.Right,
-        };
+        ListBox results = CreateTitleResults();
+        ComboBox orders = new() { MinWidth = 150 };
+        Button apply = CreateTitleApplyButton();
+        Dictionary<ListBoxItem, SeriesMatch> candidates = [];
+
         async Task FindAsync()
         {
             apply.IsEnabled = false;
+            candidates.Clear();
             results.ItemsSource = null;
             orders.ItemsSource = null;
             Model.Query = query.Text ?? "";
+            if (string.IsNullOrWhiteSpace(Model.Query))
+            {
+                return;
+            }
             try
             {
                 await Model.SearchAsync();
-                results.ItemsSource = Model.SearchResults;
+                List<ListBoxItem> items = [];
+                foreach (SeriesMatch match in Model.SearchResults)
+                {
+                    ListBoxItem item = CreateTitleResultItem(
+                        match.Name, "", match.Year, match.Overview, match.PosterUrl
+                    );
+                    candidates.Add(item, match);
+                    items.Add(item);
+                }
+                results.ItemsSource = items;
             }
             catch (Exception exception)
             {
                 Model.Status = exception.Message;
             }
         }
-        search.Click += async (_, _) => await FindAsync();
-        query.KeyDown += async (_, args) =>
-        {
-            if (args.Key == Avalonia.Input.Key.Enter)
-            {
-                await FindAsync();
-            }
-        };
+
         results.SelectionChanged += async (_, _) =>
         {
             apply.IsEnabled = false;
             orders.ItemsSource = null;
-            if (results.SelectedItem is SeriesMatch match)
+            if (results.SelectedItem is ListBoxItem item
+                && candidates.TryGetValue(item, out SeriesMatch? match))
             {
                 Model.SelectedMatch = match;
                 try
                 {
                     await Model.LoadOrdersAsync();
-                    if (ReferenceEquals(results.SelectedItem, match))
+                    if (ReferenceEquals(results.SelectedItem, item))
                     {
                         orders.ItemsSource = Model.Orders;
                         orders.SelectedItem = Model.SelectedOrder;
@@ -305,23 +327,23 @@ public sealed partial class MainWindow : Window
             }
         };
         orders.SelectionChanged += (_, _) =>
-            apply.IsEnabled = results.SelectedItem is SeriesMatch
+            apply.IsEnabled = results.SelectedItem is ListBoxItem
                 && orders.SelectedItem is EpisodeOrder;
-        apply.Click += (_, _) =>
+
+        void Accept()
         {
-            if (results.SelectedItem is SeriesMatch match
+            if (results.SelectedItem is ListBoxItem item
+                && candidates.TryGetValue(item, out SeriesMatch? match)
                 && orders.SelectedItem is EpisodeOrder order)
             {
                 dialog.Close((match.Id, order.Code));
             }
-        };
-        dialog.Content = new StackPanel
-        {
-            Margin = new Avalonia.Thickness(16),
-            Spacing = 10,
-            Children = { query, search, results, orders, apply },
-        };
+        }
+        results.DoubleTapped += (_, _) => Accept();
+        apply.Click += (_, _) => Accept();
+        dialog.Content = CreateTitleContent(dialog, results, query, apply, FindAsync, orders);
         dialog.Opened += async (_, _) => await FindAsync();
+
         (long, string)? selected =
             await dialog.ShowDialog<(long, string)?>(this);
         if (selected is { } choice)
@@ -333,10 +355,208 @@ public sealed partial class MainWindow : Window
     private Window CreateTitleDialog() => new()
     {
         Title = Model.Texts.GetString("62"),
-        Width = 620,
-        Height = 470,
+        Width = 714,
+        Height = 510,
+        MinWidth = 714,
+        MinHeight = 510,
         WindowStartupLocation = WindowStartupLocation.CenterOwner,
     };
+
+    private static ListBox CreateTitleResults() => new()
+    {
+        Background = Avalonia.Media.Brushes.White,
+        BorderBrush = Avalonia.Media.Brushes.DarkGray,
+        BorderThickness = new Avalonia.Thickness(1),
+        HorizontalAlignment = HorizontalAlignment.Stretch,
+        VerticalAlignment = VerticalAlignment.Stretch,
+    };
+
+    private Button CreateTitleApplyButton() => new()
+    {
+        Content = Model.Texts.GetString("115"),
+        IsEnabled = false,
+        MinWidth = 80,
+    };
+
+    private Grid CreateTitleContent(
+        Window dialog,
+        ListBox results,
+        TextBox query,
+        Button apply,
+        Func<Task> search,
+        ComboBox? orders = null
+    )
+    {
+        Grid layout = new()
+        {
+            Margin = new Avalonia.Thickness(12),
+            RowDefinitions = new RowDefinitions("*,Auto"),
+            RowSpacing = 12,
+        };
+        layout.Children.Add(results);
+
+        Grid footer = new()
+        {
+            ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+            RowDefinitions = new RowDefinitions("Auto,Auto"),
+            RowSpacing = 3,
+            ColumnSpacing = 8,
+        };
+        TextBlock label = new()
+        {
+            Text = Model.Texts.GetString("114") + " :",
+            FontSize = 12,
+        };
+        footer.Children.Add(label);
+        Grid searchRow = new()
+        {
+            ColumnDefinitions = new ColumnDefinitions("192,26,Auto"),
+            ColumnSpacing = 4,
+        };
+        searchRow.Children.Add(query);
+        Button searchButton = new()
+        {
+            Width = 26,
+            Height = 26,
+            Padding = new Avalonia.Thickness(2),
+            Content = new Image
+            {
+                Source = new Avalonia.Media.Imaging.Bitmap(
+                    Avalonia.Platform.AssetLoader.Open(
+                        new Uri("avares://yaDIS3.Desktop/Assets/Icons/search.png")
+                    )
+                ),
+                Width = 18,
+                Height = 18,
+            },
+        };
+        Grid.SetColumn(searchButton, 1);
+        searchRow.Children.Add(searchButton);
+        if (orders is not null)
+        {
+            Grid.SetColumn(orders, 2);
+            searchRow.Children.Add(orders);
+        }
+        Grid.SetRow(searchRow, 1);
+        footer.Children.Add(searchRow);
+
+        StackPanel actions = new()
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 6,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        actions.Children.Add(apply);
+        Button cancel = new()
+        {
+            Content = Model.Texts.GetString("11"),
+            MinWidth = 80,
+        };
+        cancel.Click += (_, _) => dialog.Close();
+        actions.Children.Add(cancel);
+        Grid.SetRow(actions, 1);
+        Grid.SetColumn(actions, 1);
+        footer.Children.Add(actions);
+        Grid.SetRow(footer, 1);
+        layout.Children.Add(footer);
+
+        searchButton.Click += async (_, _) => await search();
+        query.KeyDown += async (_, args) =>
+        {
+            if (args.Key == Avalonia.Input.Key.Enter)
+            {
+                args.Handled = true;
+                await search();
+            }
+        };
+        return layout;
+    }
+
+    private ListBoxItem CreateTitleResultItem(
+        string title,
+        string originalTitle,
+        string date,
+        string overview,
+        string posterUrl
+    )
+    {
+        Grid row = new()
+        {
+            ColumnDefinitions = new ColumnDefinitions("90,*"),
+            ColumnSpacing = 8,
+            Height = 120,
+        };
+        Image poster = new()
+        {
+            Width = 90,
+            Height = 120,
+            Stretch = Avalonia.Media.Stretch.Uniform,
+        };
+        row.Children.Add(poster);
+        StackPanel details = new()
+        {
+            Spacing = 3,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        details.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontSize = 15,
+            FontWeight = Avalonia.Media.FontWeight.Bold,
+            TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+        });
+        if (!string.IsNullOrWhiteSpace(originalTitle))
+        {
+            details.Children.Add(new TextBlock
+            {
+                Text = "(" + originalTitle + ")",
+                FontSize = 12,
+                FontStyle = Avalonia.Media.FontStyle.Italic,
+            });
+        }
+        if (date.Length >= 4)
+        {
+            details.Children.Add(new TextBlock
+            {
+                Text = date[..4],
+                FontSize = 12,
+                Foreground = Avalonia.Media.Brushes.Gray,
+            });
+        }
+        if (!string.IsNullOrWhiteSpace(overview))
+        {
+            details.Children.Add(new TextBlock
+            {
+                Text = overview,
+                FontSize = 12,
+                Foreground = Avalonia.Media.Brushes.Gray,
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                MaxHeight = 55,
+            });
+        }
+        Grid.SetColumn(details, 1);
+        row.Children.Add(details);
+        ListBoxItem item = new()
+        {
+            Content = row,
+            Padding = new Avalonia.Thickness(0),
+        };
+        _ = LoadPosterAsync(poster, posterUrl);
+        return item;
+    }
+
+    private async Task LoadPosterAsync(Image image, string posterUrl)
+    {
+        try
+        {
+            image.Source = await Model.LoadTitlePosterAsync(posterUrl);
+        }
+        catch (Exception exception)
+        {
+            Model.Status = exception.Message;
+        }
+    }
 
     private void BeginManualMovieEdit(
         object? sender,

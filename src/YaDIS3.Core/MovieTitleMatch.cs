@@ -4,7 +4,9 @@ namespace YaDIS3.Core;
 public sealed class MovieTitleMatch(
     long id,
     string title,
-    string releaseDate
+    string releaseDate,
+    string originalTitle = "",
+    string posterPath = ""
 )
 {
     /// <summary>Identifiant du film dans TMDB.</summary>
@@ -15,6 +17,12 @@ public sealed class MovieTitleMatch(
 
     /// <summary>Date de première sortie.</summary>
     public string ReleaseDate { get; } = releaseDate;
+
+    /// <summary>Titre original renvoyé par TMDB.</summary>
+    public string OriginalTitle { get; } = originalTitle;
+
+    /// <summary>Chemin de l'affiche renvoyée par TMDB.</summary>
+    public string PosterPath { get; } = posterPath;
 
     /// <inheritdoc />
     public override string ToString() =>

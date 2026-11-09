@@ -123,9 +123,36 @@ public sealed class OnlineTreatmentMetadata(
             .Select(item => new MovieTitleMatch(
                 item.GetProperty("id").GetInt64(),
                 Value(item, "title"),
-                Value(item, "release_date")
+                Value(item, "release_date"),
+                Value(item, "original_title"),
+                Value(item, "poster_path")
             ))
             .ToArray();
+    }
+
+    /// <summary>Identifie directement un film par son identifiant IMDb.</summary>
+    public async Task<MovieTitleMatch?> FindMovieByImdbAsync(
+        string imdbId,
+        CancellationToken cancellationToken
+    )
+    {
+        using JsonDocument matches = await GetMovieJsonAsync(
+            $"find/{Uri.EscapeDataString(imdbId)}?external_source=imdb_id",
+            cancellationToken
+        );
+        JsonElement results = matches.RootElement.GetProperty("movie_results");
+        if (results.GetArrayLength() == 0)
+        {
+            return null;
+        }
+        JsonElement item = results[0];
+        return new MovieTitleMatch(
+            item.GetProperty("id").GetInt64(),
+            Value(item, "title"),
+            Value(item, "release_date"),
+            Value(item, "original_title"),
+            Value(item, "poster_path")
+        );
     }
 
     private async Task<string?> FindMovieIdAsync(

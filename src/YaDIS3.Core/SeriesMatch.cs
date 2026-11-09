@@ -7,7 +7,8 @@ public sealed record SeriesMatch(
     long Id,
     string Name,
     string Overview,
-    string Year
+    string Year,
+    string PosterUrl = ""
 )
 {
     /// <summary>
