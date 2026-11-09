@@ -513,13 +513,13 @@ public sealed partial class MainWindowViewModel
             RunAsync(ApplySeriesAsync)
         );
         SaveEpisodeCommand = new UiCommand(() =>
-            RunAsync(SaveEpisodeAsync)
+            RunAsync(SaveEpisodeAsync, refreshFilter: false)
         );
         PreviousEpisodeCommand = new UiCommand(() =>
-            RunAsync(() => NavigateAndSaveAsync(-1))
+            RunAsync(() => NavigateAndSaveAsync(-1), refreshFilter: false)
         );
         NextEpisodeCommand = new UiCommand(() =>
-            RunAsync(() => NavigateAndSaveAsync(1))
+            RunAsync(() => NavigateAndSaveAsync(1), refreshFilter: false)
         );
     }
 
