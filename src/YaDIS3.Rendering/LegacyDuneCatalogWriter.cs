@@ -208,16 +208,16 @@ internal sealed partial class LegacyDuneCatalogWriter(
                 continue;
             }
 
-            string directory = Output(root, $"00/{index:00}");
+            string categoryDirectory = Output(root, $"00/{index:00}");
             if (index == 0 || Enabled(index))
             {
-                fileSystem.CreateDirectory(directory);
+                fileSystem.CreateDirectory(categoryDirectory);
                 continue;
             }
 
             // yaDIS2 renomme les catégories désactivées pour que
             // SyncInterface ne les publie pas dans la destination.
-            if (!fileSystem.DirectoryExists(directory))
+            if (!fileSystem.DirectoryExists(categoryDirectory))
             {
                 continue;
             }
@@ -228,7 +228,7 @@ internal sealed partial class LegacyDuneCatalogWriter(
                 fileSystem.DeleteDirectory(hidden);
             }
 
-            fileSystem.MoveDirectory(directory, hidden);
+            fileSystem.MoveDirectory(categoryDirectory, hidden);
         }
     }
 
