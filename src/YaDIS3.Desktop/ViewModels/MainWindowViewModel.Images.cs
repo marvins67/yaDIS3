@@ -30,9 +30,6 @@ public sealed partial class MainWindowViewModel
         Status = Texts.GetString("331");
     }
 
-    /// <summary>
-    /// Enregistre l'épisode avant de passer à l'épisode voisin.
-    /// </summary>
     /// <summary>Enregistre les modifications de l'épisode actif.</summary>
     public async Task SaveEpisodeAsync()
     {
@@ -48,6 +45,9 @@ public sealed partial class MainWindowViewModel
         Status = "Enregistré — Traiter pour actualiser l'affichage";
     }
 
+    /// <summary>
+    /// Enregistre l'épisode avant de passer à l'épisode voisin.
+    /// </summary>
     public async Task NavigateAndSaveAsync(int direction)
     {
         if (SelectedCard is null || SelectedEpisode is null)

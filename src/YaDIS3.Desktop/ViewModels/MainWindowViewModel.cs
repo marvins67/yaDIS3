@@ -110,13 +110,13 @@ public sealed partial class MainWindowViewModel
     /// </summary>
     public ICommand ApplySeriesCommand { get; }
 
+    /// <summary>Enregistrement de l'épisode sélectionné.</summary>
+    public ICommand SaveEpisodeCommand { get; }
+
     /// <summary>
     /// Commande d'enregistrement et de passage à l'épisode
     /// précédent.
     /// </summary>
-    /// <summary>Enregistrement de l'épisode sélectionné.</summary>
-    public ICommand SaveEpisodeCommand { get; }
-
     public ICommand PreviousEpisodeCommand { get; }
 
     /// <summary>
@@ -168,9 +168,6 @@ public sealed partial class MainWindowViewModel
     /// </summary>
     public string MigrationNote => Texts.GetString("337");
 
-    /// <summary>
-    /// Position de l'épisode sélectionné dans la série.
-    /// </summary>
     /// <summary>Navigation vers l'épisode précédent possible.</summary>
     public bool CanNavigatePreviousEpisode =>
         SelectedCard is not null && SelectedEpisode is not null
@@ -186,6 +183,9 @@ public sealed partial class MainWindowViewModel
     public bool EpisodeCanSave =>
         SelectedEpisode is not null && SelectedCard?.IsDirty == true;
 
+    /// <summary>
+    /// Position de l'épisode sélectionné dans la série.
+    /// </summary>
     public string EpisodePosition =>
         SelectedCard is null || SelectedEpisode is null
             ? Texts.GetString("338")
