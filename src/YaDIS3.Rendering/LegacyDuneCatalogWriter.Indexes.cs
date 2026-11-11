@@ -282,6 +282,7 @@ internal sealed partial class LegacyDuneCatalogWriter
             ),
             true
         );
+        renderer.CopyMenuBackground(directory, "background2");
         renderer.RenderMenu(
             directory,
             "menu",

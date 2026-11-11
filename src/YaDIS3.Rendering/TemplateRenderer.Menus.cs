@@ -15,12 +15,42 @@ public sealed partial class TemplateRenderer
         XElement? panel = null
     )
     {
-        using SKBitmap image = CreateBitmap(
-            CanvasWidth,
-            CanvasHeight,
-            true
+        XElement? snapshot = panel is null ? null : new(panel);
+        Directory.CreateDirectory(directory);
+        RenderMenuBackground(
+            Path.Combine(directory, "background"),
+            canvas => DrawMenuBackground(canvas, kind, snapshot)
         );
-        using var canvas = new SKCanvas(image);
+    }
+
+    private readonly Dictionary<string, Action<SKCanvas>> _menuBackgrounds = new(
+        StringComparer.Ordinal
+    );
+
+    private void RenderMenuBackground(string path, Action<SKCanvas> draw)
+    {
+        using SKBitmap image = CreateBitmap(CanvasWidth, CanvasHeight, true);
+        using (SKCanvas canvas = new(image))
+        {
+            draw(canvas);
+        }
+        SaveBackground(image, path);
+        // Conserver la recette, pas un JPEG décodé : chaque composition repart
+        // des sources sans pertes, comme le bitmap de ProcessForm.
+        _menuBackgrounds[path] = draw;
+    }
+
+    internal void CopyMenuBackground(string directory, string destinationName)
+    {
+        if (_menuBackgrounds.TryGetValue(
+            Path.Combine(directory, "background"), out Action<SKCanvas>? draw))
+        {
+            _menuBackgrounds[Path.Combine(directory, destinationName)] = draw;
+        }
+    }
+
+    private void DrawMenuBackground(SKCanvas canvas, string kind, XElement? panel)
+    {
         string background = _template
             .Root.Element(kind)
             .Attr(
@@ -56,6 +86,8 @@ public sealed partial class TemplateRenderer
             }
         }
 
+        DrawMenuTexts(canvas, scene);
+
         XElement? area =
             panel
             ?? (
@@ -75,11 +107,24 @@ public sealed partial class TemplateRenderer
             );
         }
 
-        Directory.CreateDirectory(directory);
-        SaveBackground(
-            image,
-            Path.Combine(directory, "background")
-        );
+
+    }
+
+    private void DrawMenuTexts(SKCanvas canvas, XElement? scene)
+    {
+        if (scene is null)
+        {
+            return;
+        }
+        foreach (XElement text in scene.Elements("text"))
+        {
+            if (ReadElementKind(text) == "static"
+                && string.Equals(text.Attr("language"), _options.Language,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                DrawText(canvas, text, text.Value);
+            }
+        }
     }
 
     /// <summary>

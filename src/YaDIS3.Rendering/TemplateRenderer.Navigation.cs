@@ -225,6 +225,19 @@ public sealed partial class TemplateRenderer
         string backgroundName = "background"
     )
     {
+        string key = Path.Combine(directory, backgroundName);
+        if (_menuBackgrounds.TryGetValue(key, out Action<SKCanvas>? previous))
+        {
+            SKRect rectangle = ReadRectangle(area);
+            RenderMenuBackground(key, canvas =>
+            {
+                previous(canvas);
+                using SKBitmap icon = AaiCodec.Load(iconPath);
+                DrawImage(canvas, icon, rectangle);
+            });
+            return;
+        }
+
         string path = Path.Combine(
             directory,
             backgroundName + BackgroundExtension
