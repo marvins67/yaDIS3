@@ -63,10 +63,12 @@ public sealed partial class TemplateRenderer
             text.Float("size", 24) * 96 / 72
         );
         using SKPaint paint = new();
-        string value =
-            text.Attr("case") == "upper"
-                ? caption.ToUpperInvariant()
-                : caption;
+        string value = text.Attr("case") switch
+        {
+            "upper" => caption.ToUpperInvariant(),
+            "lower" => caption.ToLowerInvariant(),
+            _ => caption,
+        };
         int width = (int)
             Math.Round(
                 LegacyTextWidth(value, font, paint)
