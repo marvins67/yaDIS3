@@ -42,6 +42,13 @@ public sealed class LegacyPersonIndexTests
     [InlineData("Burt  Lancaster", "L/Burt  Lancaster")]
     [InlineData(" Walter Goggins", "G/ Walter Goggins")]
     [InlineData("Björk", "B/Björk")]
+    [InlineData("Shigesato Itoi", "I/Shigesato Itoi")]
+    [InlineData("Hitoshi Takagi", "T/Hitoshi Takagi")]
+    [InlineData("糸井重里", "糸/糸井重里")]
+    [InlineData("高木均", "高/高木均")]
+    [InlineData("Eric Summer", "S/Eric Summer")]
+    [InlineData("Éric Summer", "S/Éric Summer")]
+    [InlineData("E\u0301ric Summer", "S/E\u0301ric Summer")]
     public void Create_ValidPersonName_PreservesLegacySpelling(
         string name,
         string expected
