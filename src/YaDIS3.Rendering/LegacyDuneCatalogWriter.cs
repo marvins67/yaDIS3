@@ -329,9 +329,12 @@ internal sealed partial class LegacyDuneCatalogWriter(
                 : "00/98/" + saga.Element("name")!.Value;
             if (saga is not null && !included.Add(target))
             {
-                // Le compteur de ProcessForm avance aussi pour les membres
-                // suivants d'une saga déjà représentée dans la sélection.
-                index++;
+                // ProcessForm consomme les doublons dans les sélections,
+                // mais les ignore avant d'avancer le compteur des récents.
+                if (relative != "00/02")
+                {
+                    index++;
+                }
                 continue;
             }
 

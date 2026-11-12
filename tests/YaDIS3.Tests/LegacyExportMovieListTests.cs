@@ -164,6 +164,83 @@ public sealed class LegacyExportMovieListTests
         Assert.DoesNotContain(lines, line => line.StartsWith("item.1.", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void Export_RecentSagaRepeated_UsesContiguousIndicesAcrossExports()
+    {
+        using ExportFixture fixture = new();
+        MediaContext[] movies =
+        [
+            Movie(fixture, "Premier.mkv", "Z premier"),
+            Movie(fixture, "Suite.mkv", "A suite"),
+            Movie(fixture, "Autre.mkv", "Après la saga"),
+        ];
+        foreach (MediaContext movie in movies)
+        {
+            movie.Header.SetElementValue("date", "2026-11-02");
+        }
+        WriteSaga(fixture, "Saga", "Saga de tri", "Suite.mkv", "Premier.mkv");
+        Directory.CreateDirectory(fixture.Destination);
+        DuneExporter exporter = new(
+            ExportFixture.Template(),
+            new RenderOptions(),
+            [],
+            catalogOptions: new LegacyCatalogOptions
+            {
+                Categories = "10000000000",
+                SortRecentByDate = true,
+            },
+            timeProvider: new FixedTimeProvider()
+        );
+
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            exporter.ExportLegacy(movies, fixture.Destination);
+            string[] lines = File.ReadAllLines(Path.Combine(
+                fixture.Destination, "00", "02", "dune_folder.txt"));
+            Assert.Equal(
+                ["item.0.caption=000_Saga de tri", "item.1.caption=000_Après la saga"],
+                Captions(lines)
+            );
+            Assert.Contains("item.1.media_url=../99/Autre.mkv", lines);
+        }
+    }
+
+    [Fact]
+    public void Export_ReducedArchiveRecent_ReproducesEntireReferenceFile()
+    {
+        using ExportFixture fixture = new();
+        string reference = Path.Combine(
+            AppContext.BaseDirectory, "Fixtures", "ReducedExport");
+        MediaContext[] movies = File.ReadAllLines(Path.Combine(reference, "movies.tsv"))
+            .Select(line => line.Split('\t'))
+            .Select(fields => Movie(fixture, fields[0], fields[1]))
+            .ToArray();
+        foreach (MediaContext movie in movies)
+        {
+            movie.Header.SetElementValue("date", "2026-11-02");
+        }
+        File.Copy(Path.Combine(reference, "groups.xml"), Path.Combine(fixture.Root, "groups.xml"));
+        Directory.CreateDirectory(fixture.Destination);
+        DuneExporter exporter = new(
+            ExportFixture.Template("GLASS Revisited"),
+            new RenderOptions(),
+            [],
+            catalogOptions: new LegacyCatalogOptions
+            {
+                Categories = "10000000000",
+                SortRecentByDate = true,
+            },
+            timeProvider: new FixedTimeProvider()
+        );
+
+        exporter.ExportLegacy(movies, fixture.Destination);
+
+        Assert.Equal(
+            File.ReadAllBytes(Path.Combine(reference, "recent-reference.txt")),
+            File.ReadAllBytes(Path.Combine(fixture.Destination, "00", "02", "dune_folder.txt"))
+        );
+    }
+
     private static MediaContext Movie(
         ExportFixture fixture,
         string filename,
