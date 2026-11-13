@@ -307,16 +307,18 @@ internal sealed partial class LegacyDuneCatalogWriter(
         bool collapseSagas
     )
     {
-        DuneFile file = relative.StartsWith(
+        const string LegacyBackground = "../00/background.aai";
+        bool alphabetListing = relative.StartsWith(
             "00/03/",
             StringComparison.Ordinal
-        )
+        );
+        // ProcessForm recherche les doublons avant la conversion du fond par CreateDF.
+        DuneFile file = alphabetListing
             ? Document(
                 Definition(_definitions.IndexListing("../.."))
             )
-            : MovieListing(background);
+            : MovieListing(LegacyBackground);
         string directory = Output(root, relative);
-        HashSet<string> included = new(StringComparer.Ordinal);
         int index = 0;
         foreach (MediaContext movie in movies)
         {
@@ -327,7 +329,10 @@ internal sealed partial class LegacyDuneCatalogWriter(
             string target = saga is null
                 ? LegacyExportPaths.Media(name, false)
                 : "00/98/" + saga.Element("name")!.Value;
-            if (saga is not null && !included.Add(target))
+            if (
+                saga is not null
+                && file.ContainsDefinitionSuffix(saga.Element("name")!.Value)
+            )
             {
                 // ProcessForm consomme les doublons dans les sélections,
                 // mais les ignore avant d'avancer le compteur des récents.
@@ -366,6 +371,10 @@ internal sealed partial class LegacyDuneCatalogWriter(
             );
         }
 
+        if (!alphabetListing)
+        {
+            file.Set("background_path", background);
+        }
         file.Save(directory);
     }
 
