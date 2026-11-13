@@ -380,3 +380,11 @@ personnes. Les assertions des tests antérieurs n’ont pas été neutralisées.
 
 Le présent rapport et les comparaisons brutes sont publiés dans un commit
 documentaire distinct, identifié dans la livraison, sur `feature/redesign`.
+
+## Poursuite du 13 novembre 2026
+
+Deux règles supplémentaires de recherche de doublons ont été corrigées et
+validées dans le [rapport de poursuite](EXPORT-PARITY-FOLLOWUP-20261113.md).
+Les inventaires et conclusions ci-dessus restent ceux des archives du
+12 novembre ; les écarts liés aux sources absentes ne sont pas requalifiés
+comme résolus.
