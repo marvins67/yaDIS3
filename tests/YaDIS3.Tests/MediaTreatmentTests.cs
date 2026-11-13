@@ -239,11 +239,7 @@ public sealed class MediaTreatmentTests
         Assert.True(
             await TreatAsync(fixture, repository, card, inputs)
         );
-        string cache = Path.Combine(
-            fixture.Root,
-            "interface-yaDIS3",
-            new MediaContext(card).Id
-        );
+        string cache = LegacyExportPaths.WorkspaceMedia(fixture.Root, card.FolderName, card.IsSeries);
         string icon = Path.Combine(
             cache,
             "01",
@@ -330,7 +326,7 @@ public sealed class MediaTreatmentTests
         string legacy = Path.Combine(fixture.Root, "interface", "01", card.FolderName, "01", "01_001_000");
         Directory.CreateDirectory(legacy);
         File.WriteAllText(Path.Combine(legacy, "marker.txt"), "ancien rendu");
-        string cache = Path.Combine(fixture.Root, "interface-yaDIS3", new MediaContext(card).Id, "01", "01_001_000");
+        string cache = Path.Combine(LegacyExportPaths.WorkspaceMedia(fixture.Root, card.FolderName, card.IsSeries), "01", "01_001_000");
         Assert.True(Directory.Exists(cache));
         File.Delete(Path.Combine(fixture.Root, "videos", card.FolderName, "S01E01.mkv"));
         Assert.Equal(keepSecond, await TreatAsync(fixture, repository, card, inputs));
@@ -460,7 +456,7 @@ public sealed class MediaTreatmentTests
 
         File.WriteAllBytes(original, []);
         Assert.True(await TreatAsync(fixture, repository, card, inputs));
-        string cache = Path.Combine(fixture.Root, "interface-yaDIS3", new MediaContext(card).Id, "01");
+        string cache = Path.Combine(LegacyExportPaths.WorkspaceMedia(fixture.Root, card.FolderName, card.IsSeries), "01");
         string preview = Path.Combine(card.DataDirectory, "preview.jpg");
         string second = Path.Combine(cache, "01_002_000", "preview.jpg");
         Assert.Equal(File.ReadAllBytes(second), File.ReadAllBytes(preview));
@@ -486,8 +482,7 @@ public sealed class MediaTreatmentTests
         using MediaCard card = PrepareCard(fixture, repository, series: true);
         TreatmentInputs inputs = new() { SeriesNotFound = true };
         Assert.True(await TreatAsync(fixture, repository, card, inputs));
-        string icon = Path.Combine(fixture.Root, "interface-yaDIS3",
-            new MediaContext(card).Id, "01", "01_001_000", "icon.aai");
+        string icon = Path.Combine(LegacyExportPaths.WorkspaceMedia(fixture.Root, card.FolderName, card.IsSeries), "01", "01_001_000", "icon.aai");
         byte[] original = File.ReadAllBytes(icon);
         Episode episode = Assert.Single(card.Episodes);
         if (artwork)
@@ -519,8 +514,7 @@ public sealed class MediaTreatmentTests
         using MediaCard card = PrepareCard(fixture, repository, series);
         TreatmentInputs inputs = new() { SeriesNotFound = true };
         Assert.True(await TreatAsync(fixture, repository, card, inputs));
-        string cache = Path.Combine(fixture.Root, "interface-yaDIS3",
-            new MediaContext(card).Id);
+        string cache = LegacyExportPaths.WorkspaceMedia(fixture.Root, card.FolderName, card.IsSeries);
         string preview = Path.Combine(card.DataDirectory, "preview.jpg");
         string background = Path.Combine(cache, "background.jpg");
         byte[] oldPreview = File.ReadAllBytes(preview);
@@ -553,8 +547,7 @@ public sealed class MediaTreatmentTests
         using MediaCard card = PrepareCard(fixture, repository, series: true);
         TreatmentInputs inputs = new() { SeriesNotFound = true };
         Assert.True(await TreatAsync(fixture, repository, card, inputs));
-        string cache = Path.Combine(fixture.Root, "interface-yaDIS3",
-            new MediaContext(card).Id, "01");
+        string cache = Path.Combine(LegacyExportPaths.WorkspaceMedia(fixture.Root, card.FolderName, card.IsSeries), "01");
         string icon = Path.Combine(cache, "01_001_000", "icon.aai");
         string preview = Path.Combine(card.DataDirectory, "preview.jpg");
         byte[] previous = File.ReadAllBytes(preview);

@@ -420,29 +420,29 @@ public sealed partial class DuneExporter(
         CancellationToken cancellationToken = default
     )
     {
-        string parent = Path.Combine(
-            workspace,
-            "interface-yaDIS3"
-        );
+        string target = LegacyExportPaths.WorkspaceMedia(
+            workspace, media.Header.ValueAt("filename"), media.IsSeries);
+        string parent = Path.GetDirectoryName(target)!;
+        ValidateTreatmentPath(workspace, target);
         Directory.CreateDirectory(parent);
-        string target = Path.Combine(parent, media.Id);
         string stage = useFirstEpisodePreview
             ? target
-            : Path.Combine(parent, ".stage-" + Guid.NewGuid().ToString("N"));
+            : Path.Combine(parent, "_stage-" + Guid.NewGuid().ToString("N"));
 
         using var processingLock = new FileStream(
-            Path.Combine(parent, media.Id + ".lock"),
+            Path.Combine(media.DataDirectory, ".render.lock"),
             FileMode.OpenOrCreate,
             FileAccess.ReadWrite,
             FileShare.None
         );
-        if (Directory.Exists(target) && !RenderCacheOwned(target))
+        if (Directory.Exists(target) && !TreatmentDirectoryOwned(target))
         {
             throw new IOException(
                 "Le dossier de cache existe mais n'est pas un rendu reconnu de cette application."
             );
         }
 
+        CheckRenderLinks(target);
         string dataPreview = media.Artwork("preview.jpg");
         try
         {
@@ -476,24 +476,13 @@ public sealed partial class DuneExporter(
             }
             WriteRenderManifest(stage, media, template, options);
             cancellationToken.ThrowIfCancellationRequested();
-            string preview = dataPreview;
-            if (!useFirstEpisodePreview)
-            {
-                CommitRenderStage(stage, target);
-                preview = CopyRenderedPreview(target, media);
-            }
             if (options.BasicMode)
             {
                 new LegacyBasicDuneWriter(
                     template,
                     options
-                ).Write(media, target, cancellationToken);
+                ).Write(media, stage, cancellationToken);
             }
-            new LegacyMovieIndexStore(template, options).Update(
-                media,
-                workspace,
-                cancellationToken
-            );
             if (!options.BasicMode)
             {
                 var legacyExporter = new DuneExporter(
@@ -507,9 +496,19 @@ public sealed partial class DuneExporter(
                     warnings
                 );
                 // Publier la définition avec le rendu, jamais avant ses images.
-                legacyExporter.WriteMedia(plan, target);
-                LegacyProcessedMediaPublisher.Publish(media, workspace, target);
+                legacyExporter.WriteMedia(plan, stage);
             }
+            string preview = dataPreview;
+            if (!useFirstEpisodePreview)
+            {
+                CommitRenderStage(stage, target);
+                preview = CopyRenderedPreview(target, media);
+            }
+            new LegacyMovieIndexStore(template, options).Update(
+                media,
+                workspace,
+                cancellationToken
+            );
 
             string? selected =
                 episodeKey is not null
@@ -773,16 +772,42 @@ public sealed partial class DuneExporter(
         }
     }
 
+    private static void ValidateTreatmentPath(string workspace, string target)
+    {
+        string path = workspace;
+        foreach (string part in Path.GetRelativePath(workspace, target).Split(Path.DirectorySeparatorChar))
+        {
+            path = Path.Combine(path, part);
+            if (Directory.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+            {
+                throw new IOException($"Le dossier de traitement est un lien : {path}");
+            }
+        }
+    }
+
+    private static bool TreatmentDirectoryOwned(string path)
+    {
+        if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+        {
+            return false;
+        }
+        string definition = Path.Combine(path, "dune_folder.txt");
+        return RenderCacheOwned(path)
+            || File.Exists(definition)
+                && File.ReadAllText(definition, System.Text.Encoding.UTF8)
+                    .StartsWith(LegacyDuneEncoding.Header, StringComparison.Ordinal);
+    }
+
     private static void CommitRenderStage(
         string stage,
         string target
     )
     {
-        string backup = target + ".previous";
+        string backup = Path.Combine(Path.GetDirectoryName(target)!, "_" + Path.GetFileName(target) + ".previous");
 
         if (Directory.Exists(target))
         {
-            if (!RenderCacheOwned(target))
+            if (!TreatmentDirectoryOwned(target))
             {
                 throw new IOException(
                     "Le cache a changé pendant le rendu."
@@ -819,6 +844,10 @@ public sealed partial class DuneExporter(
             }
 
             throw;
+        }
+        if (Directory.Exists(backup) && TreatmentDirectoryOwned(backup))
+        {
+            Directory.Delete(backup, true);
         }
     }
 

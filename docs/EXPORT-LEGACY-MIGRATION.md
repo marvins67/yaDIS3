@@ -8,9 +8,21 @@ Branche : `feature/redesign`. Référence : `marvins67/yaDIS`, `master`.
 
 ## Workspace et images (étapes 3 et 4)
 
-Le traitement via `DuneExporter.Process` publie maintenant les images traitées dans `workspace/interface/00/99/<nom>` ou `workspace/interface/01/<nom>` par `LegacyProcessedMediaPublisher`. Les `preview.jpg` et `render.json` ne sont pas inclus dans cette publication.
+Le traitement via `DuneExporter.Process` écrit directement les images et définitions
+Dune dans `workspace/interface/00/99/<nom>` ou `workspace/interface/01/<nom>`.
+Ce dossier est l'unique stockage actif : il n'existe plus de copie intermédiaire
+ni de mécanisme de restauration depuis un second cache de rendu.
 
-Les définitions Dune des médias sont générées lors du traitement. Pour les anciens workspaces yaDIS3 n'ayant pas encore de dossier d'interface, `DuneExporter.ExportLegacy` peut importer les images existantes du cache `interface-yaDIS3` lorsque le dossier cible manque et régénérer les définitions manquantes. Cette compatibilité de migration n'est **pas** une routine historique de yaDIS2.
+Les aperçus d'épisodes et le manifeste technique restent dans cette arborescence
+pour le retraitement et l'interface utilisateur, mais `preview.jpg` et `render.json`
+sont exclus de la synchronisation vers le lecteur. Le traitement complet utilise
+un dossier temporaire masqué, remplacé atomiquement ; sa sauvegarde transitoire
+est supprimée après succès. Les dossiers yaDIS2 possédant une définition reconnue
+peuvent être retraités sans manifeste yaDIS3 préalable.
+
+Un ancien dossier `interface-yaDIS3` déjà présent n'est ni lu ni effacé : aucun
+rendu existant n'est supprimé automatiquement lors de la mise à jour. Il peut être
+retiré après vérification des rendus disponibles dans `interface`.
 
 `ExportCommand` utilise `ExportLegacy` plutôt que `Export`. L'ancienne méthode `Export` reste temporairement dans le code pour les tests de caractérisation de l'ancienne implémentation.
 
@@ -56,3 +68,22 @@ Tests nouveaux :
 ## Limites du constat
 
 Ce document décrit le nouveau flux et les écarts connus, **pas une certification d'identité stricte**. Sans les sorties réelles des deux versions et sans les essais Windows de fin de migration, il reste possible de découvrir des écarts de rendu, de playlists, de fichiers conservés ou de navigation Dune.
+
+## Vérification du stockage unique
+
+Les tests de traitement utilisent désormais directement les chemins historiques,
+y compris pour les aperçus d'épisodes et la suppression des épisodes disparus.
+Les tests dédiés vérifient deux traitements successifs de films et séries,
+l'absence de second dossier de rendu et de sauvegarde transitoire persistante,
+le retraitement d'une fiche yaDIS2 sans manifeste, le nettoyage lorsque le nom XML
+diffère du dossier de données, et l'exclusion des fichiers internes de l'export.
+
+L'ancienne attente de restauration automatique depuis une seconde copie est
+remplacée par deux vérifications explicites : une fiche complète est exportée
+sans reconstruction ; une fiche dont le rendu a été supprimé provoque un
+avertissement et peut être recréée par un nouveau traitement, en AAI comme en JPEG.
+
+Validation du 13 novembre 2026 : compilation Release sans avertissement,
+614 tests réussis (483 métier et 131 Desktop), et vérification du formatage
+sans modification requise. Aucune référence à l'ancien dossier ne subsiste
+dans le code applicatif.

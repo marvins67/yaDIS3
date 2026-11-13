@@ -46,11 +46,11 @@ public sealed partial class DuneExporter
             .Select(card => Plan(card, warnings))
             .ToArray();
         // L'export ne traite pas les médias : seules les fiches publiées
-        // par Traiter (ou un cache complet) peuvent fournir leurs images.
+        // par Traiter peuvent fournir leurs images.
         foreach (MediaPlaybackPlan plan in plans)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            RestoreProcessedMedia(plan.Media, workspace, source, warnings);
+            RestoreProcessedMedia(plan.Media, source, warnings);
         }
 
         PrepareLegacyMenus(source);
@@ -81,7 +81,6 @@ public sealed partial class DuneExporter
 
     private static void RestoreProcessedMedia(
         MediaContext media,
-        string workspace,
         string source,
         List<string> warnings
     )
@@ -90,18 +89,12 @@ public sealed partial class DuneExporter
             source,
             Relative(media).Replace('/', Path.DirectorySeparatorChar)
         );
-        string cache = Path.Combine(workspace, "interface-yaDIS3", media.Id);
         if (media.IsSeries)
         {
             return;
         }
         if (CompleteMovie(output))
         {
-            return;
-        }
-        if (CompleteMovie(cache))
-        {
-            LegacyProcessedMediaPublisher.Publish(media, workspace, cache);
             return;
         }
         QuarantineEmptyMovie(output);

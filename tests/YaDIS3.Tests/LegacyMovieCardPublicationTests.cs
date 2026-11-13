@@ -43,7 +43,7 @@ public sealed class LegacyMovieCardPublicationTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Process_FilmTraite_PublieEtRestaureUneFicheComplete(bool aai)
+    public void Process_FilmTraite_PublieEtExporteUneFicheComplete(bool aai)
     {
         using ExportFixture fixture = new();
         MediaContext movie = fixture.Cards().Single(card => !card.IsSeries);
@@ -51,7 +51,6 @@ public sealed class LegacyMovieCardPublicationTests
             new RenderOptions(AaiBackgrounds: aai), fixture.Root);
         string source = MovieDirectory(Path.Combine(fixture.Root, "interface"));
         AssertComplete(source, aai);
-        Directory.Delete(source, true);
         Directory.CreateDirectory(fixture.Destination);
         var exporter = ExportFixture.Exporter();
 
@@ -61,6 +60,30 @@ public sealed class LegacyMovieCardPublicationTests
         exporter.ExportLegacy(fixture.Cards(), fixture.Destination);
         Assert.Equal(icon, File.ReadAllBytes(Path.Combine(
             MovieDirectory(fixture.Destination), "icon.aai")));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ExportLegacy_RenduSupprime_DemandeUnRetraitementExplicite(bool aai)
+    {
+        using ExportFixture fixture = new();
+        MediaContext movie = fixture.Cards().Single(card => !card.IsSeries);
+        RenderOptions options = new(AaiBackgrounds: aai);
+        DuneExporter.Process(movie, ExportFixture.Template(), options, fixture.Root);
+        string source = MovieDirectory(Path.Combine(fixture.Root, "interface"));
+        Directory.Delete(source, true);
+        Directory.CreateDirectory(fixture.Destination);
+        var exporter = ExportFixture.Exporter();
+
+        ExportResult result = exporter.ExportLegacy(fixture.Cards(), fixture.Destination);
+
+        Assert.False(Directory.Exists(source));
+        Assert.False(Directory.Exists(MovieDirectory(fixture.Destination)));
+        Assert.Contains(result.Warnings, warning => warning.Contains("Fiche à traiter", StringComparison.Ordinal));
+        DuneExporter.Process(movie, ExportFixture.Template(), options, fixture.Root);
+        exporter.ExportLegacy(fixture.Cards(), fixture.Destination);
+        AssertComplete(MovieDirectory(fixture.Destination), aai);
     }
 
     [Fact]

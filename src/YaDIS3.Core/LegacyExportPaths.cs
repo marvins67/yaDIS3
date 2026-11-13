@@ -14,6 +14,13 @@ public static class LegacyExportPaths
         return (series ? "01/" : "00/99/") + filename;
     }
 
+    /// <summary>Retourne l'unique dossier de traitement et d'export d'une fiche.</summary>
+    public static string WorkspaceMedia(string workspace, string filename, bool series)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(workspace);
+        return Path.Combine(workspace, "interface", Media(filename, series).Replace('/', Path.DirectorySeparatorChar));
+    }
+
     /// <summary>
     /// La clé de navigation peut différer de la saison TVDB.
     /// </summary>

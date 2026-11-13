@@ -371,9 +371,8 @@ public sealed partial class MainWindowViewModel
             if (node is not null)
             {
                 string candidate = Path.Combine(
-                    _workspace.Directory,
-                    "interface-yaDIS3",
-                    media.Id,
+                    LegacyExportPaths.WorkspaceMedia(_workspace.Directory,
+                        media.Header.Element("filename")!.Value, media.IsSeries),
                     MediaContext.ViewingSeason(node),
                     MediaContext.EpisodeFolder(node),
                     "preview.jpg"

@@ -63,6 +63,11 @@ public sealed class LegacyExportSynchronizer
         {
             string name = Path.GetFileName(path);
             string target = Path.Combine(destination, name);
+            if (name.Equals("preview.jpg", StringComparison.OrdinalIgnoreCase)
+                || name.Equals("render.json", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
             if (File.Exists(path))
             {
                 remaining.Remove(name);

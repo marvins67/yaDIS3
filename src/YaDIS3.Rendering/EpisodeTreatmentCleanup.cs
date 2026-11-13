@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Xml.Linq;
+using YaDIS3.Core;
 
 namespace YaDIS3.Rendering;
 
@@ -17,13 +18,10 @@ internal static class EpisodeTreatmentCleanup
             File.Delete(Path.Combine(current.DataDirectory, thumbnail));
             string season = MediaContext.ViewingSeason(episode);
             string folder = MediaContext.EpisodeFolder(episode);
-            DeleteRender(workspace, Path.Combine("interface", "01",
-                Path.GetFileName(current.DataDirectory), season, folder));
-            string cache = Path.Combine(workspace, "interface-yaDIS3", current.Id);
-            if (DuneExporter.RenderCacheOwned(cache))
-            {
-                DeleteRender(workspace, Path.Combine("interface-yaDIS3", current.Id, season, folder));
-            }
+            string output = LegacyExportPaths.WorkspaceMedia(workspace,
+                current.Header.ValueAt("filename"), current.IsSeries);
+            DeleteRender(workspace, Path.Combine(Path.GetRelativePath(workspace, output), season, folder));
+
         }
     }
 
