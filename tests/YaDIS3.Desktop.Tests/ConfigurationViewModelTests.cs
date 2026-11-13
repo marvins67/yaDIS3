@@ -18,7 +18,7 @@ public sealed class ConfigurationViewModelTests
         );
 
     [Fact]
-    public async Task CreateFolderDraft_Edit_DerivesPathWithoutChangingSavedFolder()
+    public async Task CreateFolderDraft_Edit_PreservesConfiguredPathWithoutChangingSavedFolder()
     {
         using ConfigurationViewModel settings = new(
             Snapshot(),
@@ -39,7 +39,7 @@ public sealed class ConfigurationViewModelTests
         Assert.Equal(original.DunePath, draft.DunePath);
         await draft.ChooseFolderAsync(@"Z:\Films");
         Assert.Equal(
-            "smb://192.168.1.10/Vidéos/Films",
+            original.DunePath,
             draft.DunePath
         );
         Assert.Equal("nfs://ancien:/Films", original.DunePath);

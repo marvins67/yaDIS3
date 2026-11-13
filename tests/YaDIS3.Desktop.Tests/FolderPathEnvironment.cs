@@ -7,7 +7,9 @@ internal sealed class FolderPathEnvironment
 {
     public TaskCompletionSource<string>? Address { get; init; }
 
-    public string NetworkRoot(string drive) => @"\\NAS\Vidéos";
+    public string Network { get; init; } = @"\\NAS\Vidéos";
+
+    public string NetworkRoot(string drive) => Network;
 
     public string VolumeLabel(string drive) => "MEDIA";
 

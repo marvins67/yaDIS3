@@ -8,7 +8,7 @@ public sealed class SourceFolderPathTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ChooseFolderAsync_PickerSelection_ReplacesDunePathEvenInBasicMode(
+    public async Task ChooseFolderAsync_PickerSelection_PreservesEnteredDunePathEvenInBasicMode(
         bool basicMode
     )
     {
@@ -23,7 +23,7 @@ public sealed class SourceFolderPathTests
         await draft.ChooseFolderAsync(@"Z:\Séries TV");
         Assert.Equal(@"Z:\Séries TV", draft.Path);
         Assert.Equal(
-            "smb://192.168.1.10/Vidéos/Séries TV",
+            "nfs://ancien:/Films",
             draft.DunePath
         );
         Assert.True(draft.CanAccept);

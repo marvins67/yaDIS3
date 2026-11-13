@@ -19,6 +19,7 @@ public sealed class SourceFolderViewModel : ObservableViewModel
     private int _type;
     private bool _basicMode;
     private bool _resolving;
+    private bool _dunePathEdited;
 
     /// <summary>Prépare les listes une seule fois pour conserver la sélection.</summary>
     public SourceFolderViewModel(
@@ -38,6 +39,7 @@ public sealed class SourceFolderViewModel : ObservableViewModel
             );
         _path = folder.Path;
         _dunePath = folder.DunePath;
+        _dunePathEdited = _dunePath.Length > 0;
         _type = folder.Type;
         Types = [Texts["63"], Texts["64"]];
     }
@@ -59,8 +61,8 @@ public sealed class SourceFolderViewModel : ObservableViewModel
     }
 
     /// <summary>
-    /// Le sélecteur écrase le chemin Dune, même s'il avait été
-    /// saisi manuellement, comme ButtonFolder_Click de yaDIS2.
+    /// Le sélecteur propose un chemin Dune tant que celui-ci n'a pas été saisi
+    /// ou enregistré. Un chemin configuré doit rester sous contrôle utilisateur.
     /// </summary>
     public async Task ChooseFolderAsync(
         string path,
@@ -72,10 +74,19 @@ public sealed class SourceFolderViewModel : ObservableViewModel
         try
         {
             Path = path;
-            DunePath = await _dunePaths.ResolveAsync(
-                path,
-                cancellationToken: cancellationToken
-            );
+            if (!_dunePathEdited)
+            {
+                string proposed = await _dunePaths.ResolveAsync(
+                    path,
+                    cancellationToken: cancellationToken
+                );
+                // Une saisie effectuée pendant la résolution DNS prime aussi
+                // sur la proposition qui vient de se terminer.
+                if (!_dunePathEdited)
+                {
+                    _dunePath = proposed;
+                }
+            }
         }
         finally
         {
@@ -92,7 +103,12 @@ public sealed class SourceFolderViewModel : ObservableViewModel
         get => _dunePath;
         set
         {
-            _dunePath = value ?? "";
+            string path = value ?? "";
+            if (_dunePath != path)
+            {
+                _dunePathEdited = path.Length > 0;
+            }
+            _dunePath = path;
             Notify(null);
         }
     }
