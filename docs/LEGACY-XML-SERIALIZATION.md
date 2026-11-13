@@ -228,3 +228,13 @@ La régénération conservée pour la comparaison a été exécutée après comp
 du code final. Les 511 SHA-256 de sortie sont identiques à leurs références.
 Aucune différence binaire résiduelle n'est constatée sur les XML de ce corpus.
 Aucune dépendance n'a été ajoutée.
+
+## Commit de correction
+
+Correctif : [`9dc24b6ad3f4f402081438748b4501f6ae3be2bc`](https://github.com/marvins67/yaDIS3/commit/9dc24b6ad3f4f402081438748b4501f6ae3be2bc),
+message `fix legacy xml serialization`, branche `feature/redesign`.
+
+Le correctif, les tests, les fixtures et les mesures figurent dans ce commit.
+Un second commit documentaire ajoute cette référence après sa création pour
+consigner son SHA exact ; aucun code ni résultat de validation n'est modifié.
+Publication directe sur `feature/redesign`, sans autre branche ni pull request.
