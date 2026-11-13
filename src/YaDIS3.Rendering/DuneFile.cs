@@ -124,21 +124,19 @@ internal sealed class DuneFile(
 
     /// <summary>
     /// Reprend la recherche littérale de CreateIndexItem,
-    /// limitée aux entrées.
+    /// limitée aux entrées relues sans séparateur final.
     /// </summary>
     public bool ContainsIndexCaption(string caption)
     {
-        string marker = caption + "|";
-        return _values.Any(entry =>
-            entry.Key.StartsWith(
-                "item.",
-                StringComparison.Ordinal
-            )
-            && (entry.Key + "=" + entry.Value + "|").Contains(
-                marker,
-                StringComparison.Ordinal
-            )
+        string entries = string.Join(
+            '|',
+            _values
+                .Where(entry => entry.Key.StartsWith("item.", StringComparison.Ordinal))
+                .Select(entry => entry.Key + "=" + entry.Value)
         );
+        // CreateIndexItem préfixe les entrées par | après avoir retiré le CRLF final.
+        return entries.Length > 0
+            && ("|" + entries).Contains(caption + "|", StringComparison.Ordinal);
     }
 
     // ProcessForm recherche le nom de la saga suivi du séparateur dans toute la définition.
