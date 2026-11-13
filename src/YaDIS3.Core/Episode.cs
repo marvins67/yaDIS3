@@ -74,7 +74,7 @@ public sealed class Episode(MediaCard owner, XElement node)
             return;
         }
 
-        owner.Update(() =>
+        owner.UpdateEpisode(() =>
         {
             MediaCard.Put(node, field, value);
             node.SetAttributeValue("manual_edit", "yes");

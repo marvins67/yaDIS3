@@ -71,7 +71,9 @@ public sealed class ImageImporter(IJpegEncoder encoder)
                 card.UpdateForTreatment(() => { });
                 return;
             }
-            card.Update(() =>
+            Action<Action> update = kind == ArtworkKind.Episode
+                ? card.UpdateEpisode : card.Update;
+            update(() =>
             {
                 if (kind == ArtworkKind.Episode)
                 {

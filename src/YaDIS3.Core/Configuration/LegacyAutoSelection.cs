@@ -40,11 +40,10 @@ public sealed class LegacyAutoSelection(
             return;
         }
         selection.Add(new XElement("movie", movie));
-        using MemoryStream stream = new();
-        groups.Save(stream);
+
         _files.WriteBytes(
             Path.Combine(workspace, "groups.xml"),
-            stream.ToArray()
+            LegacyWorkspaceXml.Serialize(groups)
         );
     }
 }

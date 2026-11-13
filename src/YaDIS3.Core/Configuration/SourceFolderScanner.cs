@@ -109,7 +109,7 @@ public sealed class SourceFolderScanner(
         string name,
         bool isFolder
     ) =>
-        new(
+        LegacyWorkspaceXml.Create(
             new XElement(
                 "data",
                 new XElement(
@@ -188,8 +188,6 @@ public sealed class SourceFolderScanner(
 
     private void Write(string path, XDocument document)
     {
-        using MemoryStream stream = new();
-        document.Save(stream);
-        _files.WriteBytes(path, stream.ToArray());
+        _files.WriteBytes(path, LegacyWorkspaceXml.Serialize(document));
     }
 }

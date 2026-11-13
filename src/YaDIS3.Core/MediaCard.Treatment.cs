@@ -17,6 +17,7 @@ public sealed partial class MediaCard
     internal void UpdateForTreatment(Action action)
     {
         action();
+        Document.Declaration = new("1.0", "utf-8", null);
         _revision++;
         Notify();
     }

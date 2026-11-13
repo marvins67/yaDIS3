@@ -102,7 +102,7 @@ public static class LegacyMovieGroups
         }
         if (!selection.Elements("movie").Any())
         {
-            selection.Remove();
+            RemoveGroup(selection);
         }
     }
 
@@ -161,7 +161,7 @@ public static class LegacyMovieGroups
                 .Where(item => item.Value == movie).Remove();
             if (!selection.Elements("movie").Any())
             {
-                selection.Remove();
+                RemoveGroup(selection);
             }
         }
         return removedSagas.ToArray();
@@ -172,7 +172,7 @@ public static class LegacyMovieGroups
     {
         XElement saga = FindGroup(groups, "saga", name)
             ?? throw new InvalidOperationException("Saga introuvable.");
-        saga.Remove();
+        RemoveGroup(saga);
     }
 
     /// <summary>Supprime une sélection avec ses appartenances.</summary>
@@ -180,7 +180,7 @@ public static class LegacyMovieGroups
     {
         XElement selection = FindGroup(groups, "selection", name)
             ?? throw new InvalidOperationException("Sélection introuvable.");
-        selection.Remove();
+        RemoveGroup(selection);
     }
 
     /// <summary>Renomme une saga et modifie ses références sans perdre les membres.</summary>
@@ -204,7 +204,7 @@ public static class LegacyMovieGroups
         }
         if (movies.Count == 0)
         {
-            saga.Remove();
+            RemoveGroup(saga);
             return;
         }
         if (!movies.Contains(poster) || !movies.Contains(fanart))
@@ -226,6 +226,18 @@ public static class LegacyMovieGroups
         .Elements("movie")
         .Select(movie => movie.Value)
         .ToArray();
+
+    private static void RemoveGroup(XElement group)
+    {
+        XElement parent = group.Parent!;
+        group.Remove();
+        if (!parent.Nodes().Any())
+        {
+            // XmlElement conserve sa paire de balises après RemoveChild ;
+            // XElement redeviendrait autofermé sans ce contenu vide explicite.
+            parent.Value = "";
+        }
+    }
 
     private static XElement EnsureContainer(
         XDocument groups,
@@ -271,7 +283,7 @@ public static class LegacyMovieGroups
         XElement? first = saga.Element("movie");
         if (first is null)
         {
-            saga.Remove();
+            RemoveGroup(saga);
             return;
         }
         foreach (string field in new[] { "poster", "fanart" })

@@ -336,9 +336,16 @@ public sealed partial class MediaCard
         return info;
     }
 
-    internal void Update(Action action)
+    internal void Update(Action action) => Update(action, episodeEdit: false);
+
+    internal void UpdateEpisode(Action action) => Update(action, episodeEdit: true);
+
+    private void Update(Action action, bool episodeEdit)
     {
         action();
+        // EpisodeData.Edit repart d'OuterXml sans déclaration ; les autres
+        // formulaires historiques préfixent explicitement une déclaration UTF-8.
+        Document.Declaration = episodeEdit ? null : new("1.0", "utf-8", null);
         if (Header.Element("status")?.Value == "0")
         {
             Header.Element("status")!.Value = "1";
@@ -384,6 +391,7 @@ public sealed partial class MediaCard
     /// </summary>
     public void MarkProcessed(DateOnly processingDate)
     {
+        Document.Declaration = new("1.0", "utf-8", null);
         string? previousStatus = Header.Element("status")?.Value;
         string? previousDate = Header.Element("date")?.Value;
         // ProcessMovie et ProcessTVShow conservent le statut zéro.
@@ -436,6 +444,7 @@ public sealed partial class MediaCard
                 ? "1"
                 : "0";
         Put(Header, "status", next);
+        Document.Declaration = new("1.0", "utf-8", null);
         _revision++;
         Notify();
         return true;

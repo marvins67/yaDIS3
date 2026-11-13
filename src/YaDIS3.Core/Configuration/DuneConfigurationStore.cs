@@ -1,4 +1,3 @@
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -79,17 +78,19 @@ public sealed class DuneConfigurationStore(
         string path = Path.Combine(workspace, name);
         if (!_files.FileExists(path))
         {
-            return new(new XElement(root));
+            return LegacyWorkspaceXml.Create(
+                root == "groups"
+                    ? new XElement(root, new XElement("sagas", ""), new XElement("selections", ""))
+                    : new XElement(root, ""));
         }
         using StringReader text = new(_files.ReadText(path));
-        using XmlReader reader = XmlReader.Create(
-            text,
-            new XmlReaderSettings
-            {
-                DtdProcessing = DtdProcessing.Prohibit,
-                XmlResolver = null,
-            }
-        );
+        using XmlTextReader reader = new(text)
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+            Normalization = false,
+            WhitespaceHandling = WhitespaceHandling.Significant,
+        };
         return XDocument.Load(
             reader,
             LoadOptions.PreserveWhitespace
@@ -173,7 +174,7 @@ public sealed class DuneConfigurationStore(
             new()
             {
                 [Path.Combine(workspace, "groups.xml")] =
-                    XmlBytes(groups),
+                    LegacyWorkspaceXml.Serialize(groups),
             }
         );
     }
@@ -295,22 +296,22 @@ public sealed class DuneConfigurationStore(
     ) =>
         new()
         {
-            [Path.Combine(workspace, "folders.xml")] = XmlBytes(
-                new(
+            [Path.Combine(workspace, "folders.xml")] = LegacyWorkspaceXml.Serialize(
+                LegacyWorkspaceXml.Create(
                     new XElement(
-                        "folders",
+                        "folders", "",
                         snapshot.Folders.Select(FolderElement)
                     )
                 )
             ),
-            [Path.Combine(workspace, "groups.xml")] = XmlBytes(
+            [Path.Combine(workspace, "groups.xml")] = LegacyWorkspaceXml.Serialize(
                 snapshot.Groups
             ),
             [Path.Combine(workspace, "shortcuts.xml")] =
-                XmlBytes(
-                    new(
+                LegacyWorkspaceXml.Serialize(
+                    LegacyWorkspaceXml.Create(
                         new XElement(
-                            "shortcuts",
+                            "shortcuts", "",
                             snapshot.Shortcuts.Select(
                                 shortcut => new XElement(
                                     "shortcut",
@@ -343,24 +344,5 @@ public sealed class DuneConfigurationStore(
         node.SetElementValue("type", folder.Type);
         node.SetElementValue("dunepath", folder.DunePath);
         return node;
-    }
-
-    private static byte[] XmlBytes(XDocument document)
-    {
-        using MemoryStream stream = new();
-        using (
-            XmlWriter writer = XmlWriter.Create(
-                stream,
-                new XmlWriterSettings
-                {
-                    Encoding = new UTF8Encoding(false),
-                    Indent = true,
-                }
-            )
-        )
-        {
-            document.Save(writer);
-        }
-        return stream.ToArray();
     }
 }

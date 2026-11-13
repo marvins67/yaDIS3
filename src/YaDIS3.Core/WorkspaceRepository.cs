@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -30,12 +29,23 @@ public sealed class WorkspaceRepository
     internal static XDocument Parse(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes);
+        // XmlDocument.Load utilise XmlTextReader sans normalisation des CR.
+        using XmlTextReader legacyReader = new(stream)
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+            Normalization = false,
+            WhitespaceHandling = WhitespaceHandling.Significant,
+        };
         using XmlReader reader = XmlReader.Create(
-            stream,
+            legacyReader,
             new XmlReaderSettings
             {
                 DtdProcessing = DtdProcessing.Prohibit,
                 XmlResolver = null,
+                // Comme XmlDocument dans yaDIS2, ne pas interpréter les sauts
+                // d'une paire vide indentée comme la valeur du champ date.
+                IgnoreWhitespace = true,
                 MaxCharactersInDocument = 32 * 1024 * 1024,
             }
         );
@@ -148,15 +158,15 @@ public sealed class WorkspaceRepository
         CreateDocument(
             path,
             "folders.xml",
-            new XElement("folders")
+            new XElement("folders", "")
         );
         CreateDocument(
             path,
             "groups.xml",
             new XElement(
                 "groups",
-                new XElement("sagas"),
-                new XElement("selections")
+                new XElement("sagas", ""),
+                new XElement("selections", "")
             )
         );
     }
@@ -170,7 +180,7 @@ public sealed class WorkspaceRepository
         string file = Path.Combine(path, name);
         if (!File.Exists(file))
         {
-            new XDocument(root).Save(file);
+            File.WriteAllBytes(file, LegacyWorkspaceXml.Serialize(LegacyWorkspaceXml.Create(root)));
         }
     }
 
@@ -270,22 +280,7 @@ public sealed class WorkspaceRepository
 
     private static byte[] SerializeMetadata(XDocument document)
     {
-        using MemoryStream stream = new();
-        using (
-            XmlWriter writer = XmlWriter.Create(
-                stream,
-                new XmlWriterSettings
-                {
-                    Encoding = new UTF8Encoding(false),
-                    Indent = false,
-                    CloseOutput = false,
-                }
-            )
-        )
-        {
-            document.Save(writer);
-        }
-        byte[] bytes = stream.ToArray();
+        byte[] bytes = LegacyWorkspaceXml.Serialize(document);
         Parse(bytes);
         return bytes;
     }
