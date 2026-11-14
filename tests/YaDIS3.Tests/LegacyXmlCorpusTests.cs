@@ -7,7 +7,7 @@ namespace YaDIS3.Tests;
 public sealed class LegacyXmlCorpusTests
 {
     [Fact]
-    public void Scan_QuatreSourcesReelles_RegenereLes511XmlOctetPourOctet()
+    public void Scan_QuatreSourcesReelles_NeReintroduitPasSelectionNo()
     {
         using LegacyXmlCorpus corpus = new();
         using WorkspaceRepository repository = new();
@@ -16,12 +16,15 @@ public sealed class LegacyXmlCorpusTests
         DuneConfigurationStore store = new(files, corpus.UserConfig);
         store.Save(corpus.Root, store.Load(corpus.Root) with { Folders = corpus.Folders() });
         new SourceFolderScanner(files).Scan(corpus.Root, corpus.Folders(), false);
-        string[] different = corpus.Documents.Where(pair => !pair.Value.SequenceEqual(corpus.Actual(pair.Key))).Select(pair => pair.Key).ToArray();
-        Assert.True(different.Length == 0, $"Identiques : {corpus.Documents.Count - different.Length}/511. Premiers écarts : {string.Join(", ", different.Take(5))}");
+        string[] different = corpus.Documents
+            .Where(pair => !ExpectedAfterScan(pair.Value).SequenceEqual(corpus.Actual(pair.Key)))
+            .Select(pair => pair.Key).ToArray();
+        Assert.True(different.Length == 0,
+            $"Identiques après scan : {corpus.Documents.Count - different.Length}/511. Premiers écarts : {string.Join(", ", different.Take(5))}");
         Assert.Equal(511, corpus.Documents.Count);
         foreach ((string path, byte[] expected) in corpus.Documents)
         {
-            Assert.Equal(expected, corpus.Actual(path));
+            Assert.Equal(ExpectedAfterScan(expected), corpus.Actual(path));
             XmlDocument legacy = new();
             using MemoryStream stream = new(corpus.Actual(path));
             legacy.Load(stream);
@@ -32,25 +35,11 @@ public sealed class LegacyXmlCorpusTests
         new SourceFolderScanner(files).Scan(corpus.Root, corpus.Folders(), false);
         foreach ((string path, DateTime timestamp) in timestamps)
         {
-            XmlDocument expectedDocument = new() { XmlResolver = null };
-            using (MemoryStream stream = new(corpus.Documents[path]))
-            {
-                expectedDocument.Load(stream);
-            }
-            XmlNode? selection = expectedDocument.SelectSingleNode("/data/item/selection");
-            bool consumed = selection?.InnerText == "no";
-            if (consumed)
-            {
-                selection!.ParentNode!.RemoveChild(selection);
-            }
-            byte[] expected = consumed
-                ? LegacyXmlReference.Bytes(expectedDocument)
-                : corpus.Documents[path];
-            Assert.Equal(expected, corpus.Actual(path));
-            if (!consumed)
-            {
-                Assert.Equal(timestamp, File.GetLastWriteTimeUtc(Path.Combine(corpus.Root, path.Replace('/', Path.DirectorySeparatorChar))));
-            }
+            Assert.Equal(ExpectedAfterScan(corpus.Documents[path]),
+                corpus.Actual(path));
+            Assert.Equal(timestamp, File.GetLastWriteTimeUtc(
+                Path.Combine(corpus.Root,
+                    path.Replace('/', Path.DirectorySeparatorChar))));
         }
         string[] dataFiles = corpus.Documents.Keys
             .Where(path => path.EndsWith("/data.xml", StringComparison.Ordinal))
@@ -78,6 +67,22 @@ public sealed class LegacyXmlCorpusTests
         {
             card.Dispose();
         }
+    }
+
+    private static byte[] ExpectedAfterScan(byte[] reference)
+    {
+        XmlDocument document = new() { XmlResolver = null };
+        using (MemoryStream stream = new(reference))
+        {
+            document.Load(stream);
+        }
+        XmlNode? selection = document.SelectSingleNode("/data/item/selection");
+        if (selection?.InnerText != "no")
+        {
+            return reference;
+        }
+        selection.ParentNode!.RemoveChild(selection);
+        return LegacyXmlReference.Bytes(document);
     }
 
     [Fact]

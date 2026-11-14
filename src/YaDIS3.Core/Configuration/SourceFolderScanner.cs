@@ -84,8 +84,9 @@ public sealed class SourceFolderScanner(
             );
         XElement item = Item(document, path);
         XElement original = new(item);
-        // MainForm consomme le marqueur des fiches existantes lors du scan.
-        // Il est encore présent juste après la création initiale.
+        // Les anciens workspaces peuvent contenir le marqueur transitoire
+        // du premier scan yaDIS2. Ne pas le reproduire dans les nouvelles
+        // fiches : il serait écrit sur tout le catalogue avant le traitement.
         if (exists && item.Element("selection")?.Value == "no")
         {
             item.Element("selection")!.Remove();
@@ -129,8 +130,7 @@ public sealed class SourceFolderScanner(
                     ),
                     new XElement("type", folder.Type),
                     new XElement("status", "3"),
-                    new XElement("date", ""),
-                    new XElement("selection", "no")
+                    new XElement("date", "")
                 )
             )
         );

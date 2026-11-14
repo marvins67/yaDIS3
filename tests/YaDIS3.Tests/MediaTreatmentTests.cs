@@ -1,3 +1,4 @@
+using System.Xml;
 using System.Xml.Linq;
 using SkiaSharp;
 using Xunit;
@@ -34,6 +35,49 @@ public sealed class MediaTreatmentTests
                 Path.Combine(card.DataDirectory, "preview.jpg")
             )
         );
+    }
+
+    [Fact]
+    public async Task TreatAsync_UnFilmParmi508_ConserveLes507AutresXmlOctetPourOctet()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard treated = PrepareCard(fixture, repository, series: false);
+        string data = Path.Combine(fixture.Root, "data");
+        string initialSeries = Path.Combine(data, ExportFixture.SeriesName, "data.xml");
+        byte[] seriesReference = File.ReadAllBytes(initialSeries);
+        var references = new Dictionary<string, byte[]>(StringComparer.Ordinal)
+        {
+            [initialSeries] = seriesReference,
+        };
+        for (int index = 0; index < 506; index++)
+        {
+            string folder = Path.Combine(data, $"Film non traité {index:000}");
+            Directory.CreateDirectory(folder);
+            string file = Path.Combine(folder, "data.xml");
+            File.WriteAllBytes(file, seriesReference);
+            references.Add(file, File.ReadAllBytes(file));
+        }
+        Assert.Equal(508, Directory.GetFiles(data,
+            "data.xml", SearchOption.AllDirectories).Length);
+
+        Assert.True(await TreatAsync(fixture, repository, treated,
+            new TreatmentInputs()));
+
+        foreach ((string path, byte[] expected) in references)
+        {
+            Assert.Equal(expected, File.ReadAllBytes(path));
+        }
+        Assert.Equal(507, references.Count);
+        Assert.DoesNotContain("<selection>no</selection>",
+            File.ReadAllText(treated.FilePath), StringComparison.Ordinal);
+
+        // L'oracle XmlDocument reproduit l'écriture binaire yaDIS2
+        // pour le DOM effectivement obtenu après traitement.
+        XmlDocument historical = new() { XmlResolver = null };
+        historical.Load(treated.FilePath);
+        Assert.Equal(LegacyXmlReference.Bytes(historical),
+            File.ReadAllBytes(treated.FilePath));
     }
 
     [Fact]

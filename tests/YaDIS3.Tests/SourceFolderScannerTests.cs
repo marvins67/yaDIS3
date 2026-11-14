@@ -163,7 +163,7 @@ public sealed class SourceFolderScannerTests
     }
 
     [Fact]
-    public void Scan_NouvelleFiche_SelectionNoTransitoireSeulementAuPremierPassage()
+    public void Scan_NouvelleFiche_NeCreePasDeSelectionNo()
     {
         using ExportFixture fixture = new();
         string source = Path.Combine(fixture.Root, "source-de-scan");
@@ -178,14 +178,14 @@ public sealed class SourceFolderScannerTests
         ];
 
         scanner.Scan(fixture.Root, folders, false);
-        Assert.Equal("no", XDocument.Load(path).Root!
-            .Element("item")!.Element("selection")!.Value);
-        Assert.Equal("3", XDocument.Load(path).Root!
-            .Element("item")!.Element("status")!.Value);
-
-        scanner.Scan(fixture.Root, folders, false);
         Assert.Null(XDocument.Load(path).Root!
             .Element("item")!.Element("selection"));
+        Assert.Equal("3", XDocument.Load(path).Root!
+            .Element("item")!.Element("status")!.Value);
+        byte[] original = File.ReadAllBytes(path);
+
+        scanner.Scan(fixture.Root, folders, false);
+        Assert.Equal(original, File.ReadAllBytes(path));
     }
 
     [Fact]

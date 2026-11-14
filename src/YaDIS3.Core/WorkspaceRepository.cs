@@ -439,8 +439,7 @@ public sealed class WorkspaceRepository
                     new XElement("folder", "yes"),
                     new XElement("type", "1"),
                     new XElement("status", "3"),
-                    new XElement("date", ""),
-                    new XElement("selection", "no")
+                    new XElement("date", "")
                 )
             )
         );
