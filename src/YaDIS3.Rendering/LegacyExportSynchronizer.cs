@@ -63,8 +63,7 @@ public sealed class LegacyExportSynchronizer
         {
             string name = Path.GetFileName(path);
             string target = Path.Combine(destination, name);
-            if (name.Equals("preview.jpg", StringComparison.OrdinalIgnoreCase)
-                || name.Equals("render.json", StringComparison.OrdinalIgnoreCase))
+            if (IsTreatmentTechnicalFile(name))
             {
                 continue;
             }
@@ -94,6 +93,17 @@ public sealed class LegacyExportSynchronizer
                 Directory.Delete(path, true);
             }
         }
+    }
+
+    private static bool IsTreatmentTechnicalFile(string name)
+    {
+        // yaDIS2 ne synchronise que les fichiers de navigation et les images
+        // publiées. Les états internes du traitement restent dans le workspace.
+        return name.Equals("preview.jpg", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("render.json", StringComparison.OrdinalIgnoreCase)
+            || name.Equals(".render.lock", StringComparison.OrdinalIgnoreCase)
+            || (name.StartsWith("render.json.", StringComparison.OrdinalIgnoreCase)
+                && name.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase));
     }
 
     private static void CopyWhenChanged(string source, string destination, ICollection<string>? errors)

@@ -95,6 +95,53 @@ public sealed class LegacyExportSynchronizationTests
     }
 
     [Fact]
+    public void Synchronize_FichiersTechniques_NeLesCopiePasEtNettoieLaDestination()
+    {
+        using ExportFixture fixture = new();
+        string source = Path.Combine(fixture.Root, "interface");
+        string movie = Path.Combine(source, "00", "99", ExportFixture.MovieName);
+        string destination = Path.Combine(fixture.Destination, "00", "99", ExportFixture.MovieName);
+        Directory.CreateDirectory(movie);
+        Directory.CreateDirectory(destination);
+        string[] technical =
+        [
+            "render.json",
+            "preview.jpg",
+            ".render.lock",
+            "render.json.a1b2c3.tmp",
+        ];
+        foreach (string name in technical)
+        {
+            File.WriteAllText(Path.Combine(movie, name), "cache yaDIS3");
+            File.WriteAllText(Path.Combine(destination, name), "ancien export");
+        }
+        File.WriteAllText(Path.Combine(movie, "icon.aai"), "navigation");
+
+        new LegacyExportSynchronizer().Synchronize(source, fixture.Destination);
+
+        Assert.Equal("navigation", File.ReadAllText(Path.Combine(destination, "icon.aai")));
+        foreach (string name in technical)
+        {
+            Assert.True(File.Exists(Path.Combine(movie, name)));
+            Assert.False(File.Exists(Path.Combine(destination, name)));
+        }
+    }
+
+    [Fact]
+    public void Synchronize_FichierUtilisateurTmp_NeLeSupprimePasParErreur()
+    {
+        using ExportFixture fixture = new();
+        string source = Path.Combine(fixture.Root, "source");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "notes.tmp"), "fichier ordinaire");
+
+        new LegacyExportSynchronizer().Synchronize(source, fixture.Destination);
+
+        Assert.Equal("fichier ordinaire",
+            File.ReadAllText(Path.Combine(fixture.Destination, "notes.tmp")));
+    }
+
+    [Fact]
     public void Synchronize_AnnulationPrealable_NeModifieRien()
     {
         using ExportFixture fixture = new();
