@@ -418,9 +418,19 @@ public sealed partial class MediaCard
                 )
             );
         }
+        // Le scan historique ne conserve pas l'indicateur transitoire
+        // selection=no. Un selection=yes doit rester disponible pour
+        // l'ajout à la sélection automatique.
+        XElement? selection = Header.Element("selection");
+        bool removedSelection = selection?.Value == "no";
+        if (removedSelection)
+        {
+            selection!.Remove();
+        }
         if (
             previousStatus != Header.Element("status")?.Value
             || previousDate != Header.Element("date")?.Value
+            || removedSelection
         )
         {
             _revision++;
