@@ -7,7 +7,7 @@ namespace YaDIS3.Tests;
 public sealed class ProcessedWorkspaceXmlParityTests
 {
     [Theory]
-    [InlineData("no", null)]
+    [InlineData("no", "no")]
     [InlineData("yes", "yes")]
     [InlineData(null, null)]
     public async Task MarkProcessed_SelectionTransitoire_RespecteLeCycleHistorique(
@@ -41,7 +41,8 @@ public sealed class ProcessedWorkspaceXmlParityTests
         XDocument saved = XDocument.Load(file);
         XElement savedHeader = saved.Root!.Element("item")!;
         Assert.Equal(expected, savedHeader.Element("selection")?.Value);
-        Assert.Equal("2026-11-14", savedHeader.Element("date")?.Value);
+        Assert.Equal(new DateTime(2026, 11, 14).ToString("d",
+            System.Globalization.CultureInfo.CurrentCulture), savedHeader.Element("date")?.Value);
         Assert.Equal("1", savedHeader.Element("status")?.Value);
         Assert.True(XNode.DeepEquals(
             infoBefore, saved.Root.Element("info")!
@@ -73,7 +74,7 @@ public sealed class ProcessedWorkspaceXmlParityTests
         XElement savedHeader = saved.Root!.Element("item")!;
         Assert.Equal("2024-03-02", savedHeader.Element("date")!.Value);
         Assert.Equal("0", savedHeader.Element("status")!.Value);
-        Assert.Null(savedHeader.Element("selection"));
+        Assert.Equal("no", savedHeader.Element("selection")?.Value);
         Assert.True(XNode.DeepEquals(
             infoBefore, saved.Root.Element("info")!
         ));

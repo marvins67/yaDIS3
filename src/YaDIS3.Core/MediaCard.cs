@@ -413,24 +413,15 @@ public sealed partial class MediaCard
                 Header,
                 "date",
                 processingDate.ToString(
-                    "yyyy-MM-dd",
-                    CultureInfo.InvariantCulture
+                    "d",
+                    CultureInfo.CurrentCulture
                 )
             );
         }
-        // Le scan historique ne conserve pas l'indicateur transitoire
-        // selection=no. Un selection=yes doit rester disponible pour
-        // l'ajout à la sélection automatique.
-        XElement? selection = Header.Element("selection");
-        bool removedSelection = selection?.Value == "no";
-        if (removedSelection)
-        {
-            selection!.Remove();
-        }
+        // ProcessForm ne consomme pas selection : cela revient au scan.
         if (
             previousStatus != Header.Element("status")?.Value
             || previousDate != Header.Element("date")?.Value
-            || removedSelection
         )
         {
             _revision++;

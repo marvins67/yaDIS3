@@ -29,6 +29,9 @@ public sealed class LegacyMediaInfoTests
         Assert.Equal("16:9", result.Element("video")!.Element("aspectratio")!.Value);
         Assert.Equal("23.976", result.Element("video")!.Element("framerate")!.Value);
         Assert.Equal("7200123", result.Element("duration")!.Value);
+        Assert.Equal(
+            ["format", "source", "duration", "video", "audio", "subtitles"],
+            result.Elements().Select(element => element.Name.LocalName).ToArray());
         Assert.Equal("AAC", result.Element("audio")!.Element("codec")!.Value);
     }
 

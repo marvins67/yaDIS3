@@ -138,6 +138,31 @@ public sealed class SourceFolderScannerTests
     }
 
     [Fact]
+    public void Scan_FicheExistante_RetireSelectionNoSansTraiterLeFilm()
+    {
+        using ExportFixture fixture = new();
+        string source = Path.Combine(fixture.Root, "Films");
+        Directory.CreateDirectory(source);
+        File.WriteAllBytes(Path.Combine(source, ExportFixture.MovieName), []);
+        string path = Path.Combine(fixture.Root, "data", ExportFixture.MovieName, "data.xml");
+        XDocument document = XDocument.Load(path);
+        XElement header = document.Root!.Element("item")!;
+        header.SetElementValue("selection", "no");
+        header.SetElementValue("status", "3");
+        header.SetElementValue("date", "");
+        document.Save(path);
+        XElement expectedInfo = new(document.Root.Element("info")!);
+
+        new SourceFolderScanner().Scan(fixture.Root,
+            [new(source, 0, "smb://nas/Films")], false);
+
+        XDocument actual = XDocument.Load(path);
+        Assert.Null(actual.Root!.Element("item")!.Element("selection"));
+        Assert.Equal("3", actual.Root.Element("item")!.Element("status")!.Value);
+        Assert.True(XNode.DeepEquals(expectedInfo, actual.Root.Element("info")));
+    }
+
+    [Fact]
     public void Scan_Series_PrendSeulementLesDossiersDirects()
     {
         using ExportFixture fixture = new();

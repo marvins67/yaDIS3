@@ -285,7 +285,7 @@ public sealed class OnlineTreatmentMetadata(
                 "certification",
                 MovieCertification(movie)
             ),
-            new XElement("rating", Value(movie, "vote_average")),
+            new XElement("rating", MovieRating(movie)),
             new XElement(
                 "genres",
                 Names(movie.GetProperty("genres"), "genre")
@@ -403,6 +403,14 @@ public sealed class OnlineTreatmentMetadata(
                 Value(item, "name")
             ));
 
+    private static string MovieRating(JsonElement movie)
+    {
+        string rating = Value(movie, "vote_average");
+        // Conversions.ToString dans yaDIS2 utilise le séparateur décimal local.
+        string separator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        return rating.Replace(".", separator, StringComparison.Ordinal);
+    }
+
     private static string Value(JsonElement item, string name) =>
         item.TryGetProperty(name, out JsonElement value)
             ? value.ToString()
@@ -411,7 +419,7 @@ public sealed class OnlineTreatmentMetadata(
     private static string MovieImage(string path) =>
         path.Length == 0
             ? ""
-            : "https://image.tmdb.org/t/p/original" + path;
+            : "http://image.tmdb.org/t/p/original" + path;
 
     /// <inheritdoc />
     public async Task CompleteArtworkAsync(

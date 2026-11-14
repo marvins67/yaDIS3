@@ -84,6 +84,12 @@ public sealed class SourceFolderScanner(
             );
         XElement item = Item(document, path);
         XElement original = new(item);
+        // MainForm consomme le marqueur des fiches existantes lors du scan.
+        // Il est encore présent juste après la création initiale.
+        if (exists && item.Element("selection")?.Value == "no")
+        {
+            item.Element("selection")!.Remove();
+        }
         string type = folder.Type.ToString(
             System.Globalization.CultureInfo.InvariantCulture
         );

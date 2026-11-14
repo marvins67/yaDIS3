@@ -32,8 +32,28 @@ public sealed class LegacyXmlCorpusTests
         new SourceFolderScanner(files).Scan(corpus.Root, corpus.Folders(), false);
         foreach ((string path, DateTime timestamp) in timestamps)
         {
-            Assert.Equal(timestamp, File.GetLastWriteTimeUtc(Path.Combine(corpus.Root, path.Replace('/', Path.DirectorySeparatorChar))));
-            Assert.Equal(corpus.Documents[path], corpus.Actual(path));
+            XDocument expectedDocument = WorkspaceRepository.Parse(corpus.Documents[path]);
+            XElement? selection = expectedDocument.Root?.Element("item")?.Element("selection");
+            bool consumed = selection?.Value == "no";
+            if (consumed)
+            {
+                selection!.Remove();
+            }
+            byte[] expected = consumed
+                ? LegacyWorkspaceXml.Serialize(expectedDocument)
+                : corpus.Documents[path];
+            Assert.Equal(expected, corpus.Actual(path));
+            if (!consumed)
+            {
+                Assert.Equal(timestamp, File.GetLastWriteTimeUtc(Path.Combine(corpus.Root, path.Replace('/', Path.DirectorySeparatorChar))));
+            }
+        }
+        Dictionary<string, byte[]> rescan = corpus.Documents.Keys.ToDictionary(
+            path => path, corpus.Actual, StringComparer.Ordinal);
+        new SourceFolderScanner(files).Scan(corpus.Root, corpus.Folders(), false);
+        foreach ((string path, byte[] expected) in rescan)
+        {
+            Assert.Equal(expected, corpus.Actual(path));
         }
         Workspace workspace = repository.Open(corpus.Root);
         Assert.Empty(workspace.Warnings);
@@ -85,7 +105,8 @@ public sealed class LegacyXmlCorpusTests
         await repository.SaveAsync(card);
         XmlDocument legacy = new();
         legacy.Load(path);
-        Assert.Equal("2026-11-13", legacy.SelectSingleNode("//item/date")!.InnerText);
+        Assert.Equal(new DateTime(2026, 11, 13).ToString("d", System.Globalization.CultureInfo.CurrentCulture),
+            legacy.SelectSingleNode("//item/date")!.InnerText);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using Xunit;
@@ -66,6 +67,8 @@ public sealed class MovieMetadataTests
             FixturePath("yadis2-movie.xml")
         );
         expected.SetElementValue("sort_title", sortTitle);
+        expected.SetElementValue("rating",
+            8.5.ToString(CultureInfo.CurrentCulture));
         Assert.True(
             XNode.DeepEquals(expected, actual),
             actual.ToString()
@@ -104,6 +107,38 @@ public sealed class MovieMetadataTests
             expected, info!.Element("certification")!.Value
         );
         Assert.Equal(2, handler.Requests.Count);
+    }
+
+    [Theory]
+    [InlineData("fr-FR", "7,129")]
+    [InlineData("en-US", "7.129")]
+    public async Task FindMovieAsync_NouvelleNote_UtiliseLeSeparateurRegional(
+        string cultureName, string expected
+    )
+    {
+        CultureInfo previous = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
+            JsonNode movie = JsonNode.Parse(
+                File.ReadAllText(FixturePath("movie.json"))
+            )!;
+            movie["vote_average"] = 7.129;
+            using ExportFixture fixture = new();
+            using WorkspaceRepository repository = new();
+            using MediaCard card = PrepareCard(fixture, repository, true);
+            using MovieMetadataHandler handler = new(movie.ToJsonString());
+            using HttpClient http = new(handler);
+            XElement? info = await Metadata(http, "fr")
+                .FindMovieAsync(card, CancellationToken.None);
+
+            Assert.Equal(expected, info!.Element("rating")!.Value);
+            Assert.Equal("https://example.org/movie", info.Element("url")!.Value);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

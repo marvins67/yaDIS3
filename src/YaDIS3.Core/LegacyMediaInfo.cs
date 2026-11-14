@@ -44,7 +44,8 @@ public static class LegacyMediaInfo
         if (double.TryParse(Value(general, "Duration"),
             CultureInfo.InvariantCulture, out double seconds))
         {
-            result.AddFirst(new XElement("duration", Math.Truncate(seconds * 1000)));
+            result.Element("source")!.AddAfterSelf(
+                new XElement("duration", Math.Truncate(seconds * 1000)));
         }
         XElement v = result.Element("video")!;
         v.SetElementValue("codec", VideoCodec(Codec(video)));
