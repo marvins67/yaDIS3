@@ -32,15 +32,19 @@ public sealed class LegacyXmlCorpusTests
         new SourceFolderScanner(files).Scan(corpus.Root, corpus.Folders(), false);
         foreach ((string path, DateTime timestamp) in timestamps)
         {
-            XDocument expectedDocument = WorkspaceRepository.Parse(corpus.Documents[path]);
-            XElement? selection = expectedDocument.Root?.Element("item")?.Element("selection");
-            bool consumed = selection?.Value == "no";
+            XmlDocument expectedDocument = new() { XmlResolver = null };
+            using (MemoryStream stream = new(corpus.Documents[path]))
+            {
+                expectedDocument.Load(stream);
+            }
+            XmlNode? selection = expectedDocument.SelectSingleNode("/data/item/selection");
+            bool consumed = selection?.InnerText == "no";
             if (consumed)
             {
-                selection!.Remove();
+                selection!.ParentNode!.RemoveChild(selection);
             }
             byte[] expected = consumed
-                ? LegacyWorkspaceXml.Serialize(expectedDocument)
+                ? LegacyXmlReference.Bytes(expectedDocument)
                 : corpus.Documents[path];
             Assert.Equal(expected, corpus.Actual(path));
             if (!consumed)
