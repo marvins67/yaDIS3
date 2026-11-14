@@ -56,9 +56,26 @@ public static class LegacyMediaInfo
         XElement a = result.Element("audio")!;
         a.SetElementValue("codec", AudioCodec(Codec(audio), Value(audio, "Format_Profile")));
         a.SetElementValue("channels", Channels(Value(audio, "Channels")));
-        a.SetElementValue("languages", Languages(tracks, "Audio"));
-        result.Element("subtitles")!.SetElementValue("languages", Languages(tracks, "Text"));
+        SetLanguages(a.Element("languages")!, Languages(tracks, "Audio"));
+        SetLanguages(
+            result.Element("subtitles")!.Element("languages")!,
+            Languages(tracks, "Text")
+        );
         return result;
+    }
+
+    private static void SetLanguages(XElement element, string value)
+    {
+        // La valeur vide sans nœud texte se sérialise en <languages />.
+        // Une langue renseignée reste un contenu textuel ordinaire.
+        if (value.Length == 0)
+        {
+            element.RemoveNodes();
+        }
+        else
+        {
+            element.Value = value;
+        }
     }
 
     private static string Value(XElement? track, string name) =>

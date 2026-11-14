@@ -64,6 +64,51 @@ public sealed class LegacyMediaInfoTests
         Assert.Equal("576i", result.Element("video")!.Element("resolution")!.Value);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Convert_LanguesVides_SerialiseLaBaliseAutofermee(
+        bool withoutVideo
+    )
+    {
+        XDocument input = withoutVideo
+            ? XDocument.Parse("<MediaInfo><media><track type='General'/></media></MediaInfo>")
+            : XDocument.Parse("""
+                <MediaInfo><media>
+                  <track type="General"><Format>Matroska</Format></track>
+                  <track type="Video"><Format>AVC</Format><Width>1920</Width><Height>1080</Height></track>
+                  <track type="Audio"><Format>AAC</Format><Channels>2</Channels></track>
+                </media></MediaInfo>
+                """);
+
+        XElement result = LegacyMediaInfo.Convert(input);
+        string xml = result.ToString(SaveOptions.DisableFormatting);
+
+        Assert.Contains("<languages />", xml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<languages></languages>", xml, StringComparison.Ordinal);
+        Assert.Equal(2, result.Descendants("languages").Count());
+    }
+
+    [Fact]
+    public void Convert_LangueRenseignee_ConserveLeContenu()
+    {
+        XDocument input = XDocument.Parse("""
+            <MediaInfo><media>
+              <track type="General"><Format>Matroska</Format></track>
+              <track type="Video"><Format>AVC</Format><Height>1080</Height></track>
+              <track type="Audio"><Format>AAC</Format><Channels>2</Channels><Language>fr</Language></track>
+            </media></MediaInfo>
+            """);
+
+        XElement result = LegacyMediaInfo.Convert(input);
+
+        Assert.Equal("fr", result.Element("audio")!
+            .Element("languages")!.Value);
+        Assert.Contains("<languages>fr</languages>",
+            result.ToString(SaveOptions.DisableFormatting),
+            StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task ReadAsync_FichierInexistant_BibliothequeDisponibleSousWindows()
     {

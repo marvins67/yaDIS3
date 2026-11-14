@@ -267,7 +267,8 @@ public sealed class OnlineTreatmentMetadata(
             new XElement("id", Value(movie, "id")),
             new XElement("imdb", Value(movie, "imdb_id")),
             new XElement("url", Value(movie, "homepage")),
-            new XElement("trailer", ""),
+            // CreateMovieXML enregistre ce champ vide sans nœud texte.
+            new XElement("trailer"),
             new XElement("title", Value(movie, "title")),
             new XElement(
                 "original_title",

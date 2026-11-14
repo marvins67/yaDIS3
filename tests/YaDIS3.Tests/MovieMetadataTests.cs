@@ -142,6 +142,26 @@ public sealed class MovieMetadataTests
     }
 
     [Fact]
+    public async Task FindMovieAsync_TrailerVide_SerialiseLaBaliseAutofermee()
+    {
+        using ExportFixture fixture = new();
+        using WorkspaceRepository repository = new();
+        using MediaCard card = PrepareCard(fixture, repository, true);
+        using MovieMetadataHandler handler = new(
+            File.ReadAllText(FixturePath("movie.json"))
+        );
+        using HttpClient http = new(handler);
+        XElement info = (await Metadata(http, "fr")
+            .FindMovieAsync(card, CancellationToken.None))!;
+
+        string xml = info.ToString(SaveOptions.DisableFormatting);
+
+        Assert.Contains("<trailer />", xml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<trailer></trailer>", xml,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task PrepareAsync_TraitementNormal_ConserveLesRetouchesSansRequete()
     {
         using ExportFixture fixture = new();

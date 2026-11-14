@@ -163,6 +163,32 @@ public sealed class SourceFolderScannerTests
     }
 
     [Fact]
+    public void Scan_NouvelleFiche_SelectionNoTransitoireSeulementAuPremierPassage()
+    {
+        using ExportFixture fixture = new();
+        string source = Path.Combine(fixture.Root, "source-de-scan");
+        Directory.CreateDirectory(source);
+        string name = "Nouveau Film (2026).mkv";
+        File.WriteAllBytes(Path.Combine(source, name), []);
+        string path = Path.Combine(fixture.Root, "data", name, "data.xml");
+        SourceFolderScanner scanner = new();
+        MediaSourceFolder[] folders =
+        [
+            new(source, 0, "smb://nas/Films"),
+        ];
+
+        scanner.Scan(fixture.Root, folders, false);
+        Assert.Equal("no", XDocument.Load(path).Root!
+            .Element("item")!.Element("selection")!.Value);
+        Assert.Equal("3", XDocument.Load(path).Root!
+            .Element("item")!.Element("status")!.Value);
+
+        scanner.Scan(fixture.Root, folders, false);
+        Assert.Null(XDocument.Load(path).Root!
+            .Element("item")!.Element("selection"));
+    }
+
+    [Fact]
     public void Scan_Series_PrendSeulementLesDossiersDirects()
     {
         using ExportFixture fixture = new();
