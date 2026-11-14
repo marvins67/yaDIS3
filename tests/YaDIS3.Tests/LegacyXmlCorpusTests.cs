@@ -52,6 +52,17 @@ public sealed class LegacyXmlCorpusTests
                 Assert.Equal(timestamp, File.GetLastWriteTimeUtc(Path.Combine(corpus.Root, path.Replace('/', Path.DirectorySeparatorChar))));
             }
         }
+        string[] dataFiles = corpus.Documents.Keys
+            .Where(path => path.EndsWith("/data.xml", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Equal(508, dataFiles.Length);
+        Assert.All(dataFiles, path =>
+        {
+            XmlDocument parsed = new() { XmlResolver = null };
+            parsed.Load(Path.Combine(corpus.Root,
+                path.Replace('/', Path.DirectorySeparatorChar)));
+            Assert.Null(parsed.SelectSingleNode("/data/item/selection[.='no']"));
+        });
         Dictionary<string, byte[]> rescan = corpus.Documents.Keys.ToDictionary(
             path => path, corpus.Actual, StringComparer.Ordinal);
         new SourceFolderScanner(files).Scan(corpus.Root, corpus.Folders(), false);
