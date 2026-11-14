@@ -415,12 +415,12 @@ public sealed partial class TemplateRenderer
         // Les 158 étiquettes alphabétiques GLASS Revisited de référence
         // mesurent 35 px dans yaDIS2, contre 38 px avec font.Spacing.
         // Ne pas généraliser cette mesure aux autres polices ou tailles.
-        const int glassAlphabetHeight = 35;
+        const int GlassAlphabetHeight = 35;
         if (kind == "alphabet"
             && NormalizeFontName(text.Attr("font")) == "scoutcondbold"
             && text.Float("size", 24) == 24)
         {
-            return glassAlphabetHeight;
+            return GlassAlphabetHeight;
         }
 
         return (int)Math.Round(font.Spacing);
