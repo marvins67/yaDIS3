@@ -1,6 +1,5 @@
 using SkiaSharp;
 using Xunit;
-using YaDIS3.Desktop;
 
 namespace YaDIS3.Desktop.Tests;
 
