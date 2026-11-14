@@ -41,8 +41,8 @@ public sealed class SkiaJpegEncoder : IJpegEncoder
         if (codec.EncodedFormat == SKEncodedImageFormat.Jpeg)
         {
             input.Position = 0;
-            using FileStream output = File.Create(target);
-            input.CopyTo(output);
+            using FileStream originalCopy = File.Create(target);
+            input.CopyTo(originalCopy);
             return;
         }
 
