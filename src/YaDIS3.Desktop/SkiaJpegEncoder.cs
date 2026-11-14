@@ -36,6 +36,16 @@ public sealed class SkiaJpegEncoder : IJpegEncoder
             ?? throw new InvalidDataException(
                 "Image illisible."
             );
+        // yaDIS2 copie les JPEG locaux et téléchargés sans recompression.
+        // Le JPEG ne doit être réencodé que si la source exige une conversion.
+        if (codec.EncodedFormat == SKEncodedImageFormat.Jpeg)
+        {
+            input.Position = 0;
+            using FileStream output = File.Create(target);
+            input.CopyTo(output);
+            return;
+        }
+
         using SKSurface surface =
             SKSurface.Create(
                 new SKImageInfo(bitmap.Width, bitmap.Height)
