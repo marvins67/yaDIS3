@@ -7,6 +7,29 @@ namespace YaDIS3.Tests;
 /// <summary>Dimensions mesurées sur les fichiers AAI yaDIS2 de référence.</summary>
 public sealed class LegacyIndexLabelMetricsTests
 {
+    [Fact]
+    public void RenderLegacyIndexLabel_Pays_ConserveLeDrapeau128Par64()
+    {
+        using ExportFixture fixture = new();
+        using TemplateRenderer renderer = new(
+            ExportFixture.Template("GLASS Revisited"),
+            new RenderOptions()
+        );
+        string directory = Path.Combine(fixture.Root, "country");
+
+        renderer.RenderLegacyIndexLabel(directory, "US", "countries");
+
+        using SKBitmap icon = AaiCodec.Load(
+            Path.Combine(directory, "icon.aai")
+        );
+        using SKBitmap selected = AaiCodec.Load(
+            Path.Combine(directory, "icon_sel.aai")
+        );
+        Assert.Equal(128, icon.Width);
+        Assert.Equal(64, icon.Height);
+        Assert.Equal(icon.Info, selected.Info);
+    }
+
     [Theory]
     [InlineData("0-9", "alphabet", 54)]
     [InlineData("A", "alphabet", 32)]
@@ -18,6 +41,23 @@ public sealed class LegacyIndexLabelMetricsTests
     [InlineData("R", "alphabet", 32)]
     [InlineData("T", "alphabet", 30)]
     [InlineData("W", "alphabet", 38)]
+    [InlineData("B", "alphabet", 32)]
+    [InlineData("C", "alphabet", 32)]
+    [InlineData("D", "alphabet", 32)]
+    [InlineData("F", "alphabet", 30)]
+    [InlineData("G", "alphabet", 32)]
+    [InlineData("K", "alphabet", 32)]
+    [InlineData("L", "alphabet", 30)]
+    [InlineData("N", "alphabet", 32)]
+    [InlineData("O", "alphabet", 32)]
+    [InlineData("P", "alphabet", 32)]
+    [InlineData("Q", "alphabet", 32)]
+    [InlineData("S", "alphabet", 32)]
+    [InlineData("U", "alphabet", 32)]
+    [InlineData("V", "alphabet", 32)]
+    [InlineData("X", "alphabet", 32)]
+    [InlineData("Y", "alphabet", 32)]
+    [InlineData("Z", "alphabet", 30)]
     [InlineData("Animation", "genres", 124)]
     [InlineData("Familial", "genres", 104)]
     [InlineData("Fantastique", "genres", 148)]

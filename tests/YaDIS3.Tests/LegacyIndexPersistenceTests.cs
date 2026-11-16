@@ -13,7 +13,7 @@ public sealed class LegacyIndexPersistenceTests
     public void Export_IndexObsolete_RenouvelleUniquementLesImages()
     {
         using ExportFixture fixture = new();
-        fixture.ProcessIndexes();
+        fixture.ProcessIndexes("GLASS Revisited");
         string source = Index(fixture.Root, "04", "Drame", workspace: true);
         string destination = Index(fixture.Destination, "04", "Drame");
         byte[] definition = File.ReadAllBytes(
@@ -25,7 +25,8 @@ public sealed class LegacyIndexPersistenceTests
             AaiCodec.Save(obsolete, Path.Combine(source, "icon_sel.aai"));
         }
 
-        ExportFixture.Exporter().Export(fixture.Cards(), fixture.Destination);
+        ExportFixture.Exporter("GLASS Revisited")
+            .Export(fixture.Cards(), fixture.Destination);
 
         using var icon = AaiCodec.Load(
             Path.Combine(destination, "icon.aai")
@@ -42,6 +43,83 @@ public sealed class LegacyIndexPersistenceTests
             Path.Combine(source, "icon.aai")
         );
         Assert.Equal(38, original.Height);
+    }
+
+    [Fact]
+    public void Export_IndexLargeurObsolete_RetablitLeFormatSansChangerLaDefinition()
+    {
+        using ExportFixture fixture = new();
+        ChangeMovie(fixture, "Animation", "Un film");
+        fixture.ProcessIndexes("GLASS Revisited");
+        string source = Index(fixture.Root, "04", "Animation", workspace: true);
+        string target = Index(fixture.Destination, "04", "Animation");
+        byte[] definition = File.ReadAllBytes(
+            Path.Combine(source, "dune_folder.txt")
+        );
+        using (var outdated = new SkiaSharp.SKBitmap(122, 35))
+        {
+            AaiCodec.Save(outdated, Path.Combine(source, "icon.aai"));
+            AaiCodec.Save(outdated, Path.Combine(source, "icon_sel.aai"));
+        }
+
+        ExportFixture.Exporter("GLASS Revisited")
+            .Export(fixture.Cards(), fixture.Destination);
+
+        using var icon = AaiCodec.Load(Path.Combine(target, "icon.aai"));
+        using var selected = AaiCodec.Load(Path.Combine(target, "icon_sel.aai"));
+        Assert.Equal(124, icon.Width);
+        Assert.Equal(35, icon.Height);
+        Assert.Equal(icon.Info, selected.Info);
+        Assert.Equal(definition, File.ReadAllBytes(
+            Path.Combine(target, "dune_folder.txt")
+        ));
+        using var original = AaiCodec.Load(
+            Path.Combine(source, "icon.aai")
+        );
+        Assert.Equal(122, original.Width);
+    }
+
+    [Fact]
+    public void Export_IndexConforme_ConserveLesOctetsDesDeuxIcones()
+    {
+        using ExportFixture fixture = new();
+        fixture.ProcessIndexes("GLASS Revisited");
+        string source = Index(fixture.Root, "04", "Drame", workspace: true);
+        byte[] icon = File.ReadAllBytes(Path.Combine(source, "icon.aai"));
+        byte[] selected = File.ReadAllBytes(
+            Path.Combine(source, "icon_sel.aai")
+        );
+
+        ExportFixture.Exporter("GLASS Revisited")
+            .Export(fixture.Cards(), fixture.Destination);
+
+        string destination = Index(fixture.Destination, "04", "Drame");
+        Assert.Equal(icon, File.ReadAllBytes(
+            Path.Combine(destination, "icon.aai")
+        ));
+        Assert.Equal(selected, File.ReadAllBytes(
+            Path.Combine(destination, "icon_sel.aai")
+        ));
+    }
+
+    [Fact]
+    public void Export_RacinesDIndex_NeCreePasDeFauxIconesSelectionnees()
+    {
+        using ExportFixture fixture = new();
+        fixture.ProcessIndexes("GLASS Revisited");
+
+        ExportFixture.Exporter("GLASS Revisited")
+            .Export(fixture.Cards(), fixture.Destination);
+
+        foreach (string category in new[]
+        {
+            "04", "05", "06", "07", "09", "10", "11",
+        })
+        {
+            Assert.False(File.Exists(Path.Combine(
+                fixture.Destination, "00", category, "icon_sel.aai"
+            )));
+        }
     }
 
     [Fact]

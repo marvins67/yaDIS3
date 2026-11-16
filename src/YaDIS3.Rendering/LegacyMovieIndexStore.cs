@@ -222,19 +222,27 @@ public sealed class LegacyMovieIndexStore(
         string kind = IndexKind(
             category.ToString("00", CultureInfo.InvariantCulture)
         );
-        RefreshDirectory(root, kind, renderer, cancellationToken);
+        RefreshDirectory(root, kind, renderer, cancellationToken, 0);
     }
 
     private void RefreshDirectory(
         string directory,
         string kind,
         TemplateRenderer renderer,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        int depth
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
         string path = Path.Combine(directory, "icon.aai");
-        if (_fileSystem.FileExists(path))
+        // Les racines de rubriques n'ont pas de variante sélectionnée
+        // dans CreateIndexItem (yaDIS2). Elles ne sont pas des libellés.
+        bool isLabel = kind is "actors" or "directors"
+            ? depth >= 2
+            : depth >= 1;
+        if (isLabel
+            && _fileSystem.FileExists(path)
+            && _fileSystem.FileExists(Path.Combine(directory, "icon_sel.aai")))
         {
             byte[] bytes = _fileSystem.ReadBytes(path);
             if (bytes.Length >= 8)
@@ -243,10 +251,12 @@ public sealed class LegacyMovieIndexStore(
                 int height = BinaryPrimitives.ReadInt32LittleEndian(
                     bytes.AsSpan(4)
                 );
+                (int expectedWidth, int expectedHeight) =
+                    renderer.LegacyIndexDimensions(Path.GetFileName(directory), kind);
                 if (width > 0
                     && height > 0
                     && (long)width * height * 4 + 8 == bytes.Length
-                    && height != renderer.LegacyIndexHeight(kind))
+                    && (width != expectedWidth || height != expectedHeight))
                 {
                     renderer.RenderLegacyIndexLabel(
                         directory,
@@ -261,7 +271,7 @@ public sealed class LegacyMovieIndexStore(
         {
             if (!Path.GetFileName(child).StartsWith('_'))
             {
-                RefreshDirectory(child, kind, renderer, cancellationToken);
+                RefreshDirectory(child, kind, renderer, cancellationToken, depth + 1);
             }
         }
     }

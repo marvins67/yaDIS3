@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Xml.Linq;
 using SkiaSharp;
 
@@ -367,6 +368,25 @@ public sealed partial class TemplateRenderer
                 ? "menu/index/text"
                 : "menu/index/" + kind + "/text"
         );
+        (int width, int height) = LegacyIndexDimensions(caption, kind);
+        Directory.CreateDirectory(directory);
+        SaveIndexLabel(directory, caption, text, width, height, kind == "countries", false);
+        SaveIndexLabel(directory, caption, text, width, height, kind == "countries", true);
+    }
+
+    /// <summary>
+    /// Retourne la taille prévue, y compris sans génération d'image.
+    /// </summary>
+    internal (int Width, int Height) LegacyIndexDimensions(
+        string caption,
+        string kind
+    )
+    {
+        XElement text = _template.Node(
+            kind == "alphabet"
+                ? "menu/index/text"
+                : "menu/index/" + kind + "/text"
+        );
         _fonts.TryGetValue(
             NormalizeFontName(text.Attr("font")),
             out SKTypeface? face
@@ -375,30 +395,10 @@ public sealed partial class TemplateRenderer
             face ?? SKTypeface.Default,
             text.Float("size", 24) * 96 / 72
         );
-        int width =
-            kind == "countries"
-                ? 128
-                : LegacyIndexWidth(caption, text, font, kind);
-        int height = LegacyIndexLabelHeight(kind, text, font);
-        Directory.CreateDirectory(directory);
-        SaveIndexLabel(
-            directory,
-            caption,
-            text,
-            width,
-            height,
-            kind == "countries",
-            false
-        );
-        SaveIndexLabel(
-            directory,
-            caption,
-            text,
-            width,
-            height,
-            kind == "countries",
-            true
-        );
+        int width = kind == "countries"
+            ? 128
+            : LegacyIndexWidth(caption, text, font, kind);
+        return (width, LegacyIndexLabelHeight(kind, text, font));
     }
 
     private static int LegacyIndexWidth(
@@ -415,40 +415,84 @@ public sealed partial class TemplateRenderer
             _ => caption,
         };
         using SKPaint paint = new();
-        // GDI+ utilise les avances de glyphes ajustées à la grille
-        // de pixels pour MeasureString, sans métriques linéaires.
+        float advance = RequiresGdiSyntheticBold(specification, font.Typeface)
+            ? GdiSyntheticBoldAdvance(value, font, paint)
+            : LegacyFallbackAdvance(value, font, paint, kind);
+        int width = (int)Math.Round(advance + font.Size / 3 + 8);
+        return width + width % 2;
+    }
+
+    private static bool RequiresGdiSyntheticBold(
+        XElement specification,
+        SKTypeface face
+    )
+    {
+        if (!specification.Attr("style").Contains(
+            "bold", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        const uint Os2Table = 0x4F532F32;
+        const int FontSelectionOffset = 62;
+        const ushort DeclaredBold = 1 << 5;
+        if (face.GetTableSize(Os2Table) < FontSelectionOffset + 2)
+        {
+            return false;
+        }
+
+        byte[] data = face.GetTableData(Os2Table);
+        ushort selection = BinaryPrimitives.ReadUInt16BigEndian(
+            data.AsSpan(FontSelectionOffset, 2)
+        );
+        return (selection & DeclaredBold) == 0;
+    }
+
+    private static float GdiSyntheticBoldAdvance(
+        string value,
+        SKFont font,
+        SKPaint paint
+    )
+    {
+        // GDI+ simule le gras quand le style OS/2 est déclaré
+        // régulier : +3 % sur chaque avance, arrondie en unités EM.
+        const int SyntheticBoldPercent = 3;
+        int unitsPerEm = font.Typeface.UnitsPerEm;
+        using SKFont linear = new(font.Typeface, font.Size)
+        {
+            Hinting = SKFontHinting.None,
+            LinearMetrics = true,
+        };
+        float scale = font.Size / unitsPerEm;
+        int totalUnits = 0;
+        foreach (float width in linear.GetGlyphWidths(value, paint))
+        {
+            int advanceUnits = (int)MathF.Round(width / scale);
+            int extraUnits = (int)MathF.Round(
+                advanceUnits * SyntheticBoldPercent / 100f
+            );
+            totalUnits += advanceUnits + extraUnits;
+        }
+
+        return totalUnits * scale;
+    }
+
+    private static float LegacyFallbackAdvance(
+        string value,
+        SKFont font,
+        SKPaint paint,
+        string kind
+    )
+    {
         using SKFont measured = new(font.Typeface, font.Size)
         {
             Hinting = SKFontHinting.Full,
             Subpixel = false,
             LinearMetrics = false,
         };
-        float advance = kind == "alphabet"
+        return kind == "alphabet"
             ? font.GetGlyphWidths(value, paint).Sum(MathF.Round)
             : measured.GetGlyphWidths(value, paint).Sum();
-        int width = (int)Math.Round(advance + font.Size / 3 + 8);
-        return width + width % 2;
-    }
-
-    /// <summary>
-    /// Mesure la hauteur attendue sans créer de fichier.
-    /// </summary>
-    internal int LegacyIndexHeight(string kind)
-    {
-        XElement text = _template.Node(
-            kind == "alphabet"
-                ? "menu/index/text"
-                : "menu/index/" + kind + "/text"
-        );
-        _fonts.TryGetValue(
-            NormalizeFontName(text.Attr("font")),
-            out SKTypeface? face
-        );
-        using SKFont font = new(
-            face ?? SKTypeface.Default,
-            text.Float("size", 24) * 96 / 72
-        );
-        return LegacyIndexLabelHeight(kind, text, font);
     }
 
     private static int LegacyIndexLabelHeight(
