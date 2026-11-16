@@ -30,6 +30,12 @@ internal sealed partial class LegacyDuneCatalogWriter
                     index,
                     cancellationToken
                 );
+                store.RefreshOutdatedLabels(
+                    root,
+                    index,
+                    renderer,
+                    cancellationToken
+                );
             }
         }
 

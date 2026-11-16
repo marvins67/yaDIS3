@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Globalization;
 using YaDIS3.Core;
 
@@ -194,6 +195,74 @@ public sealed class LegacyMovieIndexStore(
         )
         {
             CopyDirectory(source, target, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Répare à l'export les étiquettes historiques dont la hauteur
+    /// est périmée, sans reconstruire les listes de navigation.
+    /// </summary>
+    internal void RefreshOutdatedLabels(
+        string destination,
+        int category,
+        TemplateRenderer renderer,
+        CancellationToken cancellationToken
+    )
+    {
+        string root = Path.Combine(
+            destination,
+            "00",
+            category.ToString("00", CultureInfo.InvariantCulture)
+        );
+        if (!_fileSystem.DirectoryExists(root) || category == 8)
+        {
+            return;
+        }
+
+        string kind = IndexKind(
+            category.ToString("00", CultureInfo.InvariantCulture)
+        );
+        RefreshDirectory(root, kind, renderer, cancellationToken);
+    }
+
+    private void RefreshDirectory(
+        string directory,
+        string kind,
+        TemplateRenderer renderer,
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        string path = Path.Combine(directory, "icon.aai");
+        if (_fileSystem.FileExists(path))
+        {
+            byte[] bytes = _fileSystem.ReadBytes(path);
+            if (bytes.Length >= 8)
+            {
+                int width = BinaryPrimitives.ReadInt32LittleEndian(bytes);
+                int height = BinaryPrimitives.ReadInt32LittleEndian(
+                    bytes.AsSpan(4)
+                );
+                if (width > 0
+                    && height > 0
+                    && (long)width * height * 4 + 8 == bytes.Length
+                    && height != renderer.LegacyIndexHeight(kind))
+                {
+                    renderer.RenderLegacyIndexLabel(
+                        directory,
+                        Path.GetFileName(directory),
+                        kind
+                    );
+                }
+            }
+        }
+
+        foreach (string child in _fileSystem.EnumerateDirectories(directory))
+        {
+            if (!Path.GetFileName(child).StartsWith('_'))
+            {
+                RefreshDirectory(child, kind, renderer, cancellationToken);
+            }
         }
     }
 

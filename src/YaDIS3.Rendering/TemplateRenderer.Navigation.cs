@@ -378,7 +378,7 @@ public sealed partial class TemplateRenderer
         int width =
             kind == "countries"
                 ? 128
-                : LegacyIndexWidth(caption, text, font);
+                : LegacyIndexWidth(caption, text, font, kind);
         int height = LegacyIndexLabelHeight(kind, text, font);
         Directory.CreateDirectory(directory);
         SaveIndexLabel(
@@ -404,7 +404,8 @@ public sealed partial class TemplateRenderer
     private static int LegacyIndexWidth(
         string caption,
         XElement specification,
-        SKFont font
+        SKFont font,
+        string kind
     )
     {
         string value = specification.Attr("case") switch
@@ -414,12 +415,40 @@ public sealed partial class TemplateRenderer
             _ => caption,
         };
         using SKPaint paint = new();
-        // Le cadre GDI+ est calculé sur des avances arrondies
-        // plutôt que systématiquement plafonnées.
-        float advance = font.GetGlyphWidths(value, paint)
-            .Sum(MathF.Round);
+        // GDI+ utilise les avances de glyphes ajustées à la grille
+        // de pixels pour MeasureString, sans métriques linéaires.
+        using SKFont measured = new(font.Typeface, font.Size)
+        {
+            Hinting = SKFontHinting.Full,
+            Subpixel = false,
+            LinearMetrics = false,
+        };
+        float advance = kind == "alphabet"
+            ? font.GetGlyphWidths(value, paint).Sum(MathF.Round)
+            : measured.GetGlyphWidths(value, paint).Sum();
         int width = (int)Math.Round(advance + font.Size / 3 + 8);
         return width + width % 2;
+    }
+
+    /// <summary>
+    /// Mesure la hauteur attendue sans créer de fichier.
+    /// </summary>
+    internal int LegacyIndexHeight(string kind)
+    {
+        XElement text = _template.Node(
+            kind == "alphabet"
+                ? "menu/index/text"
+                : "menu/index/" + kind + "/text"
+        );
+        _fonts.TryGetValue(
+            NormalizeFontName(text.Attr("font")),
+            out SKTypeface? face
+        );
+        using SKFont font = new(
+            face ?? SKTypeface.Default,
+            text.Float("size", 24) * 96 / 72
+        );
+        return LegacyIndexLabelHeight(kind, text, font);
     }
 
     private static int LegacyIndexLabelHeight(

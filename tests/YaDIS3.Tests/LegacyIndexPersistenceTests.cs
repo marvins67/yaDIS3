@@ -10,6 +10,41 @@ public sealed class LegacyIndexPersistenceTests
 {
     // bgwExport ne rappelle pas AddToIndex pour les genres, personnes et critères techniques.
     [Fact]
+    public void Export_IndexObsolete_RenouvelleUniquementLesImages()
+    {
+        using ExportFixture fixture = new();
+        fixture.ProcessIndexes();
+        string source = Index(fixture.Root, "04", "Drame", workspace: true);
+        string destination = Index(fixture.Destination, "04", "Drame");
+        byte[] definition = File.ReadAllBytes(
+            Path.Combine(source, "dune_folder.txt")
+        );
+        using (var obsolete = new SkiaSharp.SKBitmap(106, 38))
+        {
+            AaiCodec.Save(obsolete, Path.Combine(source, "icon.aai"));
+            AaiCodec.Save(obsolete, Path.Combine(source, "icon_sel.aai"));
+        }
+
+        ExportFixture.Exporter().Export(fixture.Cards(), fixture.Destination);
+
+        using var icon = AaiCodec.Load(
+            Path.Combine(destination, "icon.aai")
+        );
+        using var selected = AaiCodec.Load(
+            Path.Combine(destination, "icon_sel.aai")
+        );
+        Assert.Equal(35, icon.Height);
+        Assert.Equal(icon.Info, selected.Info);
+        Assert.Equal(definition, File.ReadAllBytes(
+            Path.Combine(destination, "dune_folder.txt")
+        ));
+        using var original = AaiCodec.Load(
+            Path.Combine(source, "icon.aai")
+        );
+        Assert.Equal(38, original.Height);
+    }
+
+    [Fact]
     public void Export_SansTraitement_NeReconstruitPasLesIndex()
     {
         using ExportFixture fixture = new();
