@@ -123,6 +123,44 @@ public sealed class LegacyIndexPersistenceTests
     }
 
     [Fact]
+    public void Export_IndexRacinePrecedemmentPollue_NeConservePasLesFauxIcones()
+    {
+        using ExportFixture fixture = new();
+        fixture.ProcessIndexes("GLASS Revisited");
+        DuneExporter exporter = ExportFixture.Exporter("GLASS Revisited");
+        exporter.Export(fixture.Cards(), fixture.Destination);
+
+        foreach (string category in new[]
+        {
+            "04", "05", "06", "07", "09", "10", "11",
+        })
+        {
+            string directory = Path.Combine(
+                fixture.Destination, "00", category
+            );
+            File.WriteAllBytes(
+                Path.Combine(directory, "icon_sel.aai"),
+                [1, 2, 3]
+            );
+        }
+
+        exporter.Export(fixture.Cards(), fixture.Destination);
+
+        foreach (string category in new[]
+        {
+            "04", "05", "06", "07", "09", "10", "11",
+        })
+        {
+            string directory = Path.Combine(
+                fixture.Destination, "00", category
+            );
+            Assert.True(File.Exists(Path.Combine(directory, "icon.aai")));
+            Assert.True(File.Exists(Path.Combine(directory, "dune_folder.txt")));
+            Assert.False(File.Exists(Path.Combine(directory, "icon_sel.aai")));
+        }
+    }
+
+    [Fact]
     public void Export_SansTraitement_NeReconstruitPasLesIndex()
     {
         using ExportFixture fixture = new();

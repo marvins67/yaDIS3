@@ -222,15 +222,15 @@ public sealed class LegacyMovieIndexStore(
         string kind = IndexKind(
             category.ToString("00", CultureInfo.InvariantCulture)
         );
-        RefreshDirectory(root, kind, renderer, cancellationToken, 0);
+        RefreshDirectory(root, kind, renderer, 0, cancellationToken);
     }
 
     private void RefreshDirectory(
         string directory,
         string kind,
         TemplateRenderer renderer,
-        CancellationToken cancellationToken,
-        int depth
+        int depth,
+        CancellationToken cancellationToken
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -271,7 +271,7 @@ public sealed class LegacyMovieIndexStore(
         {
             if (!Path.GetFileName(child).StartsWith('_'))
             {
-                RefreshDirectory(child, kind, renderer, cancellationToken, depth + 1);
+                RefreshDirectory(child, kind, renderer, depth + 1, cancellationToken);
             }
         }
     }

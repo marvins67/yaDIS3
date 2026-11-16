@@ -253,6 +253,14 @@ internal sealed partial class LegacyDuneCatalogWriter
             string directory = Output(root, relative);
             renderer.RenderMenu(directory, "menu", area);
             Panel(area, letters, index == 3).Save(directory);
+            // CreateIndexItem ne crée une icône sélectionnée que
+            // pour les libellés, jamais pour la racine d'une rubrique.
+            // Une ancienne génération peut en avoir laissé une ici.
+            string orphan = Path.Combine(directory, "icon_sel.aai");
+            if (fileSystem.FileExists(orphan))
+            {
+                fileSystem.DeleteFile(orphan);
+            }
             if (index is 5 or 6)
             {
                 WritePeopleLetters(
