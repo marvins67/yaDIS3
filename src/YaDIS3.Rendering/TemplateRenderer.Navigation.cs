@@ -378,7 +378,7 @@ public sealed partial class TemplateRenderer
         int width =
             kind == "countries"
                 ? 128
-                : NavigationWidth(caption, text);
+                : LegacyIndexWidth(caption, text, font);
         int height = LegacyIndexLabelHeight(kind, text, font);
         Directory.CreateDirectory(directory);
         SaveIndexLabel(
@@ -401,6 +401,27 @@ public sealed partial class TemplateRenderer
         );
     }
 
+    private static int LegacyIndexWidth(
+        string caption,
+        XElement specification,
+        SKFont font
+    )
+    {
+        string value = specification.Attr("case") switch
+        {
+            "upper" => caption.ToUpperInvariant(),
+            "lower" => caption.ToLowerInvariant(),
+            _ => caption,
+        };
+        using SKPaint paint = new();
+        // Le cadre GDI+ est calculé sur des avances arrondies
+        // plutôt que systématiquement plafonnées.
+        float advance = font.GetGlyphWidths(value, paint)
+            .Sum(MathF.Round);
+        int width = (int)Math.Round(advance + font.Size / 3 + 8);
+        return width + width % 2;
+    }
+
     private static int LegacyIndexLabelHeight(
         string kind,
         XElement text,
@@ -412,15 +433,13 @@ public sealed partial class TemplateRenderer
             return 64;
         }
 
-        // Les 158 étiquettes alphabétiques GLASS Revisited de référence
-        // mesurent 35 px dans yaDIS2, contre 38 px avec font.Spacing.
-        // Ne pas généraliser cette mesure aux autres polices ou tailles.
-        const int GlassAlphabetHeight = 35;
-        if (kind == "alphabet"
-            && NormalizeFontName(text.Attr("font")) == "scoutcondbold"
+        // MeasureString garde la hauteur de ligne historique de
+        // ScoutCondBold 24pt pour toutes les rubriques d'index.
+        const int GlassLabelHeight = 35;
+        if (NormalizeFontName(text.Attr("font")) == "scoutcondbold"
             && text.Float("size", 24) == 24)
         {
-            return GlassAlphabetHeight;
+            return GlassLabelHeight;
         }
 
         return (int)Math.Round(font.Spacing);
